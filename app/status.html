@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Money · status</title>
+<style>
+  :root{--bg:#f6f4ef;--panel:#fffdf8;--ink:#1c1b18;--ink-2:#55524a;--ink-3:#8a867b;--rule:#e4dfd3;--ok:#2f7a4f;--bad:#b4442c;--accent:#1c1b18}
+  @media (prefers-color-scheme:dark){:root{--bg:#141310;--panel:#1d1c18;--ink:#f1eee6;--ink-2:#bdb8ab;--ink-3:#8a867b;--rule:#2e2c26;--ok:#6cc391;--bad:#e8826a;--accent:#f1eee6}}
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  main{max-width:520px;margin:0 auto;padding:40px 16px 64px}
+  h1{font:400 30px/1.15 Georgia,"Times New Roman",serif;margin:0 0 4px} .sub{color:var(--ink-2);margin:0 0 28px}
+  .card{background:var(--panel);border:1px solid var(--rule);border-radius:12px;padding:20px}
+  label{display:block;font-size:13px;color:var(--ink-2);margin-bottom:6px}
+  input{width:100%;font:inherit;padding:11px 12px;border:1px solid var(--rule);border-radius:8px;background:transparent;color:var(--ink)}
+  button{margin-top:12px;font:inherit;font-weight:600;padding:11px 16px;border:0;border-radius:8px;background:var(--accent);color:var(--bg);cursor:pointer;width:100%}
+  button.link{background:none;color:var(--ink-2);font-weight:400;text-decoration:underline;width:auto;padding:0;margin:16px 0 0}
+  .msg{font-size:13.5px;color:var(--ink-2);margin-top:12px;min-height:1em} .msg.bad{color:var(--bad)}
+  .row{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--rule)} .row:last-child{border:0}
+  .row span:first-child{color:var(--ink-2)} .num{font-variant-numeric:tabular-nums;font-weight:600}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:var(--ink-3)} .dot.ok{background:var(--ok)} .dot.bad{background:var(--bad)}
+  h2{font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);margin:28px 0 8px;font-weight:600}
+  .log{font-size:13px;color:var(--ink-2)} .log div{padding:8px 0;border-bottom:1px solid var(--rule)} .log b{color:var(--ink);font-weight:600}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+  <h1>Money</h1>
+  <p class="sub">Phase 1 · checking that your Sheet reaches the new database.</p>
+
+  <section class="card" id="signin" hidden>
+    <form id="form">
+      <label for="email">Your email</label>
+      <input id="email" type="email" autocomplete="email" required>
+      <button type="submit">Email me a sign-in link</button>
+    </form>
+    <div class="msg" id="msg"></div>
+  </section>
+
+  <section id="status" hidden>
+    <div class="card">
+      <div class="row"><span>Last sync from the Sheet</span><span id="last" class="num">—</span></div>
+      <div class="row"><span>Transactions</span><span id="tx" class="num">—</span></div>
+      <div class="row"><span>Card bills</span><span id="bills" class="num">—</span></div>
+      <div class="row"><span>Scheduled (future EMIs)</span><span id="sched" class="num">—</span></div>
+    </div>
+    <h2>Recent syncs</h2>
+    <div class="log" id="log"></div>
+    <button class="link" id="out">Sign out</button>
+  </section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+  // Public by design: this key only works through row-level security, which limits every row to your login.
+  const SUPABASE_URL = "https://ftnxpufopkosqrtjtkhi.supabase.co";
+  const SUPABASE_KEY = "%SUPABASE_PUBLISHABLE_KEY%";
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const $ = (id) => document.getElementById(id);
+  const ago = (iso) => { if (!iso) return "never"; const m = Math.round((Date.now() - Date.parse(iso)) / 60000);
+    return m < 1 ? "just now" : m < 60 ? m + " min ago" : m < 1440 ? Math.round(m / 60) + " h ago" : Math.round(m / 1440) + " d ago"; };
+
+  async function show(session) {
+    $("signin").hidden = !!session; $("status").hidden = !session;
+    if (!session) return;
+    const { data: s } = await sb.from("sync_status").select("*").single();
+    if (s) {
+      $("last").innerHTML = `<i class="dot ${s.last_result === "saved" ? "ok" : s.last_result ? "bad" : ""}"></i>${ago(s.last_sync)}`;
+      $("tx").textContent = s.transactions; $("bills").textContent = s.bills; $("sched").textContent = s.scheduled;
+    }
+    const { data: log } = await sb.from("ingest_log").select("received_at,result,detail").order("received_at", { ascending: false }).limit(6);
+    $("log").innerHTML = (log || []).map((l) => `<div><b>${new Date(l.received_at).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</b> · ${l.result}<br>${(l.detail || "").split(" · ")[0]}</div>`).join("") || "<div>No syncs yet.</div>";
+  }
+
+  $("form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    $("msg").className = "msg"; $("msg").textContent = "Sending…";
+    const { error } = await sb.auth.signInWithOtp({ email: $("email").value.trim(), options: { shouldCreateUser: false, emailRedirectTo: location.origin } });
+    $("msg").className = error ? "msg bad" : "msg";
+    $("msg").textContent = error ? "That didn't work: " + error.message : "Check your inbox and open the link on this device.";
+  });
+  $("out").addEventListener("click", () => sb.auth.signOut());
+  sb.auth.onAuthStateChange((_e, session) => show(session));
+  sb.auth.getSession().then(({ data }) => show(data.session));
+</script>
+</body>
+</html>

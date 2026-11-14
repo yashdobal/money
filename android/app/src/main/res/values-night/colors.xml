@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ground">#0C0C0C</color>
+    <color name="surface">#161616</color>
+    <color name="ink">#F2F2F0</color>
+    <color name="ink2">#A8A8A4</color>
+    <color name="accent">#F2F2F0</color>
+    <color name="accent_ink">#121212</color>
+    <color name="alert">#EC8E80</color>
+    <color name="hero_a">#1A1A1A</color>
+    <color name="hero_b">#1A1A1A</color>
+</resources>

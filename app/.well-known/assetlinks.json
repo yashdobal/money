@@ -1,0 +1,10 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.yashdobal.money",
+      "sha256_cert_fingerprints": ["8F:2E:F6:32:45:93:6C:36:FA:06:EF:78:3A:2A:05:56:F6:4B:54:1C:35:BC:6E:95:4C:43:E2:F0:E0:F8:69:20"]
+    }
+  }
+]

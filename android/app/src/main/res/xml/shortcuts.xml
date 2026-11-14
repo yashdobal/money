@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- long-press the app icon. Each opens the screen first and the sheet on top, so Back closes the sheet (not the app). -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut android:shortcutId="add" android:enabled="true" android:icon="@drawable/shortcut_add"
+        android:shortcutShortLabel="@string/shortcut_add_short" android:shortcutLongLabel="@string/shortcut_add_long">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="com.yashdobal.money"
+            android:targetClass="com.yashdobal.money.MainActivity" android:data="https://yash-money.pages.dev/#/today?sheet=add" />
+    </shortcut>
+    <shortcut android:shortcutId="cards" android:enabled="true" android:icon="@drawable/shortcut_cards"
+        android:shortcutShortLabel="@string/shortcut_cards_short" android:shortcutLongLabel="@string/shortcut_cards_long">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="com.yashdobal.money"
+            android:targetClass="com.yashdobal.money.MainActivity" android:data="https://yash-money.pages.dev/#/cards" />
+    </shortcut>
+</shortcuts>

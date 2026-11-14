@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Money</string>
+    <string name="lock_title">Money is locked</string>
+    <string name="lock_text">Use your fingerprint or phone PIN to open it.</string>
+    <string name="lock_lockout">Too many tries. Wait a moment, or use your phone PIN.</string>
+    <string name="lock_button">Unlock</string>
+    <string name="lock_prompt">Unlock Money</string>
+    <string name="lock_turn_on">Turn on the fingerprint lock</string>
+    <string name="lock_turn_off">Turn off the fingerprint lock</string>
+    <string name="lock_confirm">Confirm it\'s you</string>
+    <string name="lock_need_screen_lock">Set a screen lock on your phone first.</string>
+    <string name="not_changed">Not changed</string>
+    <string name="widget_name">Money: safe to spend</string>
+    <string name="widget_desc">What\'s safe to spend until payday, a day\'s share and your next bill</string>
+    <string name="widget_label">Safe to spend</string>
+    <string name="widget_a_day">a day</string>
+    <string name="widget_until_payday">until payday</string>
+    <string name="widget_open">Open Money to see today\'s figure</string>
+    <string name="widget_open_short">Open Money</string>
+    <string name="widget_noinc">Set your salary in Money</string>
+    <string name="widget_nobal">Set your bank balances in Money</string>
+    <string name="widget_updating">Updating…</string>
+    <string name="widget_add">Add a payment</string>
+    <string name="widget_refresh">Refresh</string>
+    <string name="shortcut_add_short">Add a payment</string>
+    <string name="shortcut_add_long">Add a payment</string>
+    <string name="shortcut_cards_short">Cards</string>
+    <string name="shortcut_cards_long">Your cards and bills</string>
+    <string name="channel_alerts">Alerts</string>
+    <string name="channel_alerts_desc">Bills due, EMIs, your salary, a quiet collector and the 9 PM summary</string>
+    <string name="channel_overdue">Overdue bills</string>
+    <string name="channel_overdue_desc">A card bill that is past its due date</string>
+    <string name="no_email_app">No email app found</string>
+</resources>

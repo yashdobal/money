@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- the same colours as the web app (app/app.css) -->
+<resources>
+    <color name="ground">#F6F6F4</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="ink">#141414</color>
+    <color name="ink2">#5E5E5A</color>
+    <color name="accent">#141414</color>
+    <color name="accent_ink">#FFFFFF</color>
+    <color name="alert">#B3412F</color>
+    <color name="hero_a">#161616</color>
+    <color name="hero_b">#161616</color>
+    <color name="hero_ink">#F5F5F3</color>
+    <color name="hero_ink2">#A8A8A4</color>
+    <color name="hero_alert">#FF9F92</color>
+    <color name="icon_bg">#141414</color>
+</resources>

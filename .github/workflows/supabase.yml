@@ -1,0 +1,40 @@
+name: Server functions
+# Deploys the Supabase functions (supabase/functions) whenever they change on main, after checking that the server
+# engine is the app's engine. Needs one repository secret: SUPABASE_ACCESS_TOKEN (Supabase → Account → Access tokens).
+on:
+  push:
+    branches: [main]
+    paths: ["supabase/functions/**", "supabase/config.toml", "app/engine.js", "app/shape.js", "collector/money-collector.gs", "tools/rn_engine.mjs", ".github/workflows/supabase.yml"]
+  workflow_dispatch: {}
+permissions:
+  contents: read
+concurrency: { group: supabase-deploy, cancel-in-progress: false }
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      PROJECT: ftnxpufopkosqrtjtkhi
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm ci --no-audit --no-fund
+        working-directory: rn
+      - name: The generated server engine matches app/engine.js
+        run: node tools/rn_engine.mjs --check
+      - name: The server engine gives the app's figures in UTC
+        run: node tools/engine/ist.test.mjs
+      - uses: supabase/setup-cli@v1
+        with: { version: latest }
+      - name: Deploy
+        run: |
+          if [ -z "$SUPABASE_ACCESS_TOKEN" ]; then echo "::warning::SUPABASE_ACCESS_TOKEN is not set, so nothing was deployed"; exit 0; fi
+          supabase functions deploy --project-ref "$PROJECT" --use-api --yes   # newer CLIs ask to confirm; there is no one to answer here
+      - name: Check the device function answers
+        run: |
+          if [ -z "$SUPABASE_ACCESS_TOKEN" ]; then exit 0; fi
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X POST "https://$PROJECT.supabase.co/functions/v1/device" -H 'x-device-token: nope' -d '{}')
+          echo "device without a key → HTTP $code"
+          [ "$code" = "401" ]

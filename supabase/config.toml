@@ -1,0 +1,13 @@
+project_id = "money"
+
+[functions.ingest]
+verify_jwt = false   # the collector signs each request with INGEST_SECRET instead
+
+[functions.app]
+verify_jwt = true    # your Supabase login; the function also checks it is your user id
+
+[functions.notify]
+verify_jwt = false   # called hourly by pg_cron with x-cron-secret
+
+[functions.device]
+verify_jwt = false   # the Android app's background work; checked with its own device key (x-device-token)

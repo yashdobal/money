@@ -1,0 +1,15 @@
+# real money data never goes in the repo
+*.xlsx
+*.csv
+baseline/
+import-*.sql
+# secrets
+.env
+.env.*
+supabase/.temp/
+# build
+node_modules/
+dist/
+__pycache__/
+/build/
+rn/dist-web/

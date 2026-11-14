@@ -1,0 +1,148 @@
+name: Android app
+# Builds the signed APK (versionCode = this run's number + 100), checks its certificate matches assetlinks.json, runs the
+# demo build in an Android emulator for screenshots, and on main attaches the APK to a GitHub Release.
+# Needs two repository secrets on main: ANDROID_KEYSTORE_B64 and ANDROID_KEYSTORE_PASSWORD.
+on:
+  push:
+    branches-ignore: [ci-artifacts, ci-phone]
+    paths: ["android/**", "app/**", "rn/**", "tools/**", "collector/**", "supabase/functions/_shared/ist-date.js", ".github/workflows/android.yml"]
+  workflow_dispatch: {}
+permissions:
+  contents: write
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+env:
+  GRADLE_VERSION: "8.10.2"
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build number (the run's number + 100, as the APK's version)
+        run: echo "BUILD=$((GITHUB_RUN_NUMBER + 100))" >> "$GITHUB_ENV"
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm ci --no-audit --no-fund
+        working-directory: rn
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 17 }
+      - uses: gradle/actions/setup-gradle@v4
+        with: { gradle-version: "${{ env.GRADLE_VERSION }}" }
+      - name: Signing key
+        env:
+          KS: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          PW: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          if [ -n "$KS" ] && [ -n "$PW" ]; then
+            echo "$KS" | base64 -d > "$RUNNER_TEMP/money.jks"
+            echo "MONEY_KEYSTORE=$RUNNER_TEMP/money.jks" >> "$GITHUB_ENV"
+            echo "MONEY_KEYSTORE_PASSWORD=$PW" >> "$GITHUB_ENV"
+          elif [ "$GITHUB_REF" = "refs/heads/main" ]; then
+            echo "::error::Add the secrets ANDROID_KEYSTORE_B64 and ANDROID_KEYSTORE_PASSWORD (Settings → Secrets and variables → Actions)"; exit 1
+          else
+            echo "::warning::No signing key, so this test build uses a throwaway key and won't install over the real app"
+          fi
+      - name: Build the APK
+        run: |
+          mkdir -p logs
+          set -o pipefail
+          gradle -p android assembleRelease --stacktrace 2>&1 | tee logs/apk-build.log || {
+            grep -E "^e: " logs/apk-build.log | head -15 | while IFS= read -r l; do echo "::error::$l"; done
+            echo "::error::$(grep -A12 'What went wrong' logs/apk-build.log | head -14 | tr '\n' ' ' | cut -c1-1500)"
+            exit 1; }
+      - name: Tests on the build machine (alert rules, widget numbers, widget and lock pictures)
+        run: |
+          set -o pipefail
+          gradle -p android testDebugUnitTest --stacktrace 2>&1 | tee logs/unit-tests.log || {
+            grep -E "FAILED|AssertionError|Exception:" logs/unit-tests.log | head -20 | while IFS= read -r l; do echo "::error::$l"; done
+            exit 1; }
+      - name: The APK is signed with the certificate in assetlinks.json
+        run: |
+          APK=android/app/build/outputs/apk/release/app-release.apk
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          "$BT/apksigner" verify --print-certs "$APK" | tee certs.txt
+          GOT=$(grep -m1 "certificate SHA-256 digest" certs.txt | sed 's/.*: //' | tr 'a-f' 'A-F' | sed 's/../&:/g; s/:$//')
+          WANT=$(python3 -c "import json; print(json.load(open('app/.well-known/assetlinks.json'))[0]['target']['sha256_cert_fingerprints'][0])")
+          echo "APK certificate:     $GOT"
+          echo "assetlinks.json has: $WANT"
+          if [ -n "${MONEY_KEYSTORE:-}" ] && [ "$GOT" != "$WANT" ]; then echo "::error::The APK's certificate doesn't match assetlinks.json, so sign-in links wouldn't open the app"; exit 1; fi
+          cp "$APK" "money-${{ env.BUILD }}.apk"
+      - name: Put the APK, pictures and logs on the ci-artifacts branch (GitHub's artifact storage isn't reachable for review)
+        if: always()
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          mkdir -p share && cp money-*.apk share/ 2>/dev/null || true
+          cp -r android/app/build/shots share/build-machine-shots 2>/dev/null || true
+          cp -r logs share/logs 2>/dev/null || true
+          cd share
+          echo "From ${{ github.sha }} on ${{ github.ref_name }}, run ${{ env.BUILD }}" > README.txt
+          git init -q -b ci-artifacts
+          git config user.name "github-actions"; git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A && git commit -qm "APK and pictures from run ${{ env.BUILD }}"
+          git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" ci-artifacts
+      - name: GitHub Release
+        if: github.ref == 'refs/heads/main'
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          gh release create "app-${{ env.BUILD }}" "money-${{ env.BUILD }}.apk" \
+            --title "Money app · build ${{ env.BUILD }}" \
+            --notes "On your phone: download money-${{ env.BUILD }}.apk below and open it. Android asks once to allow installs from your browser or Files app. It installs over the previous version and keeps your sign-in."
+
+  # The phone emulator, on request only (Actions → Android app → Run workflow): GitHub's 2-processor machines for
+  # private repositories take longer than 30 minutes to boot it, so it doesn't run on every push.
+  emulator:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build number (the run's number + 100, as the APK's version)
+        run: echo "BUILD=$((GITHUB_RUN_NUMBER + 100))" >> "$GITHUB_ENV"
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm ci --no-audit --no-fund
+        working-directory: rn
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 17 }
+      - uses: gradle/actions/setup-gradle@v4
+        with: { gradle-version: "${{ env.GRADLE_VERSION }}" }
+      - name: Build the demo app (made-up data, never released)
+        run: |
+          mkdir -p shots
+          set -o pipefail
+          gradle -p android -Pmoney.demo=true assembleRelease assembleDebug assembleDebugAndroidTest --stacktrace 2>&1 | tee shots/demo-build.log || {
+            grep -E "^e: " shots/demo-build.log | head -15 | while IFS= read -r l; do echo "::error::$l"; done
+            echo "::error::$(grep -A12 'What went wrong' shots/demo-build.log | head -14 | tr '\n' ' ' | cut -c1-1500)"
+            exit 1; }
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          echo "::notice::KVM: $(ls -l /dev/kvm 2>&1) · CPUs: $(nproc) · memory: $(free -g | awk '/Mem/{print $2}') GB"
+      - name: Use it in the emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          cores: 2
+          ram-size: 3072M
+          disk-size: 6000M
+          emulator-boot-timeout: 1800
+          disable-animations: true
+          emulator-options: -no-window -no-snapshot -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none
+          script: bash tools/android/emulator-shots.sh shots
+      - name: Put the phone screenshots on the ci-phone branch
+        if: always()
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          mkdir -p shots && cd shots
+          echo "From ${{ github.sha }} on ${{ github.ref_name }}, run ${{ env.BUILD }}" > README.txt
+          git init -q -b ci-phone
+          git config user.name "github-actions"; git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A && git commit -qm "Phone screenshots from run ${{ env.BUILD }}"
+          git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" ci-phone

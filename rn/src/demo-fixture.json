@@ -1,0 +1,5974 @@
+{
+"transactions": [
+{
+"source_ref": "demo-0003",
+"occurred_at": "2026-06-01T07:34:00.000000+00:00",
+"amount": 389900,
+"direction": "out",
+"description": "Croma Infiniti Retail Limited",
+"counted": true,
+"snippet": "Croma Infiniti Retail Limited",
+"sheet_row": 3,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Shopping"
+}
+},
+{
+"source_ref": "demo-0002",
+"occurred_at": "2026-06-01T07:37:00.000000+00:00",
+"amount": 56000,
+"direction": "out",
+"description": "Blue Tokai Coffee Roasters",
+"counted": true,
+"snippet": "Blue Tokai Coffee Roasters",
+"sheet_row": 2,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0004",
+"occurred_at": "2026-06-03T04:24:00.000000+00:00",
+"amount": 9900,
+"direction": "out",
+"description": "Blue Tokai Coffee Roasters",
+"counted": true,
+"snippet": "Blue Tokai Coffee Roasters",
+"sheet_row": 4,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0005",
+"occurred_at": "2026-06-03T12:15:00.000000+00:00",
+"amount": 25000,
+"direction": "out",
+"description": "Mohammed Irfan Abdul Rashid Shaikh",
+"counted": true,
+"snippet": "Mohammed Irfan Abdul Rashid Shaikh",
+"sheet_row": 5,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0008",
+"occurred_at": "2026-06-04T07:11:00.000000+00:00",
+"amount": 24900,
+"direction": "out",
+"description": "Swiggy",
+"counted": true,
+"snippet": "Swiggy",
+"sheet_row": 8,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0006",
+"occurred_at": "2026-06-04T07:43:00.000000+00:00",
+"amount": 18000,
+"direction": "out",
+"description": "Zomato",
+"counted": true,
+"snippet": "Zomato",
+"sheet_row": 6,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0007",
+"occurred_at": "2026-06-04T15:40:00.000000+00:00",
+"amount": 6000,
+"direction": "out",
+"description": "Ramesh Kumar Yadav",
+"counted": true,
+"snippet": "Ramesh Kumar Yadav",
+"sheet_row": 7,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0009",
+"occurred_at": "2026-06-05T04:54:00.000000+00:00",
+"amount": 26000,
+"direction": "out",
+"description": "Indian Railway Catering And Tourism Corporation",
+"counted": true,
+"snippet": "Indian Railway Catering And Tourism Corporation",
+"sheet_row": 9,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Travel"
+}
+},
+{
+"source_ref": "demo-0010",
+"occurred_at": "2026-06-06T03:16:00.000000+00:00",
+"amount": 2000,
+"direction": "out",
+"description": "Pooja Ganesh Naik",
+"counted": true,
+"snippet": "Pooja Ganesh Naik",
+"sheet_row": 10,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0011",
+"occurred_at": "2026-06-07T15:27:00.000000+00:00",
+"amount": 9900,
+"direction": "out",
+"description": "Zomato",
+"counted": true,
+"snippet": "Zomato",
+"sheet_row": 11,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0012",
+"occurred_at": "2026-06-08T05:07:00.000000+00:00",
+"amount": 56000,
+"direction": "out",
+"description": "Zomato",
+"counted": true,
+"snippet": "Zomato",
+"sheet_row": 12,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0013",
+"occurred_at": "2026-06-08T10:14:00.000000+00:00",
+"amount": 34800,
+"direction": "out",
+"description": "Shree Ganesh General Stores And Dairy Products Main Road",
+"counted": true,
+"snippet": "Shree Ganesh General Stores And Dairy Products Main Road",
+"sheet_row": 13,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0014",
+"occurred_at": "2026-06-09T14:30:00.000000+00:00",
+"amount": 73000,
+"direction": "out",
+"description": "Amazon Pay In Grocery",
+"counted": true,
+"snippet": "Amazon Pay In Grocery",
+"sheet_row": 14,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0015",
+"occurred_at": "2026-06-09T14:44:00.000000+00:00",
+"amount": 34800,
+"direction": "out",
+"description": "Blinkit",
+"counted": true,
+"snippet": "Blinkit",
+"sheet_row": 15,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0016",
+"occurred_at": "2026-06-13T14:44:00.000000+00:00",
+"amount": 48600,
+"direction": "out",
+"description": "Zepto",
+"counted": true,
+"snippet": "Zepto",
+"sheet_row": 16,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0017",
+"occurred_at": "2026-06-13T16:57:00.000000+00:00",
+"amount": 31500,
+"direction": "out",
+"description": "Swiggy",
+"counted": true,
+"snippet": "Swiggy",
+"sheet_row": 17,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0018",
+"occurred_at": "2026-06-14T10:30:00.000000+00:00",
+"amount": 31500,
+"direction": "out",
+"description": "Theobroma Patisserie",
+"counted": true,
+"snippet": "Theobroma Patisserie",
+"sheet_row": 18,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0020",
+"occurred_at": "2026-06-15T02:59:00.000000+00:00",
+"amount": 6000,
+"direction": "out",
+"description": "Mohammed Irfan Abdul Rashid Shaikh",
+"counted": true,
+"snippet": "Mohammed Irfan Abdul Rashid Shaikh",
+"sheet_row": 20,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0019",
+"occurred_at": "2026-06-15T04:15:00.000000+00:00",
+"amount": 31500,
+"direction": "out",
+"description": "Chaayos Chai Cafe",
+"counted": true,
+"snippet": "Chaayos Chai Cafe",
+"sheet_row": 19,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0021",
+"occurred_at": "2026-06-16T09:37:00.000000+00:00",
+"amount": 56000,
+"direction": "out",
+"description": "Zomato",
+"counted": true,
+"snippet": "Zomato",
+"sheet_row": 21,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0022",
+"occurred_at": "2026-06-16T10:48:00.000000+00:00",
+"amount": 18000,
+"direction": "out",
+"description": "Chaayos Chai Cafe",
+"counted": true,
+"snippet": "Chaayos Chai Cafe",
+"sheet_row": 22,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0023",
+"occurred_at": "2026-06-19T03:45:00.000000+00:00",
+"amount": 31500,
+"direction": "out",
+"description": "Blue Tokai Coffee Roasters",
+"counted": true,
+"snippet": "Blue Tokai Coffee Roasters",
+"sheet_row": 23,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0024",
+"occurred_at": "2026-06-20T13:16:00.000000+00:00",
+"amount": 6500,
+"direction": "out",
+"description": "Ola Cabs",
+"counted": true,
+"snippet": "Ola Cabs",
+"sheet_row": 24,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Travel"
+}
+},
+{
+"source_ref": "demo-0026",
+"occurred_at": "2026-06-23T05:21:00.000000+00:00",
+"amount": 21200,
+"direction": "out",
+"description": "Blinkit",
+"counted": true,
+"snippet": "Blinkit",
+"sheet_row": 26,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0025",
+"occurred_at": "2026-06-23T15:01:00.000000+00:00",
+"amount": 48600,
+"direction": "out",
+"description": "Shree Ganesh General Stores And Dairy Products Main Road",
+"counted": true,
+"snippet": "Shree Ganesh General Stores And Dairy Products Main Road",
+"sheet_row": 25,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0027",
+"occurred_at": "2026-06-24T07:05:00.000000+00:00",
+"amount": 26000,
+"direction": "out",
+"description": "Ola Cabs",
+"counted": true,
+"snippet": "Ola Cabs",
+"sheet_row": 27,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Travel"
+}
+},
+{
+"source_ref": "demo-0028",
+"occurred_at": "2026-06-24T07:26:00.000000+00:00",
+"amount": 9900,
+"direction": "out",
+"description": "Theobroma Patisserie",
+"counted": true,
+"snippet": "Theobroma Patisserie",
+"sheet_row": 28,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0030",
+"occurred_at": "2026-06-25T06:40:00.000000+00:00",
+"amount": 34800,
+"direction": "out",
+"description": "Blinkit",
+"counted": true,
+"snippet": "Blinkit",
+"sheet_row": 30,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0029",
+"occurred_at": "2026-06-25T15:11:00.000000+00:00",
+"amount": 6000,
+"direction": "out",
+"description": "Ravi Shankar",
+"counted": true,
+"snippet": "Ravi Shankar",
+"sheet_row": 29,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0031",
+"occurred_at": "2026-06-27T06:10:00.000000+00:00",
+"amount": 24900,
+"direction": "out",
+"description": "Zomato",
+"counted": true,
+"snippet": "Zomato",
+"sheet_row": 31,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0032",
+"occurred_at": "2026-06-28T16:57:00.000000+00:00",
+"amount": 14000,
+"direction": "out",
+"description": "City Metro Rail Corporation",
+"counted": true,
+"snippet": "City Metro Rail Corporation",
+"sheet_row": 32,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Travel"
+}
+},
+{
+"source_ref": "demo-0033",
+"occurred_at": "2026-06-29T04:46:00.000000+00:00",
+"amount": 9900,
+"direction": "out",
+"description": "Theobroma Patisserie",
+"counted": true,
+"snippet": "Theobroma Patisserie",
+"sheet_row": 33,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0034",
+"occurred_at": "2026-06-30T07:36:00.000000+00:00",
+"amount": 31500,
+"direction": "out",
+"description": "Swiggy",
+"counted": true,
+"snippet": "Swiggy",
+"sheet_row": 34,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0035",
+"occurred_at": "2026-06-30T11:27:00.000000+00:00",
+"amount": 6000,
+"direction": "out",
+"description": "Pooja Ganesh Naik",
+"counted": true,
+"snippet": "Pooja Ganesh Naik",
+"sheet_row": 35,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0037",
+"occurred_at": "2026-07-02T05:27:00.000000+00:00",
+"amount": 59900,
+"direction": "out",
+"description": "Decathlon Sports India",
+"counted": true,
+"snippet": "Decathlon Sports India",
+"sheet_row": 37,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Shopping"
+}
+},
+{
+"source_ref": "demo-0036",
+"occurred_at": "2026-07-02T11:43:00.000000+00:00",
+"amount": 112000,
+"direction": "out",
+"description": "Zepto",
+"counted": true,
+"snippet": "Zepto",
+"sheet_row": 36,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0038",
+"occurred_at": "2026-07-03T08:54:00.000000+00:00",
+"amount": 48600,
+"direction": "out",
+"description": "Amazon Pay In Grocery",
+"counted": true,
+"snippet": "Amazon Pay In Grocery",
+"sheet_row": 38,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0040",
+"occurred_at": "2026-07-04T02:56:00.000000+00:00",
+"amount": 14000,
+"direction": "out",
+"description": "Uber India Systems Pvt Ltd",
+"counted": true,
+"snippet": "Uber India Systems Pvt Ltd",
+"sheet_row": 40,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Travel"
+}
+},
+{
+"source_ref": "demo-0039",
+"occurred_at": "2026-07-04T09:32:00.000000+00:00",
+"amount": 24900,
+"direction": "out",
+"description": "Chaayos Chai Cafe",
+"counted": true,
+"snippet": "Chaayos Chai Cafe",
+"sheet_row": 39,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0041",
+"occurred_at": "2026-07-05T12:26:00.000000+00:00",
+"amount": 34800,
+"direction": "out",
+"description": "Blinkit",
+"counted": true,
+"snippet": "Blinkit",
+"sheet_row": 41,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0042",
+"occurred_at": "2026-07-07T03:34:00.000000+00:00",
+"amount": 24900,
+"direction": "out",
+"description": "Zomato",
+"counted": true,
+"snippet": "Zomato",
+"sheet_row": 42,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0043",
+"occurred_at": "2026-07-07T06:14:00.000000+00:00",
+"amount": 6000,
+"direction": "out",
+"description": "Sandeep Ukha Dhivar",
+"counted": true,
+"snippet": "Sandeep Ukha Dhivar",
+"sheet_row": 43,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0044",
+"occurred_at": "2026-07-07T09:26:00.000000+00:00",
+"amount": 112000,
+"direction": "out",
+"description": "Amazon Pay In Grocery",
+"counted": true,
+"snippet": "Amazon Pay In Grocery",
+"sheet_row": 44,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0045",
+"occurred_at": "2026-07-09T03:50:00.000000+00:00",
+"amount": 31500,
+"direction": "out",
+"description": "Theobroma Patisserie",
+"counted": true,
+"snippet": "Theobroma Patisserie",
+"sheet_row": 45,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0046",
+"occurred_at": "2026-07-09T13:45:00.000000+00:00",
+"amount": 18000,
+"direction": "out",
+"description": "Chaayos Chai Cafe",
+"counted": true,
+"snippet": "Chaayos Chai Cafe",
+"sheet_row": 46,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0047",
+"occurred_at": "2026-07-10T15:16:00.000000+00:00",
+"amount": 21200,
+"direction": "out",
+"description": "Zepto",
+"counted": true,
+"snippet": "Zepto",
+"sheet_row": 47,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0048",
+"occurred_at": "2026-07-10T16:57:00.000000+00:00",
+"amount": 59900,
+"direction": "out",
+"description": "Amazon Pay In E Commerce",
+"counted": true,
+"snippet": "Amazon Pay In E Commerce",
+"sheet_row": 48,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Shopping"
+}
+},
+{
+"source_ref": "demo-0049",
+"occurred_at": "2026-07-11T17:29:00.000000+00:00",
+"amount": 50000,
+"direction": "out",
+"description": "Ramesh Kumar Yadav",
+"counted": true,
+"snippet": "Ramesh Kumar Yadav",
+"sheet_row": 49,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0050",
+"occurred_at": "2026-07-12T03:06:00.000000+00:00",
+"amount": 26000,
+"direction": "out",
+"description": "Ola Cabs",
+"counted": true,
+"snippet": "Ola Cabs",
+"sheet_row": 50,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Travel"
+}
+},
+{
+"source_ref": "demo-0051",
+"occurred_at": "2026-07-12T04:28:00.000000+00:00",
+"amount": 14000,
+"direction": "out",
+"description": "Uber India Systems Pvt Ltd",
+"counted": true,
+"snippet": "Uber India Systems Pvt Ltd",
+"sheet_row": 51,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Travel"
+}
+},
+{
+"source_ref": "demo-0053",
+"occurred_at": "2026-07-14T10:27:00.000000+00:00",
+"amount": 2000,
+"direction": "out",
+"description": "Pooja Ganesh Naik",
+"counted": true,
+"snippet": "Pooja Ganesh Naik",
+"sheet_row": 53,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0052",
+"occurred_at": "2026-07-14T13:59:00.000000+00:00",
+"amount": 24900,
+"direction": "out",
+"description": "Chaayos Chai Cafe",
+"counted": true,
+"snippet": "Chaayos Chai Cafe",
+"sheet_row": 52,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0054",
+"occurred_at": "2026-07-15T11:28:00.000000+00:00",
+"amount": 389900,
+"direction": "out",
+"description": "Amazon Pay In E Commerce",
+"counted": true,
+"snippet": "Amazon Pay In E Commerce",
+"sheet_row": 54,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Shopping"
+}
+},
+{
+"source_ref": "demo-0055",
+"occurred_at": "2026-07-15T16:36:00.000000+00:00",
+"amount": 25000,
+"direction": "out",
+"description": "Pooja Ganesh Naik",
+"counted": true,
+"snippet": "Pooja Ganesh Naik",
+"sheet_row": 55,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0056",
+"occurred_at": "2026-07-16T12:18:00.000000+00:00",
+"amount": 18000,
+"direction": "out",
+"description": "Swiggy",
+"counted": true,
+"snippet": "Swiggy",
+"sheet_row": 56,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0057",
+"occurred_at": "2026-07-16T13:58:00.000000+00:00",
+"amount": 48000,
+"direction": "out",
+"description": "Uber India Systems Pvt Ltd",
+"counted": true,
+"snippet": "Uber India Systems Pvt Ltd",
+"sheet_row": 57,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Travel"
+}
+},
+{
+"source_ref": "demo-0058",
+"occurred_at": "2026-07-17T16:11:00.000000+00:00",
+"amount": 9900,
+"direction": "out",
+"description": "Zomato",
+"counted": true,
+"snippet": "Zomato",
+"sheet_row": 58,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0061",
+"occurred_at": "2026-07-19T02:32:00.000000+00:00",
+"amount": 18000,
+"direction": "out",
+"description": "Swiggy",
+"counted": true,
+"snippet": "Swiggy",
+"sheet_row": 61,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0059",
+"occurred_at": "2026-07-19T08:17:00.000000+00:00",
+"amount": 26000,
+"direction": "out",
+"description": "Indian Railway Catering And Tourism Corporation",
+"counted": true,
+"snippet": "Indian Railway Catering And Tourism Corporation",
+"sheet_row": 59,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Travel"
+}
+},
+{
+"source_ref": "demo-0060",
+"occurred_at": "2026-07-19T12:54:00.000000+00:00",
+"amount": 6500,
+"direction": "out",
+"description": "Uber India Systems Pvt Ltd",
+"counted": true,
+"snippet": "Uber India Systems Pvt Ltd",
+"sheet_row": 60,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Travel"
+}
+},
+{
+"source_ref": "demo-0062",
+"occurred_at": "2026-07-20T07:33:00.000000+00:00",
+"amount": 12000,
+"direction": "out",
+"description": "Sandeep Ukha Dhivar",
+"counted": true,
+"snippet": "Sandeep Ukha Dhivar",
+"sheet_row": 62,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0063",
+"occurred_at": "2026-07-21T11:14:00.000000+00:00",
+"amount": 9900,
+"direction": "out",
+"description": "Swiggy",
+"counted": true,
+"snippet": "Swiggy",
+"sheet_row": 63,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0064",
+"occurred_at": "2026-07-21T17:09:00.000000+00:00",
+"amount": 26000,
+"direction": "out",
+"description": "Ola Cabs",
+"counted": true,
+"snippet": "Ola Cabs",
+"sheet_row": 64,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Travel"
+}
+},
+{
+"source_ref": "demo-0066",
+"occurred_at": "2026-07-22T08:49:00.000000+00:00",
+"amount": 12000,
+"direction": "out",
+"description": "Mohammed Irfan Abdul Rashid Shaikh",
+"counted": true,
+"snippet": "Mohammed Irfan Abdul Rashid Shaikh",
+"sheet_row": 66,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0065",
+"occurred_at": "2026-07-22T12:13:00.000000+00:00",
+"amount": 249900,
+"direction": "out",
+"description": "Decathlon Sports India",
+"counted": true,
+"snippet": "Decathlon Sports India",
+"sheet_row": 65,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Shopping"
+}
+},
+{
+"source_ref": "demo-0069",
+"occurred_at": "2026-07-23T07:35:00.000000+00:00",
+"amount": 48000,
+"direction": "out",
+"description": "Ola Cabs",
+"counted": true,
+"snippet": "Ola Cabs",
+"sheet_row": 69,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Travel"
+}
+},
+{
+"source_ref": "demo-0067",
+"occurred_at": "2026-07-23T16:28:00.000000+00:00",
+"amount": 12000,
+"direction": "out",
+"description": "Sandeep Ukha Dhivar",
+"counted": true,
+"snippet": "Sandeep Ukha Dhivar",
+"sheet_row": 67,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0068",
+"occurred_at": "2026-07-23T16:33:00.000000+00:00",
+"amount": 50000,
+"direction": "out",
+"description": "Mohammed Irfan Abdul Rashid Shaikh",
+"counted": true,
+"snippet": "Mohammed Irfan Abdul Rashid Shaikh",
+"sheet_row": 68,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0071",
+"occurred_at": "2026-07-24T03:26:00.000000+00:00",
+"amount": 73000,
+"direction": "out",
+"description": "Shree Ganesh General Stores And Dairy Products Main Road",
+"counted": true,
+"snippet": "Shree Ganesh General Stores And Dairy Products Main Road",
+"sheet_row": 71,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0070",
+"occurred_at": "2026-07-24T03:44:00.000000+00:00",
+"amount": 59900,
+"direction": "out",
+"description": "Amazon Pay In E Commerce",
+"counted": true,
+"snippet": "Amazon Pay In E Commerce",
+"sheet_row": 70,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Shopping"
+}
+},
+{
+"source_ref": "demo-0073",
+"occurred_at": "2026-07-25T02:40:00.000000+00:00",
+"amount": 112000,
+"direction": "out",
+"description": "Zepto",
+"counted": true,
+"snippet": "Zepto",
+"sheet_row": 73,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0072",
+"occurred_at": "2026-07-25T05:49:00.000000+00:00",
+"amount": 59900,
+"direction": "out",
+"description": "Decathlon Sports India",
+"counted": true,
+"snippet": "Decathlon Sports India",
+"sheet_row": 72,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Shopping"
+}
+},
+{
+"source_ref": "demo-0075",
+"occurred_at": "2026-07-26T12:56:00.000000+00:00",
+"amount": 25000,
+"direction": "out",
+"description": "Pooja Ganesh Naik",
+"counted": true,
+"snippet": "Pooja Ganesh Naik",
+"sheet_row": 75,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0074",
+"occurred_at": "2026-07-26T13:53:00.000000+00:00",
+"amount": 48600,
+"direction": "out",
+"description": "Amazon Pay In Grocery",
+"counted": true,
+"snippet": "Amazon Pay In Grocery",
+"sheet_row": 74,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0076",
+"occurred_at": "2026-07-27T11:22:00.000000+00:00",
+"amount": 112000,
+"direction": "out",
+"description": "Zepto",
+"counted": true,
+"snippet": "Zepto",
+"sheet_row": 76,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0077",
+"occurred_at": "2026-07-28T11:03:00.000000+00:00",
+"amount": 56000,
+"direction": "out",
+"description": "Theobroma Patisserie",
+"counted": true,
+"snippet": "Theobroma Patisserie",
+"sheet_row": 77,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0078",
+"occurred_at": "2026-07-28T15:45:00.000000+00:00",
+"amount": 12000,
+"direction": "out",
+"description": "Ramesh Kumar Yadav",
+"counted": true,
+"snippet": "Ramesh Kumar Yadav",
+"sheet_row": 78,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0080",
+"occurred_at": "2026-07-29T03:56:00.000000+00:00",
+"amount": 18000,
+"direction": "out",
+"description": "Blue Tokai Coffee Roasters",
+"counted": true,
+"snippet": "Blue Tokai Coffee Roasters",
+"sheet_row": 80,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0081",
+"occurred_at": "2026-07-29T08:21:00.000000+00:00",
+"amount": 249900,
+"direction": "out",
+"description": "Decathlon Sports India",
+"counted": true,
+"snippet": "Decathlon Sports India",
+"sheet_row": 81,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Shopping"
+}
+},
+{
+"source_ref": "demo-0079",
+"occurred_at": "2026-07-29T17:27:00.000000+00:00",
+"amount": 6500,
+"direction": "out",
+"description": "Uber India Systems Pvt Ltd",
+"counted": true,
+"snippet": "Uber India Systems Pvt Ltd",
+"sheet_row": 79,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Travel"
+}
+},
+{
+"source_ref": "demo-0082",
+"occurred_at": "2026-07-30T09:57:00.000000+00:00",
+"amount": 42000,
+"direction": "out",
+"description": "Swiggy",
+"counted": true,
+"snippet": "Swiggy",
+"sheet_row": 82,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0083",
+"occurred_at": "2026-07-31T07:35:00.000000+00:00",
+"amount": 9900,
+"direction": "out",
+"description": "Swiggy",
+"counted": true,
+"snippet": "Swiggy",
+"sheet_row": 83,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0084",
+"occurred_at": "2026-08-01T02:33:00.000000+00:00",
+"amount": 18000,
+"direction": "out",
+"description": "Swiggy",
+"counted": true,
+"snippet": "Swiggy",
+"sheet_row": 84,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0085",
+"occurred_at": "2026-08-02T06:07:00.000000+00:00",
+"amount": 48000,
+"direction": "out",
+"description": "Uber India Systems Pvt Ltd",
+"counted": true,
+"snippet": "Uber India Systems Pvt Ltd",
+"sheet_row": 85,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Travel"
+}
+},
+{
+"source_ref": "demo-0086",
+"occurred_at": "2026-08-02T14:47:00.000000+00:00",
+"amount": 26000,
+"direction": "out",
+"description": "Ola Cabs",
+"counted": true,
+"snippet": "Ola Cabs",
+"sheet_row": 86,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Travel"
+}
+},
+{
+"source_ref": "demo-0088",
+"occurred_at": "2026-08-03T07:53:00.000000+00:00",
+"amount": 48600,
+"direction": "out",
+"description": "Shree Ganesh General Stores And Dairy Products Main Road",
+"counted": true,
+"snippet": "Shree Ganesh General Stores And Dairy Products Main Road",
+"sheet_row": 88,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0087",
+"occurred_at": "2026-08-03T09:31:00.000000+00:00",
+"amount": 389900,
+"direction": "out",
+"description": "Croma Infiniti Retail Limited",
+"counted": true,
+"snippet": "Croma Infiniti Retail Limited",
+"sheet_row": 87,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Shopping"
+}
+},
+{
+"source_ref": "demo-0090",
+"occurred_at": "2026-08-04T03:26:00.000000+00:00",
+"amount": 56000,
+"direction": "out",
+"description": "Theobroma Patisserie",
+"counted": true,
+"snippet": "Theobroma Patisserie",
+"sheet_row": 90,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0089",
+"occurred_at": "2026-08-04T04:23:00.000000+00:00",
+"amount": 48000,
+"direction": "out",
+"description": "City Metro Rail Corporation",
+"counted": true,
+"snippet": "City Metro Rail Corporation",
+"sheet_row": 89,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Travel"
+}
+},
+{
+"source_ref": "demo-0091",
+"occurred_at": "2026-08-04T04:23:00.000000+00:00",
+"amount": 14000,
+"direction": "out",
+"description": "Uber India Systems Pvt Ltd",
+"counted": true,
+"snippet": "Uber India Systems Pvt Ltd",
+"sheet_row": 91,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Travel"
+}
+},
+{
+"source_ref": "demo-0092",
+"occurred_at": "2026-08-08T03:10:00.000000+00:00",
+"amount": 26000,
+"direction": "out",
+"description": "City Metro Rail Corporation",
+"counted": true,
+"snippet": "City Metro Rail Corporation",
+"sheet_row": 92,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Travel"
+}
+},
+{
+"source_ref": "demo-0093",
+"occurred_at": "2026-08-08T13:08:00.000000+00:00",
+"amount": 112000,
+"direction": "out",
+"description": "Amazon Pay In Grocery",
+"counted": true,
+"snippet": "Amazon Pay In Grocery",
+"sheet_row": 93,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0094",
+"occurred_at": "2026-08-09T04:15:00.000000+00:00",
+"amount": 34800,
+"direction": "out",
+"description": "Zepto",
+"counted": true,
+"snippet": "Zepto",
+"sheet_row": 94,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0095",
+"occurred_at": "2026-08-09T08:51:00.000000+00:00",
+"amount": 50000,
+"direction": "out",
+"description": "Ravi Shankar",
+"counted": true,
+"snippet": "Ravi Shankar",
+"sheet_row": 95,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0097",
+"occurred_at": "2026-08-12T14:08:00.000000+00:00",
+"amount": 42000,
+"direction": "out",
+"description": "Zomato",
+"counted": true,
+"snippet": "Zomato",
+"sheet_row": 97,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0096",
+"occurred_at": "2026-08-12T16:40:00.000000+00:00",
+"amount": 34800,
+"direction": "out",
+"description": "Blinkit",
+"counted": true,
+"snippet": "Blinkit",
+"sheet_row": 96,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0098",
+"occurred_at": "2026-08-13T15:50:00.000000+00:00",
+"amount": 42000,
+"direction": "out",
+"description": "Blue Tokai Coffee Roasters",
+"counted": true,
+"snippet": "Blue Tokai Coffee Roasters",
+"sheet_row": 98,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0099",
+"occurred_at": "2026-08-14T16:41:00.000000+00:00",
+"amount": 21200,
+"direction": "out",
+"description": "Shree Ganesh General Stores And Dairy Products Main Road",
+"counted": true,
+"snippet": "Shree Ganesh General Stores And Dairy Products Main Road",
+"sheet_row": 99,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0100",
+"occurred_at": "2026-08-15T08:05:00.000000+00:00",
+"amount": 24900,
+"direction": "out",
+"description": "Chaayos Chai Cafe",
+"counted": true,
+"snippet": "Chaayos Chai Cafe",
+"sheet_row": 100,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0101",
+"occurred_at": "2026-08-16T07:48:00.000000+00:00",
+"amount": 112000,
+"direction": "out",
+"description": "Shree Ganesh General Stores And Dairy Products Main Road",
+"counted": true,
+"snippet": "Shree Ganesh General Stores And Dairy Products Main Road",
+"sheet_row": 101,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0102",
+"occurred_at": "2026-08-16T08:42:00.000000+00:00",
+"amount": 73000,
+"direction": "out",
+"description": "Shree Ganesh General Stores And Dairy Products Main Road",
+"counted": true,
+"snippet": "Shree Ganesh General Stores And Dairy Products Main Road",
+"sheet_row": 102,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0103",
+"occurred_at": "2026-08-17T02:33:00.000000+00:00",
+"amount": 6500,
+"direction": "out",
+"description": "Indian Railway Catering And Tourism Corporation",
+"counted": true,
+"snippet": "Indian Railway Catering And Tourism Corporation",
+"sheet_row": 103,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Travel"
+}
+},
+{
+"source_ref": "demo-0104",
+"occurred_at": "2026-08-17T10:15:00.000000+00:00",
+"amount": 56000,
+"direction": "out",
+"description": "Chaayos Chai Cafe",
+"counted": true,
+"snippet": "Chaayos Chai Cafe",
+"sheet_row": 104,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0105",
+"occurred_at": "2026-08-18T10:06:00.000000+00:00",
+"amount": 18000,
+"direction": "out",
+"description": "Theobroma Patisserie",
+"counted": true,
+"snippet": "Theobroma Patisserie",
+"sheet_row": 105,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0106",
+"occurred_at": "2026-08-18T10:48:00.000000+00:00",
+"amount": 112000,
+"direction": "out",
+"description": "Shree Ganesh General Stores And Dairy Products Main Road",
+"counted": true,
+"snippet": "Shree Ganesh General Stores And Dairy Products Main Road",
+"sheet_row": 106,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0107",
+"occurred_at": "2026-08-19T04:15:00.000000+00:00",
+"amount": 14000,
+"direction": "out",
+"description": "City Metro Rail Corporation",
+"counted": true,
+"snippet": "City Metro Rail Corporation",
+"sheet_row": 107,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Travel"
+}
+},
+{
+"source_ref": "demo-0108",
+"occurred_at": "2026-08-24T04:46:00.000000+00:00",
+"amount": 31500,
+"direction": "out",
+"description": "Chaayos Chai Cafe",
+"counted": true,
+"snippet": "Chaayos Chai Cafe",
+"sheet_row": 108,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0109",
+"occurred_at": "2026-08-24T14:04:00.000000+00:00",
+"amount": 389900,
+"direction": "out",
+"description": "Croma Infiniti Retail Limited",
+"counted": true,
+"snippet": "Croma Infiniti Retail Limited",
+"sheet_row": 109,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Shopping"
+}
+},
+{
+"source_ref": "demo-0111",
+"occurred_at": "2026-08-25T10:23:00.000000+00:00",
+"amount": 34800,
+"direction": "out",
+"description": "Blinkit",
+"counted": true,
+"snippet": "Blinkit",
+"sheet_row": 111,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0110",
+"occurred_at": "2026-08-25T11:27:00.000000+00:00",
+"amount": 21200,
+"direction": "out",
+"description": "Shree Ganesh General Stores And Dairy Products Main Road",
+"counted": true,
+"snippet": "Shree Ganesh General Stores And Dairy Products Main Road",
+"sheet_row": 110,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0112",
+"occurred_at": "2026-08-27T10:29:00.000000+00:00",
+"amount": 26000,
+"direction": "out",
+"description": "Uber India Systems Pvt Ltd",
+"counted": true,
+"snippet": "Uber India Systems Pvt Ltd",
+"sheet_row": 112,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Travel"
+}
+},
+{
+"source_ref": "demo-0114",
+"occurred_at": "2026-08-28T04:47:00.000000+00:00",
+"amount": 73000,
+"direction": "out",
+"description": "Shree Ganesh General Stores And Dairy Products Main Road",
+"counted": true,
+"snippet": "Shree Ganesh General Stores And Dairy Products Main Road",
+"sheet_row": 114,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0115",
+"occurred_at": "2026-08-28T04:54:00.000000+00:00",
+"amount": 9900,
+"direction": "out",
+"description": "Theobroma Patisserie",
+"counted": true,
+"snippet": "Theobroma Patisserie",
+"sheet_row": 115,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0113",
+"occurred_at": "2026-08-28T06:07:00.000000+00:00",
+"amount": 50000,
+"direction": "out",
+"description": "Pooja Ganesh Naik",
+"counted": true,
+"snippet": "Pooja Ganesh Naik",
+"sheet_row": 113,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0116",
+"occurred_at": "2026-08-29T03:25:00.000000+00:00",
+"amount": 26000,
+"direction": "out",
+"description": "City Metro Rail Corporation",
+"counted": true,
+"snippet": "City Metro Rail Corporation",
+"sheet_row": 116,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Travel"
+}
+},
+{
+"source_ref": "demo-0117",
+"occurred_at": "2026-08-30T03:25:00.000000+00:00",
+"amount": 21200,
+"direction": "out",
+"description": "Zepto",
+"counted": true,
+"snippet": "Zepto",
+"sheet_row": 117,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0118",
+"occurred_at": "2026-08-30T11:27:00.000000+00:00",
+"amount": 59900,
+"direction": "out",
+"description": "Myntra Designs Private Limited",
+"counted": true,
+"snippet": "Myntra Designs Private Limited",
+"sheet_row": 118,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Shopping"
+}
+},
+{
+"source_ref": "demo-0119",
+"occurred_at": "2026-08-31T04:20:00.000000+00:00",
+"amount": 42000,
+"direction": "out",
+"description": "Chaayos Chai Cafe",
+"counted": true,
+"snippet": "Chaayos Chai Cafe",
+"sheet_row": 119,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0120",
+"occurred_at": "2026-08-31T15:54:00.000000+00:00",
+"amount": 21200,
+"direction": "out",
+"description": "Shree Ganesh General Stores And Dairy Products Main Road",
+"counted": true,
+"snippet": "Shree Ganesh General Stores And Dairy Products Main Road",
+"sheet_row": 120,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0122",
+"occurred_at": "2026-09-01T08:47:00.000000+00:00",
+"amount": 9900,
+"direction": "out",
+"description": "Chaayos Chai Cafe",
+"counted": true,
+"snippet": "Chaayos Chai Cafe",
+"sheet_row": 122,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0121",
+"occurred_at": "2026-09-01T12:37:00.000000+00:00",
+"amount": 112000,
+"direction": "out",
+"description": "Blinkit",
+"counted": true,
+"snippet": "Blinkit",
+"sheet_row": 121,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0123",
+"occurred_at": "2026-09-03T13:39:00.000000+00:00",
+"amount": 24900,
+"direction": "out",
+"description": "Theobroma Patisserie",
+"counted": true,
+"snippet": "Theobroma Patisserie",
+"sheet_row": 123,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0124",
+"occurred_at": "2026-09-03T16:34:00.000000+00:00",
+"amount": 31500,
+"direction": "out",
+"description": "Theobroma Patisserie",
+"counted": true,
+"snippet": "Theobroma Patisserie",
+"sheet_row": 124,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0126",
+"occurred_at": "2026-09-05T07:26:00.000000+00:00",
+"amount": 14000,
+"direction": "out",
+"description": "Ola Cabs",
+"counted": true,
+"snippet": "Ola Cabs",
+"sheet_row": 126,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Travel"
+}
+},
+{
+"source_ref": "demo-0125",
+"occurred_at": "2026-09-05T12:06:00.000000+00:00",
+"amount": 31500,
+"direction": "out",
+"description": "Theobroma Patisserie",
+"counted": true,
+"snippet": "Theobroma Patisserie",
+"sheet_row": 125,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0127",
+"occurred_at": "2026-09-06T08:53:00.000000+00:00",
+"amount": 42000,
+"direction": "out",
+"description": "Theobroma Patisserie",
+"counted": true,
+"snippet": "Theobroma Patisserie",
+"sheet_row": 127,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0128",
+"occurred_at": "2026-09-07T16:25:00.000000+00:00",
+"amount": 50000,
+"direction": "out",
+"description": "Mohammed Irfan Abdul Rashid Shaikh",
+"counted": true,
+"snippet": "Mohammed Irfan Abdul Rashid Shaikh",
+"sheet_row": 128,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0129",
+"occurred_at": "2026-09-07T17:25:00.000000+00:00",
+"amount": 2000,
+"direction": "out",
+"description": "Ravi Shankar",
+"counted": true,
+"snippet": "Ravi Shankar",
+"sheet_row": 129,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0130",
+"occurred_at": "2026-09-08T06:45:00.000000+00:00",
+"amount": 31500,
+"direction": "out",
+"description": "Zomato",
+"counted": true,
+"snippet": "Zomato",
+"sheet_row": 130,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0131",
+"occurred_at": "2026-09-09T04:42:00.000000+00:00",
+"amount": 129900,
+"direction": "out",
+"description": "Decathlon Sports India",
+"counted": true,
+"snippet": "Decathlon Sports India",
+"sheet_row": 131,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Shopping"
+}
+},
+{
+"source_ref": "demo-0132",
+"occurred_at": "2026-09-10T09:27:00.000000+00:00",
+"amount": 50000,
+"direction": "out",
+"description": "Sandeep Ukha Dhivar",
+"counted": true,
+"snippet": "Sandeep Ukha Dhivar",
+"sheet_row": 132,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0134",
+"occurred_at": "2026-09-11T03:33:00.000000+00:00",
+"amount": 50000,
+"direction": "out",
+"description": "Mohammed Irfan Abdul Rashid Shaikh",
+"counted": true,
+"snippet": "Mohammed Irfan Abdul Rashid Shaikh",
+"sheet_row": 134,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0133",
+"occurred_at": "2026-09-11T12:34:00.000000+00:00",
+"amount": 50000,
+"direction": "out",
+"description": "Ravi Shankar",
+"counted": true,
+"snippet": "Ravi Shankar",
+"sheet_row": 133,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0135",
+"occurred_at": "2026-09-12T10:10:00.000000+00:00",
+"amount": 24900,
+"direction": "out",
+"description": "Swiggy",
+"counted": true,
+"snippet": "Swiggy",
+"sheet_row": 135,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0136",
+"occurred_at": "2026-09-13T09:03:00.000000+00:00",
+"amount": 56000,
+"direction": "out",
+"description": "Zomato",
+"counted": true,
+"snippet": "Zomato",
+"sheet_row": 136,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0138",
+"occurred_at": "2026-09-14T08:55:00.000000+00:00",
+"amount": 59900,
+"direction": "out",
+"description": "Amazon Pay In E Commerce",
+"counted": true,
+"snippet": "Amazon Pay In E Commerce",
+"sheet_row": 138,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Shopping"
+}
+},
+{
+"source_ref": "demo-0137",
+"occurred_at": "2026-09-14T14:02:00.000000+00:00",
+"amount": 73000,
+"direction": "out",
+"description": "Amazon Pay In Grocery",
+"counted": true,
+"snippet": "Amazon Pay In Grocery",
+"sheet_row": 137,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0139",
+"occurred_at": "2026-09-16T07:12:00.000000+00:00",
+"amount": 48000,
+"direction": "out",
+"description": "Uber India Systems Pvt Ltd",
+"counted": true,
+"snippet": "Uber India Systems Pvt Ltd",
+"sheet_row": 139,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Travel"
+}
+},
+{
+"source_ref": "demo-0140",
+"occurred_at": "2026-09-16T07:27:00.000000+00:00",
+"amount": 48600,
+"direction": "out",
+"description": "Shree Ganesh General Stores And Dairy Products Main Road",
+"counted": true,
+"snippet": "Shree Ganesh General Stores And Dairy Products Main Road",
+"sheet_row": 140,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0141",
+"occurred_at": "2026-09-17T04:01:00.000000+00:00",
+"amount": 48600,
+"direction": "out",
+"description": "Blinkit",
+"counted": true,
+"snippet": "Blinkit",
+"sheet_row": 141,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0143",
+"occurred_at": "2026-09-18T04:54:00.000000+00:00",
+"amount": 73000,
+"direction": "out",
+"description": "Shree Ganesh General Stores And Dairy Products Main Road",
+"counted": true,
+"snippet": "Shree Ganesh General Stores And Dairy Products Main Road",
+"sheet_row": 143,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0142",
+"occurred_at": "2026-09-18T13:04:00.000000+00:00",
+"amount": 48000,
+"direction": "out",
+"description": "Ola Cabs",
+"counted": true,
+"snippet": "Ola Cabs",
+"sheet_row": 142,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Travel"
+}
+},
+{
+"source_ref": "demo-0144",
+"occurred_at": "2026-09-19T04:19:00.000000+00:00",
+"amount": 42000,
+"direction": "out",
+"description": "Zomato",
+"counted": true,
+"snippet": "Zomato",
+"sheet_row": 144,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0146",
+"occurred_at": "2026-09-21T12:10:00.000000+00:00",
+"amount": 9900,
+"direction": "out",
+"description": "Blue Tokai Coffee Roasters",
+"counted": true,
+"snippet": "Blue Tokai Coffee Roasters",
+"sheet_row": 146,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0145",
+"occurred_at": "2026-09-21T15:24:00.000000+00:00",
+"amount": 112000,
+"direction": "out",
+"description": "Zepto",
+"counted": true,
+"snippet": "Zepto",
+"sheet_row": 145,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0147",
+"occurred_at": "2026-09-22T08:24:00.000000+00:00",
+"amount": 12000,
+"direction": "out",
+"description": "Sandeep Ukha Dhivar",
+"counted": true,
+"snippet": "Sandeep Ukha Dhivar",
+"sheet_row": 147,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0148",
+"occurred_at": "2026-09-23T15:33:00.000000+00:00",
+"amount": 42000,
+"direction": "out",
+"description": "Blue Tokai Coffee Roasters",
+"counted": true,
+"snippet": "Blue Tokai Coffee Roasters",
+"sheet_row": 148,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0149",
+"occurred_at": "2026-09-25T13:53:00.000000+00:00",
+"amount": 112000,
+"direction": "out",
+"description": "Blinkit",
+"counted": true,
+"snippet": "Blinkit",
+"sheet_row": 149,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0150",
+"occurred_at": "2026-09-25T16:43:00.000000+00:00",
+"amount": 34800,
+"direction": "out",
+"description": "Shree Ganesh General Stores And Dairy Products Main Road",
+"counted": true,
+"snippet": "Shree Ganesh General Stores And Dairy Products Main Road",
+"sheet_row": 150,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0153",
+"occurred_at": "2026-09-27T08:57:00.000000+00:00",
+"amount": 34800,
+"direction": "out",
+"description": "Blinkit",
+"counted": true,
+"snippet": "Blinkit",
+"sheet_row": 153,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0151",
+"occurred_at": "2026-09-27T12:01:00.000000+00:00",
+"amount": 25000,
+"direction": "out",
+"description": "Pooja Ganesh Naik",
+"counted": true,
+"snippet": "Pooja Ganesh Naik",
+"sheet_row": 151,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0152",
+"occurred_at": "2026-09-27T16:41:00.000000+00:00",
+"amount": 48000,
+"direction": "out",
+"description": "Indian Railway Catering And Tourism Corporation",
+"counted": true,
+"snippet": "Indian Railway Catering And Tourism Corporation",
+"sheet_row": 152,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Travel"
+}
+},
+{
+"source_ref": "demo-0155",
+"occurred_at": "2026-09-29T12:55:00.000000+00:00",
+"amount": 112000,
+"direction": "out",
+"description": "Zepto",
+"counted": true,
+"snippet": "Zepto",
+"sheet_row": 155,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0154",
+"occurred_at": "2026-09-29T16:16:00.000000+00:00",
+"amount": 112000,
+"direction": "out",
+"description": "Blinkit",
+"counted": true,
+"snippet": "Blinkit",
+"sheet_row": 154,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0157",
+"occurred_at": "2026-10-01T05:17:00.000000+00:00",
+"amount": 2000,
+"direction": "out",
+"description": "Ravi Shankar",
+"counted": true,
+"snippet": "Ravi Shankar",
+"sheet_row": 157,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0158",
+"occurred_at": "2026-10-01T16:20:00.000000+00:00",
+"amount": 34800,
+"direction": "out",
+"description": "Zepto",
+"counted": true,
+"snippet": "Zepto",
+"sheet_row": 158,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0156",
+"occurred_at": "2026-10-01T17:02:00.000000+00:00",
+"amount": 26000,
+"direction": "out",
+"description": "Indian Railway Catering And Tourism Corporation",
+"counted": true,
+"snippet": "Indian Railway Catering And Tourism Corporation",
+"sheet_row": 156,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Travel"
+}
+},
+{
+"source_ref": "demo-0159",
+"occurred_at": "2026-10-02T07:53:00.000000+00:00",
+"amount": 50000,
+"direction": "out",
+"description": "Pooja Ganesh Naik",
+"counted": true,
+"snippet": "Pooja Ganesh Naik",
+"sheet_row": 159,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0161",
+"occurred_at": "2026-10-03T03:51:00.000000+00:00",
+"amount": 9900,
+"direction": "out",
+"description": "Swiggy",
+"counted": true,
+"snippet": "Swiggy",
+"sheet_row": 161,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0162",
+"occurred_at": "2026-10-03T13:00:00.000000+00:00",
+"amount": 48600,
+"direction": "out",
+"description": "Zepto",
+"counted": true,
+"snippet": "Zepto",
+"sheet_row": 162,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0160",
+"occurred_at": "2026-10-03T13:32:00.000000+00:00",
+"amount": 14000,
+"direction": "out",
+"description": "Indian Railway Catering And Tourism Corporation",
+"counted": true,
+"snippet": "Indian Railway Catering And Tourism Corporation",
+"sheet_row": 160,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Travel"
+}
+},
+{
+"source_ref": "demo-0164",
+"occurred_at": "2026-10-04T07:03:00.000000+00:00",
+"amount": 56000,
+"direction": "out",
+"description": "Blue Tokai Coffee Roasters",
+"counted": true,
+"snippet": "Blue Tokai Coffee Roasters",
+"sheet_row": 164,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0163",
+"occurred_at": "2026-10-04T12:20:00.000000+00:00",
+"amount": 42000,
+"direction": "out",
+"description": "Chaayos Chai Cafe",
+"counted": true,
+"snippet": "Chaayos Chai Cafe",
+"sheet_row": 163,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0165",
+"occurred_at": "2026-10-05T09:07:00.000000+00:00",
+"amount": 9900,
+"direction": "out",
+"description": "Theobroma Patisserie",
+"counted": true,
+"snippet": "Theobroma Patisserie",
+"sheet_row": 165,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0166",
+"occurred_at": "2026-10-05T09:26:00.000000+00:00",
+"amount": 50000,
+"direction": "out",
+"description": "Pooja Ganesh Naik",
+"counted": true,
+"snippet": "Pooja Ganesh Naik",
+"sheet_row": 166,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0167",
+"occurred_at": "2026-10-06T04:24:00.000000+00:00",
+"amount": 14000,
+"direction": "out",
+"description": "Ola Cabs",
+"counted": true,
+"snippet": "Ola Cabs",
+"sheet_row": 167,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Travel"
+}
+},
+{
+"source_ref": "demo-0258",
+"occurred_at": "2026-10-08T12:16:00.000000+00:00",
+"amount": 41250,
+"direction": "in",
+"description": "Kailash Parbat Refund UPI Reversal",
+"counted": false,
+"snippet": "Kailash Parbat Refund UPI Reversal",
+"sheet_row": 258,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Refunds"
+}
+},
+{
+"source_ref": "demo-0169",
+"occurred_at": "2026-10-09T04:06:00.000000+00:00",
+"amount": 9900,
+"direction": "out",
+"description": "Swiggy",
+"counted": true,
+"snippet": "Swiggy",
+"sheet_row": 169,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0168",
+"occurred_at": "2026-10-09T16:13:00.000000+00:00",
+"amount": 56000,
+"direction": "out",
+"description": "Zomato",
+"counted": true,
+"snippet": "Zomato",
+"sheet_row": 168,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0172",
+"occurred_at": "2026-10-10T03:18:00.000000+00:00",
+"amount": 42000,
+"direction": "out",
+"description": "Swiggy",
+"counted": true,
+"snippet": "Swiggy",
+"sheet_row": 172,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0170",
+"occurred_at": "2026-10-10T08:56:00.000000+00:00",
+"amount": 48600,
+"direction": "out",
+"description": "Blinkit",
+"counted": true,
+"snippet": "Blinkit",
+"sheet_row": 170,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0171",
+"occurred_at": "2026-10-10T17:28:00.000000+00:00",
+"amount": 31500,
+"direction": "out",
+"description": "Blue Tokai Coffee Roasters",
+"counted": true,
+"snippet": "Blue Tokai Coffee Roasters",
+"sheet_row": 171,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0265",
+"occurred_at": "2026-10-12T06:30:00.000000+00:00",
+"amount": 945000,
+"direction": "in",
+"description": "Phone 9,450 converted to EMI",
+"counted": false,
+"snippet": "Phone 9,450 converted to EMI",
+"sheet_row": 265,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Money in"
+}
+},
+{
+"source_ref": "demo-0266",
+"occurred_at": "2026-10-12T06:31:00.000000+00:00",
+"amount": 327135,
+"direction": "out",
+"description": "Phone EMI 1 of 3 (3,103.20 + 142.50 interest + 25.65 GST)",
+"counted": true,
+"snippet": "Phone EMI 1 of 3 (3,103.20 + 142.50 interest + 25.65 GST)",
+"sheet_row": 266,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Shopping"
+}
+},
+{
+"source_ref": "demo-0174",
+"occurred_at": "2026-10-12T08:43:00.000000+00:00",
+"amount": 42000,
+"direction": "out",
+"description": "Zomato",
+"counted": true,
+"snippet": "Zomato",
+"sheet_row": 174,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0175",
+"occurred_at": "2026-10-12T10:30:00.000000+00:00",
+"amount": 48600,
+"direction": "out",
+"description": "Amazon Pay In Grocery",
+"counted": true,
+"snippet": "Amazon Pay In Grocery",
+"sheet_row": 175,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0173",
+"occurred_at": "2026-10-12T16:07:00.000000+00:00",
+"amount": 26000,
+"direction": "out",
+"description": "Uber India Systems Pvt Ltd",
+"counted": true,
+"snippet": "Uber India Systems Pvt Ltd",
+"sheet_row": 173,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Travel"
+}
+},
+{
+"source_ref": "demo-0176",
+"occurred_at": "2026-10-13T02:38:00.000000+00:00",
+"amount": 48000,
+"direction": "out",
+"description": "Uber India Systems Pvt Ltd",
+"counted": true,
+"snippet": "Uber India Systems Pvt Ltd",
+"sheet_row": 176,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Travel"
+}
+},
+{
+"source_ref": "demo-0177",
+"occurred_at": "2026-10-14T08:32:00.000000+00:00",
+"amount": 31500,
+"direction": "out",
+"description": "Swiggy",
+"counted": true,
+"snippet": "Swiggy",
+"sheet_row": 177,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0179",
+"occurred_at": "2026-10-15T06:39:00.000000+00:00",
+"amount": 112000,
+"direction": "out",
+"description": "Amazon Pay In Grocery",
+"counted": true,
+"snippet": "Amazon Pay In Grocery",
+"sheet_row": 179,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0180",
+"occurred_at": "2026-10-15T07:51:00.000000+00:00",
+"amount": 2000,
+"direction": "out",
+"description": "Mohammed Irfan Abdul Rashid Shaikh",
+"counted": true,
+"snippet": "Mohammed Irfan Abdul Rashid Shaikh",
+"sheet_row": 180,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0178",
+"occurred_at": "2026-10-15T15:59:00.000000+00:00",
+"amount": 18000,
+"direction": "out",
+"description": "Chaayos Chai Cafe",
+"counted": true,
+"snippet": "Chaayos Chai Cafe",
+"sheet_row": 178,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0181",
+"occurred_at": "2026-10-17T03:55:00.000000+00:00",
+"amount": 26000,
+"direction": "out",
+"description": "Uber India Systems Pvt Ltd",
+"counted": true,
+"snippet": "Uber India Systems Pvt Ltd",
+"sheet_row": 181,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Travel"
+}
+},
+{
+"source_ref": "demo-0182",
+"occurred_at": "2026-10-17T07:24:00.000000+00:00",
+"amount": 9900,
+"direction": "out",
+"description": "Theobroma Patisserie",
+"counted": true,
+"snippet": "Theobroma Patisserie",
+"sheet_row": 182,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0183",
+"occurred_at": "2026-10-17T08:58:00.000000+00:00",
+"amount": 21200,
+"direction": "out",
+"description": "Amazon Pay In Grocery",
+"counted": true,
+"snippet": "Amazon Pay In Grocery",
+"sheet_row": 183,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0185",
+"occurred_at": "2026-10-18T10:35:00.000000+00:00",
+"amount": 112000,
+"direction": "out",
+"description": "Amazon Pay In Grocery",
+"counted": true,
+"snippet": "Amazon Pay In Grocery",
+"sheet_row": 185,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0184",
+"occurred_at": "2026-10-18T10:54:00.000000+00:00",
+"amount": 6000,
+"direction": "out",
+"description": "Pooja Ganesh Naik",
+"counted": true,
+"snippet": "Pooja Ganesh Naik",
+"sheet_row": 184,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0187",
+"occurred_at": "2026-10-19T05:45:00.000000+00:00",
+"amount": 26000,
+"direction": "out",
+"description": "City Metro Rail Corporation",
+"counted": true,
+"snippet": "City Metro Rail Corporation",
+"sheet_row": 187,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Travel"
+}
+},
+{
+"source_ref": "demo-0186",
+"occurred_at": "2026-10-19T14:09:00.000000+00:00",
+"amount": 24900,
+"direction": "out",
+"description": "Zomato",
+"counted": true,
+"snippet": "Zomato",
+"sheet_row": 186,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0188",
+"occurred_at": "2026-10-20T11:51:00.000000+00:00",
+"amount": 24900,
+"direction": "out",
+"description": "Zomato",
+"counted": true,
+"snippet": "Zomato",
+"sheet_row": 188,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0189",
+"occurred_at": "2026-10-20T12:09:00.000000+00:00",
+"amount": 48600,
+"direction": "out",
+"description": "Amazon Pay In Grocery",
+"counted": true,
+"snippet": "Amazon Pay In Grocery",
+"sheet_row": 189,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0191",
+"occurred_at": "2026-10-21T05:11:00.000000+00:00",
+"amount": 56000,
+"direction": "out",
+"description": "Blue Tokai Coffee Roasters",
+"counted": true,
+"snippet": "Blue Tokai Coffee Roasters",
+"sheet_row": 191,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0190",
+"occurred_at": "2026-10-21T11:58:00.000000+00:00",
+"amount": 48600,
+"direction": "out",
+"description": "Amazon Pay In Grocery",
+"counted": true,
+"snippet": "Amazon Pay In Grocery",
+"sheet_row": 190,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0192",
+"occurred_at": "2026-10-22T03:03:00.000000+00:00",
+"amount": 25000,
+"direction": "out",
+"description": "Pooja Ganesh Naik",
+"counted": true,
+"snippet": "Pooja Ganesh Naik",
+"sheet_row": 192,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0194",
+"occurred_at": "2026-10-22T04:04:00.000000+00:00",
+"amount": 9900,
+"direction": "out",
+"description": "Zomato",
+"counted": true,
+"snippet": "Zomato",
+"sheet_row": 194,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0193",
+"occurred_at": "2026-10-22T14:02:00.000000+00:00",
+"amount": 18000,
+"direction": "out",
+"description": "Theobroma Patisserie",
+"counted": true,
+"snippet": "Theobroma Patisserie",
+"sheet_row": 193,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0195",
+"occurred_at": "2026-10-23T05:05:00.000000+00:00",
+"amount": 112000,
+"direction": "out",
+"description": "Amazon Pay In Grocery",
+"counted": true,
+"snippet": "Amazon Pay In Grocery",
+"sheet_row": 195,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0196",
+"occurred_at": "2026-10-24T03:06:00.000000+00:00",
+"amount": 6500,
+"direction": "out",
+"description": "Indian Railway Catering And Tourism Corporation",
+"counted": true,
+"snippet": "Indian Railway Catering And Tourism Corporation",
+"sheet_row": 196,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Travel"
+}
+},
+{
+"source_ref": "demo-0198",
+"occurred_at": "2026-10-24T09:29:00.000000+00:00",
+"amount": 34800,
+"direction": "out",
+"description": "Zepto",
+"counted": true,
+"snippet": "Zepto",
+"sheet_row": 198,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0197",
+"occurred_at": "2026-10-24T15:31:00.000000+00:00",
+"amount": 31500,
+"direction": "out",
+"description": "Blue Tokai Coffee Roasters",
+"counted": true,
+"snippet": "Blue Tokai Coffee Roasters",
+"sheet_row": 197,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0200",
+"occurred_at": "2026-10-25T07:33:00.000000+00:00",
+"amount": 56000,
+"direction": "out",
+"description": "Chaayos Chai Cafe",
+"counted": true,
+"snippet": "Chaayos Chai Cafe",
+"sheet_row": 200,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0199",
+"occurred_at": "2026-10-25T08:00:00.000000+00:00",
+"amount": 73000,
+"direction": "out",
+"description": "Zepto",
+"counted": true,
+"snippet": "Zepto",
+"sheet_row": 199,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0201",
+"occurred_at": "2026-10-26T11:42:00.000000+00:00",
+"amount": 12000,
+"direction": "out",
+"description": "Pooja Ganesh Naik",
+"counted": true,
+"snippet": "Pooja Ganesh Naik",
+"sheet_row": 201,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0202",
+"occurred_at": "2026-10-28T02:39:00.000000+00:00",
+"amount": 42000,
+"direction": "out",
+"description": "Swiggy",
+"counted": true,
+"snippet": "Swiggy",
+"sheet_row": 202,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0203",
+"occurred_at": "2026-10-28T16:33:00.000000+00:00",
+"amount": 56000,
+"direction": "out",
+"description": "Zomato",
+"counted": true,
+"snippet": "Zomato",
+"sheet_row": 203,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0204",
+"occurred_at": "2026-10-29T13:28:00.000000+00:00",
+"amount": 21200,
+"direction": "out",
+"description": "Zepto",
+"counted": true,
+"snippet": "Zepto",
+"sheet_row": 204,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0205",
+"occurred_at": "2026-10-29T15:04:00.000000+00:00",
+"amount": 50000,
+"direction": "out",
+"description": "Ravi Shankar",
+"counted": true,
+"snippet": "Ravi Shankar",
+"sheet_row": 205,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0255",
+"occurred_at": "2026-10-30T04:35:00.000000+00:00",
+"amount": 4126000,
+"direction": "in",
+"description": "NEFT CR NIMBUS SOFTWARE PVT LTD SALARY OCT 2026",
+"counted": false,
+"snippet": "NEFT CR NIMBUS SOFTWARE PVT LTD SALARY OCT 2026",
+"sheet_row": 255,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Money in"
+}
+},
+{
+"source_ref": "demo-0206",
+"occurred_at": "2026-10-30T09:47:00.000000+00:00",
+"amount": 6000,
+"direction": "out",
+"description": "Ravi Shankar",
+"counted": true,
+"snippet": "Ravi Shankar",
+"sheet_row": 206,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0273",
+"occurred_at": "2026-10-30T15:32:00.000000+00:00",
+"amount": 690000,
+"direction": "out",
+"description": "CRED Club",
+"counted": true,
+"snippet": "CRED Club",
+"sheet_row": 273,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Cash & transfers"
+}
+},
+{
+"source_ref": "demo-0271",
+"occurred_at": "2026-11-01T14:34:00.000000+00:00",
+"amount": 742000,
+"direction": "out",
+"description": "CRED Club",
+"counted": true,
+"snippet": "CRED Club",
+"sheet_row": 271,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Cash & transfers"
+}
+},
+{
+"source_ref": "demo-0207",
+"occurred_at": "2026-11-02T11:50:00.000000+00:00",
+"amount": 34800,
+"direction": "out",
+"description": "Zepto",
+"counted": true,
+"snippet": "Zepto",
+"sheet_row": 207,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0208",
+"occurred_at": "2026-11-03T12:26:00.000000+00:00",
+"amount": 6000,
+"direction": "out",
+"description": "Pooja Ganesh Naik",
+"counted": true,
+"snippet": "Pooja Ganesh Naik",
+"sheet_row": 208,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0262",
+"occurred_at": "2026-11-03T21:42:00.000000+00:00",
+"amount": 133900,
+"direction": "out",
+"description": "Netflix.com (USD 15.49 at Rs 86.45)",
+"counted": true,
+"snippet": "Netflix.com (USD 15.49 at Rs 86.45)",
+"sheet_row": 262,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Bills & subscriptions"
+}
+},
+{
+"source_ref": "demo-0210",
+"occurred_at": "2026-11-04T06:01:00.000000+00:00",
+"amount": 21200,
+"direction": "out",
+"description": "Amazon Pay In Grocery",
+"counted": true,
+"snippet": "Amazon Pay In Grocery",
+"sheet_row": 210,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0209",
+"occurred_at": "2026-11-04T15:47:00.000000+00:00",
+"amount": 31500,
+"direction": "out",
+"description": "Chaayos Chai Cafe",
+"counted": true,
+"snippet": "Chaayos Chai Cafe",
+"sheet_row": 209,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0211",
+"occurred_at": "2026-11-07T08:09:00.000000+00:00",
+"amount": 48600,
+"direction": "out",
+"description": "Amazon Pay In Grocery",
+"counted": true,
+"snippet": "Amazon Pay In Grocery",
+"sheet_row": 211,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0213",
+"occurred_at": "2026-11-08T03:38:00.000000+00:00",
+"amount": 12000,
+"direction": "out",
+"description": "Mohammed Irfan Abdul Rashid Shaikh",
+"counted": true,
+"snippet": "Mohammed Irfan Abdul Rashid Shaikh",
+"sheet_row": 213,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0212",
+"occurred_at": "2026-11-08T13:53:00.000000+00:00",
+"amount": 48600,
+"direction": "out",
+"description": "Blinkit",
+"counted": true,
+"snippet": "Blinkit",
+"sheet_row": 212,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0214",
+"occurred_at": "2026-11-10T11:00:00.000000+00:00",
+"amount": 48600,
+"direction": "out",
+"description": "Amazon Pay In Grocery",
+"counted": true,
+"snippet": "Amazon Pay In Grocery",
+"sheet_row": 214,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0215",
+"occurred_at": "2026-11-11T04:55:00.000000+00:00",
+"amount": 48600,
+"direction": "out",
+"description": "Amazon Pay In Grocery",
+"counted": true,
+"snippet": "Amazon Pay In Grocery",
+"sheet_row": 215,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0216",
+"occurred_at": "2026-11-11T14:01:00.000000+00:00",
+"amount": 389900,
+"direction": "out",
+"description": "Croma Infiniti Retail Limited",
+"counted": true,
+"snippet": "Croma Infiniti Retail Limited",
+"sheet_row": 216,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Shopping"
+}
+},
+{
+"source_ref": "demo-0267",
+"occurred_at": "2026-11-12T06:30:00.000000+00:00",
+"amount": 326234,
+"direction": "out",
+"description": "Phone EMI 2 of 3 (3,150.00 + 95.20 interest + 17.14 GST)",
+"counted": true,
+"snippet": "Phone EMI 2 of 3 (3,150.00 + 95.20 interest + 17.14 GST)",
+"sheet_row": 267,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Shopping"
+}
+},
+{
+"source_ref": "demo-0217",
+"occurred_at": "2026-11-12T08:19:00.000000+00:00",
+"amount": 24900,
+"direction": "out",
+"description": "Blue Tokai Coffee Roasters",
+"counted": true,
+"snippet": "Blue Tokai Coffee Roasters",
+"sheet_row": 217,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0219",
+"occurred_at": "2026-11-13T12:47:00.000000+00:00",
+"amount": 50000,
+"direction": "out",
+"description": "Pooja Ganesh Naik",
+"counted": true,
+"snippet": "Pooja Ganesh Naik",
+"sheet_row": 219,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0218",
+"occurred_at": "2026-11-13T13:03:00.000000+00:00",
+"amount": 26000,
+"direction": "out",
+"description": "City Metro Rail Corporation",
+"counted": true,
+"snippet": "City Metro Rail Corporation",
+"sheet_row": 218,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Travel"
+}
+},
+{
+"source_ref": "demo-0220",
+"occurred_at": "2026-11-14T04:37:00.000000+00:00",
+"amount": 6000,
+"direction": "out",
+"description": "Mohammed Irfan Abdul Rashid Shaikh",
+"counted": true,
+"snippet": "Mohammed Irfan Abdul Rashid Shaikh",
+"sheet_row": 220,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0221",
+"occurred_at": "2026-11-14T06:20:00.000000+00:00",
+"amount": 50000,
+"direction": "out",
+"description": "Ramesh Kumar Yadav",
+"counted": true,
+"snippet": "Ramesh Kumar Yadav",
+"sheet_row": 221,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0274",
+"occurred_at": "2026-11-14T07:28:00.000000+00:00",
+"amount": 865000,
+"direction": "out",
+"description": "Bharat Petroleum Corporation Ltd Highway Service Station",
+"counted": true,
+"snippet": "Bharat Petroleum Corporation Ltd Highway Service Station",
+"sheet_row": 274,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Harbour Card XX4444",
+"miles"
+]
+},
+"categories": {
+"name": "Shopping"
+}
+},
+{
+"source_ref": "demo-0223",
+"occurred_at": "2026-11-15T08:47:00.000000+00:00",
+"amount": 56000,
+"direction": "out",
+"description": "Theobroma Patisserie",
+"counted": true,
+"snippet": "Theobroma Patisserie",
+"sheet_row": 223,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0222",
+"occurred_at": "2026-11-15T17:05:00.000000+00:00",
+"amount": 9900,
+"direction": "out",
+"description": "Swiggy",
+"counted": true,
+"snippet": "Swiggy",
+"sheet_row": 222,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0225",
+"occurred_at": "2026-11-16T04:38:00.000000+00:00",
+"amount": 21200,
+"direction": "out",
+"description": "Amazon Pay In Grocery",
+"counted": true,
+"snippet": "Amazon Pay In Grocery",
+"sheet_row": 225,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0270",
+"occurred_at": "2026-11-16T13:42:00.000000+00:00",
+"amount": 2214000,
+"direction": "out",
+"description": "CRED Club",
+"counted": true,
+"snippet": "CRED Club",
+"sheet_row": 270,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Cash & transfers"
+}
+},
+{
+"source_ref": "demo-0224",
+"occurred_at": "2026-11-16T15:51:00.000000+00:00",
+"amount": 12000,
+"direction": "out",
+"description": "Sandeep Ukha Dhivar",
+"counted": true,
+"snippet": "Sandeep Ukha Dhivar",
+"sheet_row": 224,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0226",
+"occurred_at": "2026-11-17T13:24:00.000000+00:00",
+"amount": 24900,
+"direction": "out",
+"description": "Zomato",
+"counted": true,
+"snippet": "Zomato",
+"sheet_row": 226,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-hospital",
+"occurred_at": "2026-11-18T08:00:00.000000+00:00",
+"amount": 678000,
+"direction": "out",
+"description": "Sunrise Multispeciality Hospital And Research Centre",
+"counted": true,
+"snippet": "Sunrise Multispeciality Hospital And Research Centre",
+"sheet_row": 269,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Health"
+}
+},
+{
+"source_ref": "demo-0227",
+"occurred_at": "2026-11-18T12:46:00.000000+00:00",
+"amount": 12000,
+"direction": "out",
+"description": "Sandeep Ukha Dhivar",
+"counted": true,
+"snippet": "Sandeep Ukha Dhivar",
+"sheet_row": 227,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0228",
+"occurred_at": "2026-11-18T17:29:00.000000+00:00",
+"amount": 249900,
+"direction": "out",
+"description": "Amazon Pay In E Commerce",
+"counted": true,
+"snippet": "Amazon Pay In E Commerce",
+"sheet_row": 228,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Shopping"
+}
+},
+{
+"source_ref": "demo-0230",
+"occurred_at": "2026-11-21T05:48:00.000000+00:00",
+"amount": 31500,
+"direction": "out",
+"description": "Zomato",
+"counted": true,
+"snippet": "Zomato",
+"sheet_row": 230,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0229",
+"occurred_at": "2026-11-21T09:44:00.000000+00:00",
+"amount": 25000,
+"direction": "out",
+"description": "Ramesh Kumar Yadav",
+"counted": true,
+"snippet": "Ramesh Kumar Yadav",
+"sheet_row": 229,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0231",
+"occurred_at": "2026-11-22T07:39:00.000000+00:00",
+"amount": 50000,
+"direction": "out",
+"description": "Sandeep Ukha Dhivar",
+"counted": true,
+"snippet": "Sandeep Ukha Dhivar",
+"sheet_row": 231,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0232",
+"occurred_at": "2026-11-22T09:00:00.000000+00:00",
+"amount": 48600,
+"direction": "out",
+"description": "Blinkit",
+"counted": true,
+"snippet": "Blinkit",
+"sheet_row": 232,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-payback-rohan",
+"occurred_at": "2026-11-22T15:40:00.000000+00:00",
+"amount": 125000,
+"direction": "in",
+"description": "Rohan Verma",
+"counted": false,
+"snippet": "Rohan Verma",
+"sheet_row": 257,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Money in"
+}
+},
+{
+"source_ref": "demo-0233",
+"occurred_at": "2026-11-23T11:18:00.000000+00:00",
+"amount": 18000,
+"direction": "out",
+"description": "Swiggy",
+"counted": true,
+"snippet": "Swiggy",
+"sheet_row": 233,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0234",
+"occurred_at": "2026-11-23T14:22:00.000000+00:00",
+"amount": 73000,
+"direction": "out",
+"description": "Shree Ganesh General Stores And Dairy Products Main Road",
+"counted": true,
+"snippet": "Shree Ganesh General Stores And Dairy Products Main Road",
+"sheet_row": 234,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0236",
+"occurred_at": "2026-11-24T05:01:00.000000+00:00",
+"amount": 34800,
+"direction": "out",
+"description": "Blinkit",
+"counted": true,
+"snippet": "Blinkit",
+"sheet_row": 236,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0235",
+"occurred_at": "2026-11-24T15:58:00.000000+00:00",
+"amount": 48600,
+"direction": "out",
+"description": "Shree Ganesh General Stores And Dairy Products Main Road",
+"counted": true,
+"snippet": "Shree Ganesh General Stores And Dairy Products Main Road",
+"sheet_row": 235,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0238",
+"occurred_at": "2026-11-25T02:33:00.000000+00:00",
+"amount": 9900,
+"direction": "out",
+"description": "Chaayos Chai Cafe",
+"counted": true,
+"snippet": "Chaayos Chai Cafe",
+"sheet_row": 238,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0237",
+"occurred_at": "2026-11-25T11:13:00.000000+00:00",
+"amount": 31500,
+"direction": "out",
+"description": "Swiggy",
+"counted": true,
+"snippet": "Swiggy",
+"sheet_row": 237,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0239",
+"occurred_at": "2026-11-25T17:05:00.000000+00:00",
+"amount": 129900,
+"direction": "out",
+"description": "Croma Infiniti Retail Limited",
+"counted": true,
+"snippet": "Croma Infiniti Retail Limited",
+"sheet_row": 239,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Shopping"
+}
+},
+{
+"source_ref": "demo-0240",
+"occurred_at": "2026-11-26T08:07:00.000000+00:00",
+"amount": 42000,
+"direction": "out",
+"description": "Swiggy",
+"counted": true,
+"snippet": "Swiggy",
+"sheet_row": 240,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0264",
+"occurred_at": "2026-11-26T09:32:00.000000+00:00",
+"amount": 149900,
+"direction": "in",
+"description": "Myntra Refund",
+"counted": false,
+"snippet": "Myntra Refund",
+"sheet_row": 264,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Refunds"
+}
+},
+{
+"source_ref": "demo-0241",
+"occurred_at": "2026-11-27T06:45:00.000000+00:00",
+"amount": 2000,
+"direction": "out",
+"description": "Sandeep Ukha Dhivar",
+"counted": true,
+"snippet": "Sandeep Ukha Dhivar",
+"sheet_row": 241,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0242",
+"occurred_at": "2026-11-27T17:04:00.000000+00:00",
+"amount": 18000,
+"direction": "out",
+"description": "Chaayos Chai Cafe",
+"counted": true,
+"snippet": "Chaayos Chai Cafe",
+"sheet_row": 242,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0243",
+"occurred_at": "2026-11-28T08:22:00.000000+00:00",
+"amount": 73000,
+"direction": "out",
+"description": "Amazon Pay In Grocery",
+"counted": true,
+"snippet": "Amazon Pay In Grocery",
+"sheet_row": 243,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0275",
+"occurred_at": "2026-11-29T13:24:00.000000+00:00",
+"amount": 342000,
+"direction": "out",
+"description": "Sri Venkateshwara Enterprises Private Limited",
+"counted": true,
+"snippet": "Sri Venkateshwara Enterprises Private Limited",
+"sheet_row": 275,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Harbour Card XX4444",
+"miles"
+]
+},
+"categories": {
+"name": "Shopping"
+}
+},
+{
+"source_ref": "demo-0256",
+"occurred_at": "2026-11-30T04:10:00.000000+00:00",
+"amount": 9860000,
+"direction": "in",
+"description": "NEFT CR NIMBUS SOFTWARE PVT LTD SALARY NOV 2026",
+"counted": false,
+"snippet": "NEFT CR NIMBUS SOFTWARE PVT LTD SALARY NOV 2026",
+"sheet_row": 256,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Money in"
+}
+},
+{
+"source_ref": "demo-0259",
+"occurred_at": "2026-12-01T03:35:00.000000+00:00",
+"amount": 1972000,
+"direction": "out",
+"description": "Asha Sharma",
+"counted": true,
+"snippet": "Asha Sharma",
+"sheet_row": 259,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0245",
+"occurred_at": "2026-12-01T03:59:00.000000+00:00",
+"amount": 9900,
+"direction": "out",
+"description": "Chaayos Chai Cafe",
+"counted": true,
+"snippet": "Chaayos Chai Cafe",
+"sheet_row": 245,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0244",
+"occurred_at": "2026-12-01T05:49:00.000000+00:00",
+"amount": 112000,
+"direction": "out",
+"description": "Zepto",
+"counted": true,
+"snippet": "Zepto",
+"sheet_row": 244,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0260",
+"occurred_at": "2026-12-01T05:50:00.000000+00:00",
+"amount": 1400000,
+"direction": "out",
+"description": "Vijay Sales Washing Machine EMI",
+"counted": true,
+"snippet": "Vijay Sales Washing Machine EMI",
+"sheet_row": 260,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0261",
+"occurred_at": "2026-12-02T02:00:00.000000+00:00",
+"amount": 1200000,
+"direction": "out",
+"description": "Groww Mutual Fund SIP",
+"counted": true,
+"snippet": "Groww Mutual Fund SIP",
+"sheet_row": 261,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Investments"
+}
+},
+{
+"source_ref": "demo-0246",
+"occurred_at": "2026-12-02T10:35:00.000000+00:00",
+"amount": 56000,
+"direction": "out",
+"description": "Swiggy",
+"counted": true,
+"snippet": "Swiggy",
+"sheet_row": 246,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0247",
+"occurred_at": "2026-12-02T11:15:00.000000+00:00",
+"amount": 9900,
+"direction": "out",
+"description": "Blue Tokai Coffee Roasters",
+"counted": true,
+"snippet": "Blue Tokai Coffee Roasters",
+"sheet_row": 247,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0272",
+"occurred_at": "2026-12-02T13:25:00.000000+00:00",
+"amount": 987000,
+"direction": "out",
+"description": "CRED Club",
+"counted": true,
+"snippet": "CRED Club",
+"sheet_row": 272,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Cash & transfers"
+}
+},
+{
+"source_ref": "demo-aws",
+"occurred_at": "2026-12-03T00:11:00.000000+00:00",
+"amount": 214800,
+"direction": "out",
+"description": "AMAZON WEB SERVICES (USD 24.85 at Rs 86.44)",
+"counted": true,
+"snippet": "AMAZON WEB SERVICES (USD 24.85 at Rs 86.44)",
+"sheet_row": 263,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Bills & subscriptions"
+}
+},
+{
+"source_ref": "demo-0248",
+"occurred_at": "2026-12-03T06:06:00.000000+00:00",
+"amount": 14000,
+"direction": "out",
+"description": "Indian Railway Catering And Tourism Corporation",
+"counted": true,
+"snippet": "Indian Railway Catering And Tourism Corporation",
+"sheet_row": 248,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Travel"
+}
+},
+{
+"source_ref": "demo-0249",
+"occurred_at": "2026-12-04T06:19:00.000000+00:00",
+"amount": 50000,
+"direction": "out",
+"description": "Sandeep Ukha Dhivar",
+"counted": true,
+"snippet": "Sandeep Ukha Dhivar",
+"sheet_row": 249,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Transfers to people"
+}
+},
+{
+"source_ref": "demo-0250",
+"occurred_at": "2026-12-04T10:21:00.000000+00:00",
+"amount": 112000,
+"direction": "out",
+"description": "Amazon Pay In Grocery",
+"counted": true,
+"snippet": "Amazon Pay In Grocery",
+"sheet_row": 250,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0251",
+"occurred_at": "2026-12-05T13:21:00.000000+00:00",
+"amount": 48000,
+"direction": "out",
+"description": "Uber India Systems Pvt Ltd",
+"counted": true,
+"snippet": "Uber India Systems Pvt Ltd",
+"sheet_row": 251,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Travel"
+}
+},
+{
+"source_ref": "demo-0252",
+"occurred_at": "2026-12-06T08:52:00.000000+00:00",
+"amount": 21200,
+"direction": "out",
+"description": "Amazon Pay In Grocery",
+"counted": true,
+"snippet": "Amazon Pay In Grocery",
+"sheet_row": 252,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX3333",
+"shopper"
+]
+},
+"categories": {
+"name": "Groceries"
+}
+},
+{
+"source_ref": "demo-0254",
+"occurred_at": "2026-12-07T10:35:00.000000+00:00",
+"amount": 31500,
+"direction": "out",
+"description": "Chaayos Chai Cafe",
+"counted": true,
+"snippet": "Chaayos Chai Cafe",
+"sheet_row": 254,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "demo-0253",
+"occurred_at": "2026-12-07T17:18:00.000000+00:00",
+"amount": 18000,
+"direction": "out",
+"description": "Swiggy",
+"counted": true,
+"snippet": "Swiggy",
+"sheet_row": 253,
+"deleted_at": null,
+"accounts": {
+"kind": "bank",
+"aliases": [
+"Kestrel Bank Savings XX4417"
+]
+},
+"categories": {
+"name": "Food & dining"
+}
+},
+{
+"source_ref": "manual-20261212-phone-emi-3",
+"occurred_at": "2026-12-12T06:30:00.000000+00:00",
+"amount": 325332,
+"direction": "out",
+"description": "Phone EMI 3 of 3 (3,196.80 + 47.90 interest + 8.62 GST) - scheduled",
+"counted": true,
+"snippet": "Phone EMI 3 of 3 (3,196.80 + 47.90 interest + 8.62 GST) - scheduled",
+"sheet_row": 268,
+"deleted_at": null,
+"accounts": {
+"kind": "card",
+"aliases": [
+"Lotus Credit Card XX2222"
+]
+},
+"categories": {
+"name": "Shopping"
+}
+}
+],
+"card_emails": [
+{
+"message_id": "demo-mail-1",
+"received_at": "2026-10-31T03:45:00.000000+00:00",
+"kind": "statement",
+"amount": 2214000,
+"minimum_due": 111000,
+"due_date": "2026-11-17",
+"statement_date": "2026-10-30",
+"sender": "Lotus",
+"sheet_row": 2,
+"deleted_at": null,
+"accounts": {
+"last4": "2222",
+"issuer": "Lotus"
+}
+},
+{
+"message_id": "demo-mail-2",
+"received_at": "2026-11-17T02:32:00.000000+00:00",
+"kind": "payment",
+"amount": 2214000,
+"minimum_due": null,
+"due_date": null,
+"statement_date": null,
+"sender": "CRED",
+"sheet_row": 3,
+"deleted_at": null,
+"accounts": {
+"last4": "2222",
+"issuer": "Lotus"
+}
+},
+{
+"message_id": "demo-mail-3",
+"received_at": "2026-12-01T03:45:00.000000+00:00",
+"kind": "statement",
+"amount": 263000,
+"minimum_due": 13000,
+"due_date": "2026-12-18",
+"statement_date": "2026-11-30",
+"sender": "Lotus",
+"sheet_row": 4,
+"deleted_at": null,
+"accounts": {
+"last4": "2222",
+"issuer": "Lotus"
+}
+},
+{
+"message_id": "demo-mail-4",
+"received_at": "2026-10-16T03:45:00.000000+00:00",
+"kind": "statement",
+"amount": 742000,
+"minimum_due": 37000,
+"due_date": "2026-11-02",
+"statement_date": "2026-10-15",
+"sender": "Lotus",
+"sheet_row": 5,
+"deleted_at": null,
+"accounts": {
+"last4": "3333",
+"issuer": "Lotus"
+}
+},
+{
+"message_id": "demo-mail-5",
+"received_at": "2026-11-01T14:39:00.000000+00:00",
+"kind": "payment",
+"amount": 742000,
+"minimum_due": null,
+"due_date": null,
+"statement_date": null,
+"sender": "CRED",
+"sheet_row": 6,
+"deleted_at": null,
+"accounts": {
+"last4": "3333",
+"issuer": "Lotus"
+}
+},
+{
+"message_id": "demo-mail-6",
+"received_at": "2026-11-16T03:45:00.000000+00:00",
+"kind": "statement",
+"amount": 987000,
+"minimum_due": 50000,
+"due_date": "2026-12-03",
+"statement_date": "2026-11-15",
+"sender": "Lotus",
+"sheet_row": 7,
+"deleted_at": null,
+"accounts": {
+"last4": "3333",
+"issuer": "Lotus"
+}
+},
+{
+"message_id": "demo-mail-7",
+"received_at": "2026-12-02T13:31:00.000000+00:00",
+"kind": "payment",
+"amount": 987000,
+"minimum_due": null,
+"due_date": null,
+"statement_date": null,
+"sender": "CRED",
+"sheet_row": 8,
+"deleted_at": null,
+"accounts": {
+"last4": "3333",
+"issuer": "Lotus"
+}
+},
+{
+"message_id": "demo-mail-8",
+"received_at": "2026-10-11T03:45:00.000000+00:00",
+"kind": "statement",
+"amount": 690000,
+"minimum_due": 34500,
+"due_date": "2026-10-31",
+"statement_date": "2026-10-10",
+"sender": "Harbour",
+"sheet_row": 9,
+"deleted_at": null,
+"accounts": {
+"last4": "4444",
+"issuer": "Harbour"
+}
+},
+{
+"message_id": "demo-mail-9",
+"received_at": "2026-10-30T15:37:00.000000+00:00",
+"kind": "payment",
+"amount": 690000,
+"minimum_due": null,
+"due_date": null,
+"statement_date": null,
+"sender": "CRED",
+"sheet_row": 10,
+"deleted_at": null,
+"accounts": {
+"last4": "4444",
+"issuer": "Harbour"
+}
+},
+{
+"message_id": "demo-mail-10",
+"received_at": "2026-11-11T03:45:00.000000+00:00",
+"kind": "statement",
+"amount": 1845000,
+"minimum_due": 92500,
+"due_date": "2026-12-01",
+"statement_date": "2026-11-10",
+"sender": "Harbour",
+"sheet_row": 11,
+"deleted_at": null,
+"accounts": {
+"last4": "4444",
+"issuer": "Harbour"
+}
+}
+],
+"card_payments": [],
+"card_statements": [],
+"salary_cycles": [],
+"goals": [],
+"goal_contributions": [],
+"rules": [],
+"settings": [
+{
+"key": "app.state",
+"value": {
+"version": 3,
+"savedAt": "2026-12-01T09:00:00.000Z",
+"data": {
+"ob": 42000,
+"obAt": 1793471460000,
+"inc": 98600,
+"payDay": 0,
+"payDayV": 1,
+"buffer": 2000,
+"joined": "2026-10-16",
+"seeded": true,
+"migrated": "v4",
+"manual": [
+{
+"id": "m-demo-1",
+"d": 6,
+"t": "Chai and samosa at the office canteen with the whole team",
+"amt": 180,
+"c": "Food & dining",
+"ym": "2026-12"
+}
+],
+"payAssign": {},
+"payments": [],
+"goals": [
+{
+"id": "g-laptop",
+"name": "Laptop",
+"start": 15000,
+"target": 120000,
+"prio": 1,
+"date": "2027-06-30"
+},
+{
+"id": "g-washer",
+"name": "Washing machine",
+"start": 0,
+"target": 42000,
+"prio": 2,
+"date": "2027-02-01"
+},
+{
+"id": "g-ef",
+"name": "Emergency fund",
+"start": 0,
+"target": 600000,
+"prio": 1,
+"date": "2028-12-31"
+}
+],
+"contribs": [
+{
+"id": "c-1",
+"goal": "g-laptop",
+"amt": 8000,
+"date": "2026-11-05"
+},
+{
+"id": "c-2",
+"goal": "g-ef",
+"amt": 11391,
+"date": "2026-12-01"
+}
+],
+"overrides": {
+"paidback|demo-payback-rohan": true
+},
+"catRules": {
+"kailash parbat refund upi reversal": "Refunds"
+},
+"cfg": {
+"offer": {
+"gross": 101800,
+"basic": 50000,
+"pf": 0.06,
+"pt": 200,
+"firstPayday": "2026-10-31",
+"stipend": 20000,
+"allow": 300,
+"pfCap": 0,
+"pfCapFrom": "2026-12-01",
+"v": 2
+},
+"rule": {
+"from": "2026-11-25",
+"savings": 0.25,
+"ef": 0.1,
+"family": 0.2,
+"efCapX": 6,
+"billsFrom": "2026-11-25"
+},
+"planned": [
+{
+"name": "Washing machine EMI 1 of 3",
+"amt": 14000,
+"due": "2026-12-01",
+"from": "savings",
+"goal": "Washing machine"
+},
+{
+"name": "Washing machine EMI 2 of 3",
+"amt": 14000,
+"due": "2027-01-01",
+"from": "savings",
+"goal": "Washing machine"
+},
+{
+"name": "Washing machine EMI 3 of 3",
+"amt": 14000,
+"due": "2027-02-01",
+"from": "savings",
+"goal": "Washing machine"
+}
+]
+},
+"profile": {
+"banks": [
+{
+"key": "kestrel",
+"name": "Kestrel",
+"full": "Kestrel Bank",
+"match": "Kestrel"
+},
+{
+"key": "heron",
+"name": "Heron",
+"full": "Heron Bank",
+"match": "Heron Bank"
+}
+],
+"groups": {
+"orbit": {
+"short": "Lotus Orbit",
+"sub": "Visa + RuPay (\u00b71111, \u00b72222) \u2014 one card account",
+"issuer": "Lotus",
+"stmtDay": 30,
+"dueAfter": 18,
+"net": "VISA \u00b7 RUPAY"
+},
+"shopper": {
+"short": "Lotus Shopper \u00b73333",
+"issuer": "Lotus",
+"stmtDay": 15,
+"dueAfter": 18,
+"net": "VISA"
+},
+"miles": {
+"short": "Harbour Miles add-on \u00b74444",
+"issuer": "Harbour",
+"stmtDay": 10,
+"dueAfter": 21,
+"net": "VISA",
+"catalog": "sbi-miles"
+}
+},
+"cards": {
+"Lotus Credit Card XX1111": {
+"group": "orbit",
+"last4": "1111",
+"short": "Visa \u00b71111"
+},
+"Lotus Credit Card XX2222": {
+"group": "orbit",
+"last4": "2222",
+"short": "RuPay \u00b72222"
+},
+"Lotus Credit Card XX3333": {
+"group": "shopper",
+"last4": "3333",
+"short": "\u00b73333"
+},
+"Harbour Card XX4444": {
+"group": "miles",
+"last4": "4444",
+"short": "\u00b74444"
+}
+},
+"payText": [
+{
+"re": "harbour",
+"groups": [
+"miles"
+]
+},
+{
+"re": "shopper",
+"groups": [
+"shopper"
+]
+},
+{
+"re": "lotus",
+"issuer": "Lotus"
+}
+],
+"salaryText": "NIMBUS",
+"family": "your parents"
+}
+}
+}
+}
+],
+"ingest_log": [
+{
+"received_at": "2026-12-08T13:19:00.000000+00:00"
+}
+],
+"payee_rules": [
+{
+"pattern": "kailash parbat refund upi reversal",
+"category": "Refunds"
+},
+{
+"pattern": "amazon pay in grocery",
+"category": "Groceries"
+}
+],
+"txn_notes": [
+{
+"txn_ref": "demo-hospital",
+"category": null,
+"for_someone_else": true,
+"paid_back": false,
+"note": "Neha's hospital bill, she'll send it back"
+},
+{
+"txn_ref": "demo-payback-rohan",
+"category": null,
+"for_someone_else": false,
+"paid_back": true,
+"note": ""
+},
+{
+"txn_ref": "demo-aws",
+"category": null,
+"for_someone_else": false,
+"paid_back": false,
+"note": "Side project server"
+}
+]
+}
