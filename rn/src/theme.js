@@ -82,6 +82,9 @@ export function tokens(palette, dark) {
     c.icTint = c.accent;
   }
   // the hero's chart and light: white on graphite (Minimal); in a colour theme, the accent's tint
+  // the dock: a solid capsule a shade off the page (dark: lifted graphite; light: white)
+  c.dock = dark ? mix(c.accent, 0.05, "#1E1F24") : "#FFFFFF";
+  c.dockEdge = dark ? "rgba(255,255,255,0.07)" : "rgba(20,20,22,0.07)";
   c.heroChart = "#EDEDEB";
   c.heroGlow = c.palette === "minimal" ? "#FFFFFF" : mix(c.accent, 0.7, "#FFFFFF");
   return c;

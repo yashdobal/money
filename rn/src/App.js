@@ -1,6 +1,6 @@
 /* Money RN · the app frame, exactly as the Money app draws it (app/app.css "The frame", app/motion.js):
-   the app bar (27 px title, the feed line, round glass buttons), the five screens, the floating glass dock with its
-   liquid selection, the Add button, toasts that drip out of the dock, Settings zooming out of the gear, the screen
+   the app bar (27 px title, the feed line, round glass buttons), the screens pushing in sideways, the floating dock
+   with its stretching pill, the Add button, toasts that drip out of the dock, Settings zooming out of the gear, the screen
    stepping back while a sheet is up, the fingerprint lock, and links in (shortcuts, the widget, alerts, the tile).
    Native extras: swipe left and right between screens, drag along the dock, haptics matched to each gesture. */
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
@@ -23,7 +23,7 @@ import { setLive } from "./live";
 import { WEB, inApp, chrome } from "./host";
 import { PinLock } from "./pin";
 import { PaneCtx, Ping, Turn } from "./alive";
-import { S, OUT, EASE_OUT, springTo, timeTo, motionOn, NATIVE, rs, screenShown } from "./motion";
+import { S, OUT, EASE_OUT, PUSH, springTo, timeTo, motionOn, NATIVE, rs, screenShown } from "./motion";
 import { Dialog } from "./form";
 import SheetHost, { sheetLevel } from "./sheet";
 import ToastHost from "./toast";
@@ -161,7 +161,7 @@ function Main() {
 
   /* the screens. Each one stays mounted once you've been there (frozen while hidden: no re-renders, its scroll kept),
      so switching is just showing it; the tabs you haven't opened yet are built quietly in the background after
-     launch. Tabs swap with a short fade; Settings zooms out of the gear and back into it. */
+     launch. Tabs push in sideways (a short fade on a laptop); Settings zooms out of the gear and back into it. */
   const view = nav.view;
   const [mounted, setMounted] = useState(() => [view]);
   const settled = useRef({});
@@ -178,6 +178,10 @@ function Main() {
   const offsets = useRef({});
   const prev = useRef(view);
   const op = useSharedValue(1), sc = useSharedValue(1);
+  /* tab to tab: the new screen pushes the old one out sideways, from the side of the tab you picked */
+  const inX = useSharedValue(0), outX = useSharedValue(0);
+  const [leaving, setLeaving] = useState(null);
+  const leaveT = useRef(0);
   const gearRot = useRef(new Animated.Value(0)).current;
   const [W, setW] = useState(Dimensions.get("window").width);     // the screens' own width (beside the sidebar when there is one)
   const [origin, setOrigin] = useState(null);
@@ -185,16 +189,27 @@ function Main() {
     if (tapAt.t) { console.log("[money] switch " + view + " " + (Date.now() - tapAt.t) + "ms"); tapAt.t = 0; }
     const from = prev.current; prev.current = view;
     setScrolled((offsets.current[view] || 0) > 4); expand();
-    if (from === view || !motionOn()) { op.value = 1; sc.value = 1; return; }
+    if (from === view || !motionOn()) { op.value = 1; sc.value = 1; inX.value = 0; setLeaving(null); return; }
     const kind = view === "settings" ? "into" : from === "settings" ? "outof" : "tab";
     setOrigin(kind === "tab" ? null : (W - 37) + "px " + (insets.top + 33) + "px");
-    if (kind === "tab") {
+    if (kind === "tab" && wideRef.current) {
       op.value = 0.35; sc.value = 1;
       op.value = withTiming(1, { duration: 140, easing: REasing.bezier(0.2, 0, 0, 1) });
+    } else if (kind === "tab") {
+      const dir = IDS.indexOf(view) > IDS.indexOf(from) ? 1 : -1;
+      const ease = { duration: PUSH.duration, easing: REasing.bezier(...PUSH.bezier) };
+      op.value = 1; sc.value = 1;
+      inX.value = dir * W; inX.value = withTiming(0, ease);
+      outX.value = 0; outX.value = withTiming(-dir * W, ease);
+      setLeaving(from);
+      clearTimeout(leaveT.current);
+      leaveT.current = setTimeout(() => setLeaving(null), PUSH.duration + 40);
     } else if (kind === "into") {
+      setLeaving(null); inX.value = 0;
       op.value = 0; sc.value = 0.6;
       op.value = withTiming(1, { duration: 160 }); sc.value = withSpring(1, rs(S.page));
     } else {
+      setLeaving(null); inX.value = 0;
       op.value = 0.3; sc.value = 1.03;
       op.value = withTiming(1, { duration: 140 }); sc.value = withSpring(1, rs(S.page));
       // on the native driver like the rest of the gear button: the gear was pressed natively on the way in, and a JS-driven
@@ -233,13 +248,15 @@ function Main() {
       const i = IDS.indexOf(nav.view), dir = g.dx < -70 || g.vx < -0.55 ? 1 : g.dx > 70 || g.vx > 0.55 ? -1 : 0, to = i + dir;
       if (dir && to >= 0 && to < IDS.length) {
         buzz("tick");
-        swipe.setValue(dir * 28); go(IDS[to]); springTo(swipe, 0, S.page).start();
+        go(IDS[to]); springTo(swipe, 0, S.page).start();
       } else springTo(swipe, 0, S.press).start();
     },
     onPanResponderTerminate: () => springTo(swipe, 0, S.press).start(),
   })).current;
 
   const screenSt = useAnimatedStyle(() => ({ opacity: Math.min(1, op.value), transform: [{ scale: sc.value }] }));
+  const inSt = useAnimatedStyle(() => ({ transform: [{ translateX: inX.value }] }));
+  const outSt = useAnimatedStyle(() => ({ transform: [{ translateX: outX.value }] }));
   // the same functions every render, so a drawn screen's props don't change
   const scrollFn = useRef(onScroll); scrollFn.current = onScroll;
   const cb = useRef(null);
@@ -264,15 +281,15 @@ function Main() {
         <Animated.View style={{ flex: 1, transform: [{ translateX: swipe }] }}>
           <RAnimated.View style={[{ flex: 1, transformOrigin: origin || "50% 0px" }, screenSt]}>
             {mounted.map((v) => {
-              const on = v === view;
+              const on = v === view, out = !on && v === leaving;
               return (
-                <View key={v} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0, display: on ? "flex" : "none" }}>
-                  <Freeze freeze={!on && !!settled.current[v + ":seen"]}>
+                <RAnimated.View key={v} style={[{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0, display: on || out ? "flex" : "none" }, on ? inSt : out ? outSt : null]}>
+                  <Freeze freeze={!on && !out && !!settled.current[v + ":seen"]}>
                     <Pane v={v} first={firstOf.current[v] !== undefined ? firstOf.current[v] : (firstOf.current[v] = on && !settled.current[v + ":seen"])} loading={loading && v !== "settings"}
                       barH={barH} insets={insets} onScroll={cb.current.onScroll} register={cb.current.register[v]} onShown={cb.current.shown[v]} ver={dataVer()}
                       params={on ? (lastParams.current[v] = JSON.stringify(nav.params)) : lastParams.current[v] || "{}"} wide={wide} />
                   </Freeze>
-                </View>
+                </RAnimated.View>
               );
             })}
           </RAnimated.View>
@@ -282,7 +299,7 @@ function Main() {
       <AppBar onLayout={(h) => setBarH(h)} scrolled={scrolled} gearRot={gearRot} target={target} wide={wide} />
       {wide ? null : <EdgeFade />}
       {fabOn ? <Fab wide={wide} /> : null}
-      {wide ? null : <Dock compact={compact} target={target} />}
+      {wide ? null : <Dock compact={compact} />}
       <BurstLayer />
       </View>
       <SheetHost />
@@ -322,12 +339,19 @@ function AppBar({ onLayout, scrolled, gearRot, target, wide }) {
   const was = useRef(nav.view);
   useEffect(() => {
     if (was.current === nav.view) return;
-    const into = nav.view === "settings";
+    const into = nav.view === "settings", from = was.current;
     was.current = nav.view;
     if (!motionOn()) return;
-    fade.setValue(into ? 0 : 0.4); slide.setValue(into ? -6 : 0);
-    if (into) { Animated.parallel([springTo(fade, 1, S.small, { native: false }), springTo(slide, 0, S.small, { native: false })]).start(); backIn.setValue(0); springTo(backIn, 1, S.icon, { native: false }).start(); }
-    else timeTo(fade, 1, 120, EASE_OUT, { native: false }).start();
+    if (into) {
+      fade.setValue(0); slide.setValue(-6);
+      Animated.parallel([springTo(fade, 1, S.small, { native: false }), springTo(slide, 0, S.small, { native: false })]).start(); backIn.setValue(0); springTo(backIn, 1, S.icon, { native: false }).start();
+    } else if (from === "settings" || wide) { fade.setValue(0.4); slide.setValue(0); timeTo(fade, 1, 120, EASE_OUT, { native: false }).start(); }
+    else {
+      // tab to tab: the title rides in from the same side as the screen
+      const dir = IDS.indexOf(nav.view) > IDS.indexOf(from) ? 1 : -1;
+      fade.setValue(0); slide.setValue(dir * 22);
+      Animated.parallel([timeTo(fade, 1, 200, EASE_OUT, { native: false }), timeTo(slide, 0, PUSH.duration, Easing.bezier(...PUSH.bezier), { native: false })]).start();
+    }
   }, [nav.view]);
   const dot = ui.feed.cls === "warn" ? C.warn : ui.feed.cls === "idle" ? C.ink3 : C.pos;
   return (
@@ -392,35 +416,35 @@ function GlassBtn({ icon, label, onPress, turn = 0, spin, rot, plain, nudge, off
 }
 
 /* ---------------- the dock ---------------- */
-/** .tabbar: floating glass, 64 tall, with a drop that slides to the chosen tab: its leading edge springs fast and its
-    trailing edge follows a little later, so it stretches as it moves. Drag along it to pick a tab. */
-function Dock({ compact, target }) {
+/** .tabbar: a solid floating capsule, 66 tall. Behind the chosen icon sits an accent pill; picking another tab sends its
+    leading edge ahead fast while the trailing edge follows, so it stretches across and snaps short. The icon under it
+    turns white and pops as it lands. Drag along the bar to pick a tab. */
+function Dock({ compact }) {
   const C = useC();
   const insets = useSafeAreaInsets();
   const idx = IDS.indexOf(nav.view);
   const [w, setW] = useState(Math.min(480, Dimensions.get("window").width - 24));
-  const N = TABS.length, last = N - 1, slot = (w - 12) / N;
-  const slotV = useSharedValue(slot);
-  useEffect(() => { slotV.value = slot; }, [slot]);
-  /* the drop's two edges, in tabs (0..last), on the graphics thread */
+  const N = TABS.length, last = N - 1, slot = (w - 12) / N, pw = Math.min(slot - 4, 58);
+  const slotV = useSharedValue(slot), pwV = useSharedValue(pw);
+  useEffect(() => { slotV.value = slot; pwV.value = pw; }, [slot]);
+  /* the pill's two edges, in tabs (0..last), on the graphics thread */
   const pl = useSharedValue(Math.max(0, idx)), pr = useSharedValue(Math.max(0, idx));
-  const lens = useSharedValue(0), show = useSharedValue(idx < 0 ? 0 : 1), nearV = useSharedValue(-1);
+  const grab = useSharedValue(0), show = useSharedValue(idx < 0 ? 0 : 1), nearV = useSharedValue(-1);
   const at = useRef(Math.max(0, idx)), dragging = useRef(false);
   const [drag, setDrag] = useState(false);
   const [near, setNear] = useState(-1);
-  const LIQ = rs(S.liquid), LAG = rs(S.liquidLag), SMALL = rs(S.small);
+  const LEAD = rs(S.lead), TRAIL = rs(S.trail), SMALL = rs(S.small);
   const moveTo = (i, from) => {
     if (!motionOn()) { pl.value = i; pr.value = i; return; }
     const right = i > from;
-    pl.value = withSpring(i, right ? LAG : LIQ); pr.value = withSpring(i, right ? LIQ : LAG);
+    pl.value = withSpring(i, right ? TRAIL : LEAD); pr.value = withSpring(i, right ? LEAD : TRAIL);
   };
   useEffect(() => {
-    show.value = withTiming(idx < 0 ? 0 : 1, { duration: 160 });
+    show.value = withTiming(idx < 0 ? 0 : 1, { duration: 180 });
     if (idx < 0 || dragging.current) return;
     if (idx !== at.current) { moveTo(idx, at.current); at.current = idx; }
   }, [idx]);
-  /* a tap: on touch-down the tab lights up and the drop slides there at once (on the graphics thread), with the tick;
-     the screen itself switches on the next frame, so nothing waits for it */
+  /* a tap: on touch-down the pill sets off (on the graphics thread), with the tick; the screen follows a frame later */
   const [sel, setSel] = useState(null);
   useEffect(() => { setSel(null); }, [idx]);
   const shown = sel !== null ? sel : idx;
@@ -436,9 +460,9 @@ function Dock({ compact, target }) {
   const began = () => { dragging.current = true; setDrag(true); buzz("tick"); };
   const nearTo = (k) => { setNear(k); buzz("tick"); };
   const ended = (k) => { dragging.current = false; setDrag(false); setNear(-1); at.current = k; if (IDS[k] !== nav.view) go(IDS[k]); };
-  /* drag along the dock: the drop follows your finger exactly (the gesture runs on the graphics thread too) */
+  /* drag along the bar: the pill follows your finger exactly (the gesture runs on the graphics thread too) */
   const pan = Gesture.Pan().activeOffsetX([-8, 8]).failOffsetY([-14, 14])
-    .onStart(() => { "worklet"; lens.value = withSpring(1, SMALL); show.value = withTiming(1, { duration: 120 }); runOnJS(began)(); })
+    .onStart(() => { "worklet"; grab.value = withSpring(1, SMALL); show.value = withTiming(1, { duration: 120 }); runOnJS(began)(); })
     .onUpdate((e) => {
       "worklet";
       const f = Math.max(0, Math.min(last, (e.x - 6) / slotV.value - 0.5));
@@ -449,46 +473,56 @@ function Dock({ compact, target }) {
     .onEnd((e) => {
       "worklet";
       const k = Math.round(Math.max(0, Math.min(last, (e.x - 6) / slotV.value - 0.5)));
-      pl.value = withSpring(k, LIQ); pr.value = withSpring(k, LIQ); lens.value = withSpring(0, SMALL); nearV.value = -1;
+      pl.value = withSpring(k, LEAD); pr.value = withSpring(k, LEAD); grab.value = withSpring(0, SMALL); nearV.value = -1;
       runOnJS(ended)(k);
     });
   const pill = useAnimatedStyle(() => {
-    const s = slotV.value, a = 9 + Math.max(0, Math.min(last, pl.value)) * s, b = 3 + (Math.max(0, Math.min(last, pr.value)) + 1) * s;
-    return { left: a, width: Math.max(10, b - a), opacity: show.value,
-      transform: [{ scaleX: 1 + 0.16 * lens.value }, { scaleY: 1 + 0.2 * lens.value }, { scale: 0.7 + 0.3 * show.value }] };
+    const s = slotV.value, half = pwV.value / 2;
+    const a = 6 + (Math.max(0, Math.min(last, pl.value)) + 0.5) * s - half, b = 6 + (Math.max(0, Math.min(last, pr.value)) + 0.5) * s + half;
+    return { left: a, width: Math.max(12, b - a), opacity: show.value, transform: [{ scaleY: 1 + 0.12 * grab.value }, { scale: 0.6 + 0.4 * show.value }] };
   });
   const c = compact;
   return (
     <GestureDetector gesture={pan}>
-      <Animated.View onLayout={(e) => setW(e.nativeEvent.layout.width)}
-        style={{ position: "absolute", zIndex: 30, left: 12, right: 12, bottom: 10 + insets.bottom, maxWidth: 480, height: 64, paddingHorizontal: 6, flexDirection: "row", borderRadius: 32,
-          boxShadow: C.dark ? "0px 12px 32px rgba(0,0,0,0.6)" : "0px 12px 30px rgba(22,24,46,0.2)",
+      <Animated.View onLayout={(e) => setW(e.nativeEvent.layout.width)} accessibilityRole="tablist"
+        style={{ position: "absolute", zIndex: 30, left: 12, right: 12, bottom: 10 + insets.bottom, maxWidth: 480, height: 66, paddingHorizontal: 6, flexDirection: "row", borderRadius: 33,
+          backgroundColor: C.dock, borderWidth: 1, borderColor: C.dockEdge,
+          boxShadow: C.dark ? "0px 14px 34px rgba(0,0,0,0.55)" : "0px 12px 30px rgba(22,24,46,0.16)",
           transform: [{ translateY: c.interpolate({ inputRange: [0, 1], outputRange: [0, 6] }) }, { scale: c.interpolate({ inputRange: [0, 1], outputRange: [1, 0.9] }) }] }}>
-        <Glass target={target} radius={32} tint={rgba(C.dark ? "#1C1C1C" : "#FFFFFF", 0.55)} edge />
-        <View pointerEvents="none" style={{ position: "absolute", left: 0, top: 0, right: 0, bottom: 0, borderRadius: 32, borderWidth: 1, borderColor: C.glassEdge }} />
-        <RAnimated.View pointerEvents="none" style={[{ position: "absolute", top: 7, bottom: 7, borderRadius: 25, backgroundColor: drag ? rgba(C.dark ? "#2A2A2A" : "#FFFFFF", 0.55) : C.drop,
-          borderWidth: 1, borderColor: drag ? C.glassRim : rgba(C.accent, 0.1),
-          boxShadow: drag ? "0px 10px 22px rgba(22,24,46,0.28)" : "0px 1px 3px rgba(22,24,46,0.08)" }, pill]} />
-        {TABS.map((t, i) => <DockTab key={t.id} t={t} on={i === shown && !drag} near={i === near} c={c} onPick={() => pick(i)} />)}
+        <Animated.View pointerEvents="none" style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0, transform: [{ translateY: c.interpolate({ inputRange: [0, 1], outputRange: [0, 8] }) }] }}>
+          <RAnimated.View style={[{ position: "absolute", top: 9, height: 30, borderRadius: 15, backgroundColor: C.accent }, pill]} />
+        </Animated.View>
+        {TABS.map((t, i) => <DockTab key={t.id} t={t} on={drag ? i === near : i === shown} c={c} onPick={() => pick(i)} />)}
       </Animated.View>
     </GestureDetector>
   );
 }
 
-function DockTab({ t, on, near, c, onPick }) {
+function DockTab({ t, on, c, onPick }) {
   const C = useC();
   const picked = useRef(false);   // picked on touch-down; the web preview only sends the tap, so then it picks on release
   const s = useRef(new Animated.Value(1)).current;
-  const col = on ? C.accent : near ? C.ink : C.ink2;
+  /* 0 → 1 as the pill arrives: the white icon fades in over the grey one, with a small pop */
+  const lit = useRef(new Animated.Value(on ? 1 : 0)).current, pop = useRef(new Animated.Value(1)).current;
+  const was = useRef(on);
+  useEffect(() => {
+    if (was.current === on) return;
+    was.current = on;
+    if (!motionOn()) { lit.setValue(on ? 1 : 0); return; }
+    if (on) { timeTo(lit, 1, 170, EASE_OUT, { delay: 70 }).start(); pop.setValue(0.78); springTo(pop, 1, S.icon, { delay: 60 }).start(); }
+    else timeTo(lit, 0, 140).start();
+  }, [on]);
+  const fill = { position: "absolute", left: 0, right: 0, top: 0, bottom: 0, alignItems: "center", justifyContent: "center" };
   return (
-    <Pressable style={{ flex: 1, alignItems: "center", justifyContent: "center", zIndex: 2 }} accessibilityRole="tab" accessibilityState={{ selected: on }} aria-selected={on} accessibilityLabel={t.label}
-      onPressIn={() => { springTo(s, 0.86, S.liquid).start(); picked.current = true; onPick(); }} onPressOut={() => springTo(s, 1, S.liquid).start()}
+    <Pressable style={{ flex: 1, alignItems: "center", paddingTop: 9, zIndex: 2 }} accessibilityRole="tab" accessibilityState={{ selected: on }} aria-selected={on} accessibilityLabel={t.label}
+      onPressIn={() => { springTo(s, 0.86, S.press).start(); picked.current = true; onPick(); }} onPressOut={() => springTo(s, 1, S.icon).start()}
       onPress={() => { if (!picked.current) onPick(); picked.current = false; }}>
-      <Animated.View style={{ width: 30, height: 28, alignItems: "center", justifyContent: "center", transform: [{ translateY: c.interpolate({ inputRange: [0, 1], outputRange: [0, 7] }) }, { scale: s }] }}>
-        <TabIcon name={t.id} on={on} size={23} color={col} />
+      <Animated.View style={{ width: 30, height: 30, transform: [{ translateY: c.interpolate({ inputRange: [0, 1], outputRange: [0, 8] }) }, { scale: Animated.multiply(s, pop) }] }}>
+        <Animated.View style={[fill, { opacity: lit.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) }]}><TabIcon name={t.id} on={false} size={22} color={C.ink2} /></Animated.View>
+        <Animated.View style={[fill, { opacity: lit }]}><TabIcon name={t.id} on={on} size={22} color={C.accentInk} /></Animated.View>
       </Animated.View>
-      <Animated.View style={{ marginTop: 1, opacity: c.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }), transform: [{ translateY: c.interpolate({ inputRange: [0, 1], outputRange: [0, 5] }) }, { scale: c.interpolate({ inputRange: [0, 1], outputRange: [1, 0.8] }) }] }}>
-        <T f={on ? F.bold : F.medium} s={10.5} lh={14} c={col} lines={1} style={{ letterSpacing: 0 }}>{t.label}</T>
+      <Animated.View style={{ marginTop: 3, opacity: c.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }), transform: [{ translateY: c.interpolate({ inputRange: [0, 1], outputRange: [0, 5] }) }, { scale: c.interpolate({ inputRange: [0, 1], outputRange: [1, 0.8] }) }] }}>
+        <T f={on ? F.bold : F.medium} s={10.5} lh={14} c={on ? C.accent : C.ink2} lines={1} style={{ letterSpacing: 0 }}>{t.label}</T>
       </Animated.View>
     </Pressable>
   );

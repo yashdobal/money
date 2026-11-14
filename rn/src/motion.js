@@ -19,6 +19,8 @@ export function spring(stiffness, damping) {
 export const S = {
   press: spring(1400, 0.6), small: spring(1000, 0.72), liquid: spring(520, 0.62), liquidLag: spring(300, 0.74),
   sheet: spring(560, 0.86), page: spring(320, 0.9), icon: spring(700, 0.42), fx: spring(1600, 1),
+  /* the tab pill: its leading edge jumps ahead, the trailing edge catches up, so it stretches and snaps short */
+  lead: spring(640, 0.8), trail: spring(230, 0.92),
   /* app/choreo.js (anime.js springs: bounce, duration) */
   block: spring(150, 0.78), soft: spring(190, 0.9), pop: spring(420, 0.45), grow: spring(110, 0.74),
 };
@@ -26,6 +28,8 @@ export const S = {
 export const OUT = Easing.bezier(0.3, 0, 0.8, 0.15);          // leaving: accelerate away
 export const EASE_OUT = Easing.bezier(0.2, 0, 0, 1);
 export const SOFT = Easing.bezier(0.25, 1, 0.5, 1);
+/* screens pushing sideways: a quick start that glides to a soft landing */
+export const PUSH = { duration: 420, bezier: [0.32, 0.72, 0, 1] };
 export const outExpo = (t) => (t >= 1 ? 1 : 1 - Math.pow(2, -10 * t));
 export const NATIVE = Platform.OS !== "web";
 

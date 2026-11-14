@@ -507,22 +507,25 @@ export function Chips({ options, value, onChange, scroll, small, style }) {
   if (scroll) return <ScrollView horizontal showsHorizontalScrollIndicator={false} style={[{ marginHorizontal: -16 }, style]} contentContainerStyle={{ gap: 8, paddingHorizontal: 16, paddingTop: 2, paddingBottom: 4 }}>{chips}</ScrollView>;
   return <View style={[{ flexDirection: "row", flexWrap: "wrap", gap: 8 }, style]}>{chips}</View>;
 }
-/** .seg: segmented choices; the highlight glides across to the one you pick, the moment you touch it (on the graphics
-    thread), and whatever it changes follows a frame later. */
+/** .seg: segmented choices; the highlight stretches across to the one you pick, the moment you touch it (on the
+    graphics thread): its leading edge goes first and the trailing edge catches up. What it changes follows a frame later. */
 export function Seg({ options, value, onChange, full, style, label }) {
   const C = useC();
   const tray = useTray();
   const lay = useRef({}).current;
-  const x = useSharedValue(0), w = useSharedValue(0);
+  const l = useSharedValue(0), r = useSharedValue(0);
   const [sel, setSel] = useState(value);
+  const selRef = useRef(value);
   const [ready, setReady] = useState(false);
   const place = (v, animate) => {
     const L = lay[v]; if (!L) return;
-    if (animate && motionOn()) { x.value = withSpring(L.x, rs(S.small)); w.value = withSpring(L.w, rs(S.small)); }
-    else { x.value = L.x; w.value = L.w; }
+    const from = lay[selRef.current], right = !from || L.x >= from.x;
+    selRef.current = v;
+    if (animate && motionOn()) { l.value = withSpring(L.x, rs(right ? S.trail : S.lead)); r.value = withSpring(L.x + L.w, rs(right ? S.lead : S.trail)); }
+    else { l.value = L.x; r.value = L.x + L.w; }
   };
   useEffect(() => { if (value !== sel) { setSel(value); place(value, ready); } }, [value]);
-  const hl = useAnimatedStyle(() => ({ left: x.value, width: w.value }));
+  const hl = useAnimatedStyle(() => ({ left: l.value, width: Math.max(0, r.value - l.value) }));
   return (
     <View accessibilityRole="radiogroup" accessibilityLabel={label} style={[{ flexDirection: "row", padding: 3, borderRadius: 12, backgroundColor: tray === "tray" ? C.inset2 : C.inset, alignSelf: full ? "stretch" : "flex-start" }, style]}>
       <RAnimated.View style={[{ position: "absolute", top: 3, bottom: 3, borderRadius: 9, backgroundColor: C.surface,
