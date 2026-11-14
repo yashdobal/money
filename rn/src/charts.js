@@ -1,13 +1,15 @@
 /* Money RN · charts, with the Money app's geometry and colours, and its entrances (choreo.js): lines draw themselves,
    the area under them fades up, marker dots pop at the end, a donut sweeps round slice after slice, bars grow. */
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Animated, PanResponder, View } from "react-native";
 import Svg, { Path, Line, Circle, Defs, LinearGradient, RadialGradient, Stop } from "react-native-svg";
 import { E } from "./store";
-import { useC, F } from "./theme";
+import { useC, F, rgba } from "./theme";
 import { T, M, amt, compact, catHue, buzz, hidden, Press } from "./kit";
 import { S, springTo, enter, entrance, motionOn, frames } from "./motion";
 import { Sheen, Ping, Breathe } from "./alive";
+import RAnimated, { useSharedValue, useAnimatedStyle, withTiming, withDelay, runOnJS, Easing as REasing } from "react-native-reanimated";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 
 const APath = Animated.createAnimatedComponent(Path);
 const ACircle = Animated.createAnimatedComponent(Circle);
@@ -116,79 +118,155 @@ export function bankAhead(hero) {
   return out.concat([{ d: end, bal: last }]);
 }
 
-/** The bank balance: the past as a line with a soft fill, the days ahead as a dashed step line, salaries and card bills
-    as dots, and today. With onScrub, dragging across reads the balance on each day. */
-export function BankChart({ pts, ahead, marks, h, big, onScrub, delay = 0, run }) {
-  const C = useC();
-  const [width, setWidth] = useState(320);
-  const [scrubX, setScrubX] = useState(null);
-  const an = useDraw(delay, run);
-  const W = 320, H = h, all = pts.concat(ahead);
-  const T0 = +pts[0].d, T1 = Math.max(+all[all.length - 1].d, T0 + 864e5), span = T1 - T0;
-  const vals = all.map((p) => p.bal);
-  let lo = Math.min.apply(null, vals.concat([0])), hi = Math.max.apply(null, vals);
-  if (lo === hi) hi = lo + 1000;
-  const pad = (hi - lo) * 0.1; lo -= lo < 0 ? pad : 0; hi += pad;
-  const X = (d) => ((+d - T0) / span) * W, Y = (v) => H - 4 - ((v - lo) / (hi - lo)) * (H - 8);
-  const line = pts.map((p, i) => (i ? "L" : "M") + X(p.d).toFixed(1) + " " + Y(p.bal).toFixed(1)).join("");
-  const L = pathLength(line);
-  const area = line + "L" + X(pts[pts.length - 1].d).toFixed(1) + " " + H + "L0 " + H + "Z";
-  let fut = "";
-  if (ahead.length) {
-    const last = pts[pts.length - 1];
-    fut = "M" + X(last.d).toFixed(1) + " " + Y(last.bal).toFixed(1);
-    ahead.forEach((p) => { fut += "H" + X(p.d).toFixed(1) + "V" + Y(p.bal).toFixed(1); });
+/* ---------------- the bank balance ---------------- */
+/** A smooth line through the days (monotone cubic: it never overshoots a day's value, so no fake dips or peaks). */
+function smooth(xs, ys) {
+  const n = xs.length;
+  if (n < 2) return n ? "M" + xs[0].toFixed(1) + " " + ys[0].toFixed(1) : "";
+  const dx = [], m = [], t = [];
+  for (let i = 0; i < n - 1; i++) { dx.push(xs[i + 1] - xs[i] || 1e-6); m.push((ys[i + 1] - ys[i]) / (dx[i])); }
+  t.push(m[0]);
+  for (let i = 1; i < n - 1; i++) t.push(m[i - 1] * m[i] <= 0 ? 0 : (3 * (dx[i - 1] + dx[i])) / ((2 * dx[i] + dx[i - 1]) / m[i - 1] + (dx[i] + 2 * dx[i - 1]) / m[i]));
+  t.push(m[n - 2]);
+  let d = "M" + xs[0].toFixed(1) + " " + ys[0].toFixed(1);
+  for (let i = 0; i < n - 1; i++) {
+    const h = dx[i] / 3;
+    d += "C" + (xs[i] + h).toFixed(1) + " " + (ys[i] + t[i] * h).toFixed(1) + " " + (xs[i + 1] - h).toFixed(1) + " " + (ys[i + 1] - t[i + 1] * h).toFixed(1) + " " + xs[i + 1].toFixed(1) + " " + ys[i + 1].toFixed(1);
   }
-  const now = pts[pts.length - 1];
-  const pick = (x) => {
-    const t = T0 + (x / width) * (T1 - T0);
-    const near = all.reduce((a, p) => (Math.abs(+p.d - t) < Math.abs(+a.d - t) ? p : a), all[0]);
-    const sx = ((+near.d - T0) / (T1 - T0)) * W;
-    if (sx !== scrubX) buzz("tick");
-    setScrubX(sx);
-    onScrub && onScrub(near, +near.d > +now.d);
-  };
-  const pan = useRef(null);
-  if (onScrub && !pan.current) pan.current = PanResponder.create({
-    onStartShouldSetPanResponder: () => true, onMoveShouldSetPanResponder: () => true, onPanResponderTerminationRequest: () => false,
-    onPanResponderGrant: (e) => pick(e.nativeEvent.locationX), onPanResponderMove: (e) => pick(e.nativeEvent.locationX),
-    onPanResponderRelease: () => setTimeout(() => { setScrubX(null); onScrub(null); }, 1400),
-  });
-  const dot = (m, i) => {
-    if (+m.d < T0) return null;
-    const p = pts.find((q) => +q.d === +m.d) || now;
-    return <ACircle key={i} cx={X(m.d)} cy={Y(p.bal)} r={an.dot.interpolate({ inputRange: [0, 1], outputRange: [0, big ? 3.6 : 2.8] })} fill={m.kind === "salary" ? C.pos : m.kind === "card" ? C.alert : C.surface}
-      stroke={m.kind === "set" ? C.ink3 : C.surface} strokeWidth={1.5} />;
-  };
+  return d;
+}
+
+/** The bank balance: the past as a smooth line over a soft fill, the days ahead as a dashed step line to payday,
+    salaries and card bills as dots, and today. It's drawn at its real width (no stretching) and reveals once, left to
+    right. With head (the History sheet), touch and drag across it: a line and a dot follow your finger on the graphics
+    thread, and the figure above reads the balance on that day. Only that figure redraws, and only when the day
+    under your finger changes. */
+export function BankChart({ pts, ahead, marks, h, big, head, delay = 0, run }) {
+  const [width, setWidth] = useState(0);
   return (
-    <View onLayout={(e) => setWidth(e.nativeEvent.layout.width)} {...(pan.current ? pan.current.panHandlers : {})} style={{ marginTop: big ? 6 : 12 }}>
-      <Svg width="100%" height={H} viewBox={"0 0 " + W + " " + H} preserveAspectRatio="none" pointerEvents="none" style={{ overflow: "visible" }}>
-        <Defs><LinearGradient id={"bkFill" + (big ? "B" : "")} x1="0" x2="0" y1="0" y2="1"><Stop offset="0" stopColor={C.accent} stopOpacity={0.22} /><Stop offset="1" stopColor={C.accent} stopOpacity={0} /></LinearGradient></Defs>
-        {lo < 0 ? <Line x1={0} x2={W} y1={Y(0)} y2={Y(0)} stroke={C.alert} strokeOpacity={0.7} strokeDasharray="2 4" vectorEffect="non-scaling-stroke" /> : null}
-        <APath d={area} fill={"url(#bkFill" + (big ? "B" : "") + ")"} opacity={an.fade} />
-        <APath d={line} fill="none" stroke={C.accent} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" strokeDasharray={[L, L]} strokeDashoffset={an.k.interpolate({ inputRange: [0, 1], outputRange: [L, 0] })} />
-        {fut ? <APath d={fut} fill="none" stroke={C.ink3} strokeWidth={1.6} strokeDasharray="4 4" opacity={an.fade} /> : null}
-        {marks.map(dot)}
-        <Circle cx={X(now.d)} cy={Y(now.bal)} r={big ? 4.5 : 3.8} fill={C.accent} stroke={C.surface} strokeWidth={2} />
-        {scrubX !== null ? <Line x1={scrubX} x2={scrubX} y1={0} y2={H} stroke={C.ink2} strokeWidth={1} vectorEffect="non-scaling-stroke" /> : null}
-      </Svg>
-      {big ? null : <View pointerEvents="none" style={{ position: "absolute", left: 0, top: 0, right: 0, height: H, overflow: "hidden" }}><Sheen w={width} h={H} band={0.22} tone={C.accent} strength={0.16} every={6800} delay={1600} id="bk" /></View>}
-      <Ping size={big ? 9 : 7.6} color={C.accent} style={{ left: (X(now.d) / W) * width - (big ? 4.5 : 3.8), top: Y(now.bal) - (big ? 4.5 : 3.8) }} />
-      <BankAxis pts={pts} ahead={ahead} />
+    <View onLayout={(e) => { const w = Math.round(e.nativeEvent.layout.width); if (Math.abs(w - width) > 1) setWidth(w); }} style={{ marginTop: big ? 6 : 12 }}>
+      {head ? <BankRead head={head} /> : null}
+      {width ? <BankPlot pts={pts} ahead={ahead} marks={marks} H={h} big={big} W={width} scrub={!!head} head={head} delay={delay} run={run} /> : <View style={{ height: h }} />}
+      <BankAxis pts={pts} ahead={ahead} w={width} />
     </View>
   );
 }
-function BankAxis({ pts, ahead }) {
+
+/* the figure above the big chart: today's balance, or the day under your finger */
+const scrubBus = { fn: null };
+function BankRead({ head }) {
   const C = useC();
-  const [w, setW] = useState(320);
+  const [p, setP] = useState(null);
+  useEffect(() => { scrubBus.fn = setP; return () => { if (scrubBus.fn === setP) scrubBus.fn = null; }; }, []);
+  const v = p ? p.bal : head.now;
+  return (
+    <View style={{ marginBottom: 6 }}>
+      <T f={F.medium} s={13.5} c={C.ink2}>{p ? (p.today ? "Today" : E.fmtD(p.d)) + (p.ahead ? " · expected" : "") : "Today"}</T>
+      <M v={v} f={F.fig} s={30} tone={v < 0 ? "alert" : ""} style={{ lineHeight: 36 }} />
+    </View>
+  );
+}
+
+const BankPlot = React.memo(function BankPlot({ pts, ahead, marks, H, big, W, scrub, delay, run }) {
+  const C = useC();
+  const g = useMemo(() => {
+    const all = pts.concat(ahead);
+    const T0 = +pts[0].d, T1 = Math.max(+all[all.length - 1].d, T0 + 864e5), span = T1 - T0;
+    const vals = all.map((p) => p.bal);
+    let lo = Math.min.apply(null, vals.concat([0])), hi = Math.max.apply(null, vals);
+    if (lo === hi) hi = lo + 1000;
+    const pad = (hi - lo) * 0.12; lo -= lo < 0 ? pad : 0; hi += pad;
+    const top = 8, bot = 6, X = (d) => ((+d - T0) / span) * (W - 8) + 4, Y = (v) => top + (1 - (v - lo) / (hi - lo)) * (H - top - bot);
+    const xs = pts.map((p) => X(p.d)), ys = pts.map((p) => Y(p.bal));
+    const line = smooth(xs, ys);
+    const area = line + "L" + xs[xs.length - 1].toFixed(1) + " " + H + "L" + xs[0].toFixed(1) + " " + H + "Z";
+    const now = pts[pts.length - 1];
+    let fut = "";
+    if (ahead.length) { fut = "M" + X(now.d).toFixed(1) + " " + Y(now.bal).toFixed(1); ahead.forEach((p) => { fut += "H" + X(p.d).toFixed(1) + "V" + Y(p.bal).toFixed(1); }); }
+    const byDay = {}; pts.forEach((p) => { byDay[+p.d] = p; });
+    const dots = marks.filter((m) => +m.d >= T0 && byDay[+m.d] && m.kind !== "set").map((m) => ({ x: X(m.d), y: Y(byDay[+m.d].bal), kind: m.kind }));
+    // the points a finger can land on: every day so far, then each step ahead
+    const sx = all.map((p) => X(p.d)), sy = all.map((p) => Y(p.bal));
+    return { line, area, fut, dots, nx: X(now.d), ny: Y(now.bal), zeroY: lo < 0 ? Y(0) : null, sx, sy, all, nowT: +now.d };
+  }, [pts, ahead, marks, H, W]);
+
+  /* the entrance: a clip opening left to right (one width, on the graphics thread) */
+  const on = run !== false && motionOn();
+  const rev = useSharedValue(on ? 0 : 1);
+  useEffect(() => { if (on) rev.value = withDelay(delay + 80, withTiming(1, { duration: 900, easing: REasing.bezier(0.25, 0.8, 0.25, 1) })); }, []);
+  const clip = useAnimatedStyle(() => ({ width: Math.max(1, rev.value * W) }));
+  const nowDot = useAnimatedStyle(() => ({ opacity: rev.value > 0.97 ? 1 : 0, transform: [{ scale: rev.value > 0.97 ? 1 : 0.4 }] }));
+
+  /* scrubbing */
+  const sxV = useSharedValue(g.sx), syV = useSharedValue(g.sy), hot = useSharedValue(0), ix = useSharedValue(-1);
+  useEffect(() => { sxV.value = g.sx; syV.value = g.sy; }, [g]);
+  const tell = (i) => {
+    buzz("tick");
+    const f = scrubBus.fn; if (!f) return;
+    if (i < 0) return f(null);
+    const p = g.all[i];
+    f({ d: p.d, bal: p.bal, ahead: +p.d > g.nowT, today: +p.d === g.nowT });
+  };
+  const near = (x) => {
+    "worklet";
+    const a = sxV.value; let k = 0;
+    for (let i = 1; i < a.length; i++) if (Math.abs(a[i] - x) < Math.abs(a[k] - x)) k = i;
+    return k;
+  };
+  const move = (x) => {
+    "worklet";
+    const k = near(x);
+    if (k !== ix.value) { ix.value = k; runOnJS(tell)(k); }
+  };
+  const pan = Gesture.Pan().enabled(scrub).activeOffsetX([-3, 3]).failOffsetY([-14, 14])
+    .onBegin((e) => { "worklet"; hot.value = withTiming(1, { duration: 120 }); move(e.x); })
+    .onUpdate((e) => { "worklet"; move(e.x); })
+    .onFinalize(() => { "worklet"; hot.value = withDelay(900, withTiming(0, { duration: 220 })); ix.value = -1; runOnJS(tell)(-1); });
+  const cur = useAnimatedStyle(() => {
+    const k = ix.value < 0 ? sxV.value.length - 1 : ix.value;
+    return { opacity: hot.value, transform: [{ translateX: withTiming(sxV.value[k], { duration: 70 }) }] };
+  });
+  const curDot = useAnimatedStyle(() => {
+    const k = ix.value < 0 ? sxV.value.length - 1 : ix.value;
+    return { opacity: hot.value, transform: [{ translateX: withTiming(sxV.value[k] - 6, { duration: 70 }) }, { translateY: withTiming(syV.value[k] - 6, { duration: 70 }) }] };
+  });
+
+  const id = "bk" + (big ? "B" : "");
+  const r = big ? 4 : 3.4;
+  return (
+    <GestureDetector gesture={pan}>
+      <View style={{ height: H, width: W }}>
+        {g.zeroY !== null ? <Svg width={W} height={H} style={{ position: "absolute" }}><Line x1={0} x2={W} y1={g.zeroY} y2={g.zeroY} stroke={C.alert} strokeOpacity={0.6} strokeDasharray="2 4" /></Svg> : null}
+        <RAnimated.View style={[{ position: "absolute", left: 0, top: 0, height: H, overflow: "hidden" }, clip]}>
+          <Svg width={W} height={H}>
+            <Defs><LinearGradient id={id} x1="0" x2="0" y1="0" y2="1"><Stop offset="0" stopColor={C.accent} stopOpacity={0.24} /><Stop offset="0.7" stopColor={C.accent} stopOpacity={0.05} /><Stop offset="1" stopColor={C.accent} stopOpacity={0} /></LinearGradient></Defs>
+            <Path d={g.area} fill={"url(#" + id + ")"} />
+            {g.fut ? <Path d={g.fut} fill="none" stroke={C.ink3} strokeWidth={1.6} strokeDasharray="4 4" strokeLinejoin="round" /> : null}
+            <Path d={g.line} fill="none" stroke={C.accent} strokeWidth={big ? 2.6 : 2.3} strokeLinejoin="round" strokeLinecap="round" />
+            {g.dots.map((d, i) => <Circle key={i} cx={d.x} cy={d.y} r={big ? 3.4 : 2.8} fill={d.kind === "salary" ? C.pos : C.alert} stroke={C.surface} strokeWidth={1.5} />)}
+          </Svg>
+        </RAnimated.View>
+        <RAnimated.View pointerEvents="none" style={[{ position: "absolute", left: g.nx - r - 4, top: g.ny - r - 4, width: 2 * r + 8, height: 2 * r + 8, borderRadius: r + 4, backgroundColor: rgba(C.accent, 0.18), alignItems: "center", justifyContent: "center" }, nowDot]}>
+          <View style={{ width: 2 * r, height: 2 * r, borderRadius: r, backgroundColor: C.accent, borderWidth: 2, borderColor: C.surface }} />
+        </RAnimated.View>
+        {scrub ? <>
+          <RAnimated.View pointerEvents="none" style={[{ position: "absolute", left: 0, top: 0, width: 1.5, height: H, backgroundColor: C.ink3 }, cur]} />
+          <RAnimated.View pointerEvents="none" style={[{ position: "absolute", left: 0, top: 0, width: 12, height: 12, borderRadius: 6, backgroundColor: C.surface, borderWidth: 3, borderColor: C.accent, boxShadow: "0px 2px 6px rgba(0,0,0,0.25)" }, curDot]} />
+        </> : null}
+      </View>
+    </GestureDetector>
+  );
+});
+function BankAxis({ pts, ahead, w }) {
+  const C = useC();
   const T0 = +pts[0].d, T1 = Math.max(+(ahead.length ? ahead[ahead.length - 1].d : pts[pts.length - 1].d), T0 + 864e5), today = pts[pts.length - 1].d;
   const gap = ahead.length ? (+ahead[ahead.length - 1].d - +today) / (T1 - T0) : 0;
   const at = ((+today - T0) / (T1 - T0)) * w;
   const st = { position: "absolute", top: 0 };
   return (
-    <View style={{ height: 16, marginTop: 6 }} onLayout={(e) => setW(e.nativeEvent.layout.width)}>
+    <View style={{ height: 16, marginTop: 6 }}>
       <T s={11.5} lh={15} c={C.ink3} style={[st, { left: 0 }]}>{E.fmt(pts[0].d)}</T>
-      {ahead.length && gap >= 0.22 ? <T s={11.5} lh={15} c={C.ink3} style={[st, gap < 0.36 ? { right: w - at } : { left: at - 30, width: 60, textAlign: "center" }]}>Today</T> : null}
+      {ahead.length && gap >= 0.22 && w ? <T s={11.5} lh={15} c={C.ink3} style={[st, gap < 0.36 ? { right: w - at } : { left: at - 30, width: 60, textAlign: "center" }]}>Today</T> : null}
       <T s={11.5} lh={15} c={C.ink3} style={[st, { right: 0 }]}>{ahead.length ? "Payday " + E.fmt(ahead[ahead.length - 1].d) : "Today"}</T>
     </View>
   );

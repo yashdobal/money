@@ -24,7 +24,7 @@ saved with your account (and set in the app); every test runs on invented data.
 - `rn/` is the app (React Native, Expo). It is also the website: `tools/build_site.py` builds it for the browser
   (react-native-web) into `dist/`, which Cloudflare Pages serves, with a sidebar and two columns on a wide window. What
   differs between the phone, a browser and the Android app's WebView lives in `rn/src/host.js` and
-  `rn/src/native/*.web.js`. The look (bento: grey trays of white cards, one accent colour, Inter) is in
+  `rn/src/native/*.web.js`. The look (bento: grey trays of white cards, one accent colour, Anek Latin) is in
   `rn/src/theme.js` and `rn/src/kit.js`; the movement in `rn/src/motion.js` and `rn/src/alive.js`.
 - `tools/rn_engine.mjs` writes the engine's two copies: `rn/src/engine.gen.js` for the app and
   `supabase/functions/_shared/engine.gen.js` for the server, which runs it with India's time (`ist-date.js`) for the

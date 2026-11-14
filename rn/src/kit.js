@@ -77,7 +77,7 @@ export function buzz(kind) {
     number can still be read on some phones (Android drew the "transparent" digits in black). */
 export const MASK = "₹ ••••";
 const AMT_RE = /₹\s?\d/, AMT_ALL = /[−+-]?₹\s?[\d,]+(?:\.\d+)?[kKLl]?/g;
-/** Text in Inter (tabular, open digits are in the font), tracked a little tight. f: a font cut (theme F), s: size, c: colour. */
+/** Text in Anek, with tabular digits. f: a font cut (theme F), s: size, c: colour. */
 export function T({ f, s = 15, lh, c, style, children, lines, ...rest }) {
   const C = useC();
   const col = c || C.ink;
@@ -86,7 +86,7 @@ export function T({ f, s = 15, lh, c, style, children, lines, ...rest }) {
     const str = Array.isArray(children) ? children.join("") : children;
     if (AMT_RE.test(str)) children = str.replace(AMT_ALL, MASK);
   }
-  return <Text numberOfLines={lines} {...rest} style={[{ fontFamily: f || F.body, fontSize: s, lineHeight: lh || Math.round(s * 1.42), color: col, letterSpacing: track(s), includeFontPadding: false }, style]}>{children}</Text>;
+  return <Text numberOfLines={lines} {...rest} style={[{ fontFamily: f || F.body, fontSize: s, lineHeight: lh || Math.round(s * 1.42), color: col, letterSpacing: track(s), fontVariant: ["tabular-nums"], includeFontPadding: false }, style]}>{children}</Text>;
 }
 /** An amount. While amounts are hidden it is the mask, in the amount's own colour; anything without a digit (a dash)
     shows as it is. */

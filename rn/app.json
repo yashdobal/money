@@ -99,11 +99,11 @@
             }
           ],
           "fonts": [
-            "./assets/fonts/Inter-Hero.ttf",
-            "./assets/fonts/Inter-Fig.ttf",
-            "./assets/fonts/Inter-Semi.ttf",
-            "./assets/fonts/Inter-Medium.ttf",
-            "./assets/fonts/Inter-Body.ttf"
+            "./assets/fonts/Anek-Hero.ttf",
+            "./assets/fonts/Anek-Fig.ttf",
+            "./assets/fonts/Anek-Semi.ttf",
+            "./assets/fonts/Anek-Medium.ttf",
+            "./assets/fonts/Anek-Body.ttf"
           ]
         }
       ],

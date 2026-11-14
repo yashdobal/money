@@ -108,18 +108,18 @@ export function swatch(choice, dark) {
 export const ThemeCtx = React.createContext(tokens("signal", false));
 export const useC = () => useContext(ThemeCtx);
 
-/* Type: Inter, cut at the weights the screens use, with tabular and open digits and the single-storey a swapped in
-   (rn/assets/fonts, made by tools/fonts_inter.py). TRACK: Inter wants a little negative tracking, more as it grows. */
+/* Type: Anek Latin, cut at the weights the screens use (rn/assets/fonts, made by tools/rn/fonts.py). It is drawn with
+   its own spacing, so no extra tracking. */
 export const F = {
-  body: "Inter-Body", book: "Inter-Book", medium: "Inter-Medium", semi: "Inter-Semi", bold: "Inter-Bold",
-  head: "Inter-Head", title: "Inter-Title", day: "Inter-Day", tile: "Inter-Tile", hero: "Inter-Hero", fig: "Inter-Fig",
+  body: "Anek-Body", book: "Anek-Book", medium: "Anek-Medium", semi: "Anek-Semi", bold: "Anek-Bold",
+  head: "Anek-Head", title: "Anek-Title", day: "Anek-Day", tile: "Anek-Tile", hero: "Anek-Hero", fig: "Anek-Fig",
 };
-export const track = (size) => -size * (size >= 40 ? 0.05 : size >= 24 ? 0.04 : size >= 17 ? 0.028 : 0.012);
+export const track = () => 0;
 export const FONT_FILES = {
-  "Inter-Body": require("../assets/fonts/Inter-Body.ttf"), "Inter-Book": require("../assets/fonts/Inter-Book.ttf"),
-  "Inter-Medium": require("../assets/fonts/Inter-Medium.ttf"), "Inter-Semi": require("../assets/fonts/Inter-Semi.ttf"),
-  "Inter-Bold": require("../assets/fonts/Inter-Bold.ttf"), "Inter-Head": require("../assets/fonts/Inter-Head.ttf"),
-  "Inter-Title": require("../assets/fonts/Inter-Title.ttf"), "Inter-Day": require("../assets/fonts/Inter-Day.ttf"),
-  "Inter-Tile": require("../assets/fonts/Inter-Tile.ttf"), "Inter-Hero": require("../assets/fonts/Inter-Hero.ttf"),
-  "Inter-Fig": require("../assets/fonts/Inter-Fig.ttf"),
+  "Anek-Body": require("../assets/fonts/Anek-Body.ttf"), "Anek-Book": require("../assets/fonts/Anek-Book.ttf"),
+  "Anek-Medium": require("../assets/fonts/Anek-Medium.ttf"), "Anek-Semi": require("../assets/fonts/Anek-Semi.ttf"),
+  "Anek-Bold": require("../assets/fonts/Anek-Bold.ttf"), "Anek-Head": require("../assets/fonts/Anek-Head.ttf"),
+  "Anek-Title": require("../assets/fonts/Anek-Title.ttf"), "Anek-Day": require("../assets/fonts/Anek-Day.ttf"),
+  "Anek-Tile": require("../assets/fonts/Anek-Tile.ttf"), "Anek-Hero": require("../assets/fonts/Anek-Hero.ttf"),
+  "Anek-Fig": require("../assets/fonts/Anek-Fig.ttf"),
 };

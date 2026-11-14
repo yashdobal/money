@@ -261,7 +261,6 @@ const RANGES = [["1m", "1M", 30], ["3m", "3M", 91], ["6m", "6M", 182], ["all", "
 function BankSheet() {
   const C = useC();
   const [range, setRange] = useState("3m");
-  const [read, setRead] = useState(null);
   const h = E.balanceHistory();
   if (!h) return <BalanceSheet />;
   const ahead = bankAhead(E.heroModel(E.allCards()));
@@ -276,10 +275,8 @@ function BankSheet() {
     <View>
       <Seg full value={range} onChange={setRange} options={RANGES.map(([k, l]) => [k, l])} label="Range" />
       <View style={{ marginTop: 14 }}>
-        <T f={F.medium} s={13.5} c={C.ink2}>{read ? (read.today ? "Today" : E.fmtD(read.p.d)) + (read.ahead ? " · expected" : "") : "Today"}</T>
-        <M v={read ? read.p.bal : h.now} f={F.fig} s={30} tone={(read ? read.p.bal : h.now) < 0 ? "alert" : ""} style={{ lineHeight: 36 }} />
+        <BankChart key={range} pts={pts} ahead={ahead} marks={h.marks} h={160} big head={{ now: h.now }} delay={0} />
       </View>
-      <BankChart key={range} pts={pts} ahead={ahead} marks={h.marks} h={150} big delay={0} onScrub={(p, a) => setRead(p ? { p, ahead: a, today: +p.d === +pts[pts.length - 1].d } : null)} />
       <Legend small style={{ marginTop: 10 }} items={[["Salary" + (nSal ? " ×" + nSal : ""), C.pos], ["Card bill paid" + (nCard ? " ×" + nCard : ""), C.alert], ["Until payday", C.ink3, "", "dash"]]} />
       <View style={{ flexDirection: "row", gap: 8, marginTop: 14 }}>
         <Tile inPanel label="Lowest" value={amt(lo.bal)} tone={lo.bal < 0 ? "alert" : ""} sub={E.fmtD(lo.d)} />

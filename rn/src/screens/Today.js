@@ -158,7 +158,7 @@ function BankPanel({ hero, i, first }) {
         </View>
         <T s={13} lh={17} c={C.ink3} lines={1} style={{ marginTop: 2 }}>{split}</T>
         <T s={13} lh={17} c={C.ink3} lines={1} style={{ marginTop: 2 }}>{sub}</T>
-        <BankChart pts={pts} ahead={ahead} marks={h.marks} h={74} delay={settleAt(i, first)} run={first} />
+        <BankChart pts={pts} ahead={ahead} marks={h.marks} h={92} delay={settleAt(i, first)} run={first} />
         <View style={{ flexDirection: "row", flexWrap: "wrap", columnGap: 16, rowGap: 4, marginTop: 10 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}><View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: C.accent }} />
             <T s={13} c={C.ink2}>Lowest this month </T><M v={low.bal} f={F.body} s={13} c={low.bal < 0 ? C.alert : C.ink2} /><T s={13} c={C.ink2}>{" · " + E.fmt(low.d)}</T></View>

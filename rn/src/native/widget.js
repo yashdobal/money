@@ -50,8 +50,8 @@ function curveSvg(c, color, Wd = 600, H = 100) {
     pays + zero + '<path d="' + d + 'V' + H + 'H' + pad + 'Z" fill="url(#f)"/><path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="4" stroke-linejoin="round"/>' + low + '</svg>';
 }
 
-/* The look: the Safe to spend card itself (the app's hero colours for your palette, light and dark), in Inter. */
-const FONT = { hero: "Inter-Hero", fig: "Inter-Fig", semi: "Inter-Semi", medium: "Inter-Medium", body: "Inter-Body" };
+/* The look: the Safe to spend card itself (the app's hero colours for your palette, light and dark), in Anek. */
+const FONT = { hero: "Anek-Hero", fig: "Anek-Fig", semi: "Anek-Semi", medium: "Anek-Medium", body: "Anek-Body" };
 function look(w, dark) {
   const t = (w && w.theme && w.theme[dark ? "dark" : "light"]) || {};
   return { a: t.a || (dark ? "#242424" : "#2A2A28"), b: t.b || (dark ? "#121212" : "#151515"), ink: t.ink || "#F5F5F3", ink2: t.ink2 || "rgba(245,245,243,0.64)",

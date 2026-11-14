@@ -15,8 +15,8 @@ The React Native (Expo SDK 58) version of Money, installed next to the WebView a
 - **Look:** bento, the same as the website (`app/app.css`): colours from `src/theme.js` (signal blue by default,
   Minimal, seed palettes, or the phone's Material You palettes through `modules/money-native`), and the building
   blocks in `src/kit.js`. A `Panel` is a grey tray whose `Row`s and `Tile`s are white cards (`TrayCtx` tells them what
-  they sit in); `kind="w"` is one white card (charts, forms), `kind="d"` a dark card. Type is Inter, cut by
-  `tools/fonts_inter.py`. `src/alive.js` keeps every card moving a little while its screen is showing.
+  they sit in); `kind="w"` is one white card (charts, forms), `kind="d"` a dark card. Type is Anek Latin, cut by
+  `tools/rn/fonts.py`. `src/alive.js` keeps every card moving a little while its screen is showing.
 - Packages: `npx expo install` can't reach Expo's servers here, so install the versions in
   `node_modules/expo/bundledNativeModules.json` with `npm install`.
 - **It is also the website** (and what the older Android app shows): `python3 tools/build_site.py` builds it for the

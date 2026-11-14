@@ -2,6 +2,7 @@
    They rise on the sheet spring (560 / 0.86) while the screen behind recedes a little; the content follows the sheet in;
    drag down, tap outside or press Back to close (they leave quickly, accelerating away). */
 import React, { useEffect, useRef, useState } from "react";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Animated, Dimensions, KeyboardAvoidingView, Modal, PanResponder, Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { nav, closeSheet } from "./nav";
@@ -54,9 +55,11 @@ export default function SheetHost() {
   if (!def) { setTimeout(close, 0); return null; }
   return (
     <Modal transparent visible animationType="none" onRequestClose={close} statusBarTranslucent navigationBarTranslucent>
+      <GestureHandlerRootView style={{ flex: 1 }}>
       <SheetFrame y={y} H={H} close={close} title={def.title} key={typeof shown === "string" ? shown : p.kind + JSON.stringify(p.spec.preset || {})}>
         <SheetCtx.Provider value={{ close }}>{def.body}</SheetCtx.Provider>
       </SheetFrame>
+      </GestureHandlerRootView>
     </Modal>
   );
 }
