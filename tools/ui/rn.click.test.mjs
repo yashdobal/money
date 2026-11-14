@@ -103,7 +103,7 @@ await step("Hide amounts: no amount is drawn on any screen, only the mask", asyn
   await p.getByLabel("Hide amounts").filter({ visible: true }).first().click(); await p.waitForTimeout(900);
   // the digits must not be on the page at all (not see-through, not blurred: Android drew those in black), and nothing
   // a screen reader would say may hold them either
-  for (const tab of ["Today", "Plan", "Cards", "Spending", "Activity", "Trips"]) {
+  for (const tab of ["Today", "Plan", "Cards", "Spending", "Activity", "Trips", "Rewards"]) {
     await p.getByRole("tab", { name: tab }).filter({ visible: true }).first().click(); await p.waitForTimeout(900);
     const shown = await p.evaluate(() => {
       const seen = (e) => e.getBoundingClientRect().width > 0;
@@ -165,6 +165,30 @@ await step("Cards and Spending draw; a category opens Activity filtered", async 
   await p.getByText("Shopping", { exact: true }).filter({ visible: true }).first().click(); await p.waitForTimeout(900);
   const t = await text(p);
   must(/Activity/.test(t) && /Shopping/.test(t), "category didn't open Activity");
+});
+await step("Rewards: a search finds the best card and the way to pay; the cards you could get; the month's figures", async () => {
+  await tab(p, "Rewards");
+  let t = await text(p);
+  must(/What are you buying\?/.test(t) && /Points this month/.test(t) && /Your next card/.test(t) && /How it counts/.test(t), "the tab's panels are missing");
+  const box = p.getByLabel("What are you buying?").filter({ visible: true }).first();
+  await box.fill("iPhone on Amazon 80000"); await box.press("Enter"); await p.waitForTimeout(1200);
+  t = await text(p);
+  must(/Electronics · at Amazon · ₹80,000 · online/.test(t), "not understood: " + (t.match(/Understood as:\s*\n?([^\n]*)/) || [])[1]);
+  must(/Best card · electronics\s*\n?\s*Lotus Shopper ·3333/.test(t) && /Pay at Amazon with this card/.test(t) && /₹4,000/.test(t) && /5% back on ₹80,000/.test(t), "the answer isn't Lotus Shopper at Amazon, ₹4,000");
+  must(new URL(p.url()).hash.includes("q=iPhone"), "the search isn't in the address");
+  // without Prime, Amazon pays 3%
+  await p.getByRole("switch", { name: "I have Amazon Prime" }).filter({ visible: true }).first().click(); await p.waitForTimeout(800);
+  must(/₹2,400/.test(await text(p)) && saves.some((s) => s.action === "save" && s.settings.overrides && s.settings.overrides.rew && s.settings.overrides.rew.prime === false), "Prime off didn't change the answer or save");
+  await p.getByRole("switch", { name: "I have Amazon Prime" }).filter({ visible: true }).first().click(); await p.waitForTimeout(600);
+  // fuel: nothing earns
+  await box.fill("petrol 3000"); await box.press("Enter"); await p.waitForTimeout(1200);
+  must(/None of your cards earns on this/.test(await text(p)), "fuel shows a card that earns");
+  // an example chip searches
+  await p.getByLabel("Clear").filter({ visible: true }).first().click(); await p.waitForTimeout(800);
+  must(!new URL(p.url()).hash.includes("q="), "clearing didn't clear the search");
+  await tapText(p, "Myntra 4,000");
+  t = await text(p);
+  must(/Clothes and beauty · at Myntra · ₹4,000/.test(t) && /If you had…/.test(t) && /Flipkart Axis/.test(t), "the Myntra example didn't search, or Flipkart Axis isn't offered");
 });
 await step("Trips: the trip, the airline, the points, the best cards, the cards you can get", async () => {
   await tab(p, "Trips");

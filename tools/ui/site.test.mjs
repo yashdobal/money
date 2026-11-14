@@ -11,7 +11,7 @@ let n = 0;
 const step = async (name, fn) => { n++; try { await fn(); console.log("ok   " + name); } catch (e) { fails.push(name + ": " + String(e.message || e).split("\n")[0]); console.log("FAIL " + name + "\n     " + String(e.message || e).split("\n")[0]); } };
 const must = (c, msg) => { if (!c) throw new Error(msg); };
 const running = (p) => p.evaluate(() => document.getAnimations().filter((a) => a.playState === "running").length);
-const TABS = ["Today", "Plan", "Cards", "Spending", "Activity", "Trips"];
+const TABS = ["Today", "Plan", "Cards", "Spending", "Activity", "Trips", "Rewards"];
 // a browser that hasn't been asked about notifications yet (headless Chromium on some machines answers "denied")
 const UNASKED = `try { Object.defineProperty(Notification, "permission", { get: () => "default" }); } catch (e) {}`;
 const typeCode = async (p, code) => { for (const d of code) { await p.keyboard.press(d); await p.waitForTimeout(60); } await p.waitForTimeout(1200); };

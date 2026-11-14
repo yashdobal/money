@@ -182,9 +182,11 @@ function tripHeld(plan){
   plan.mine.forEach(id => { if(!mine[id]) mine[id] = {auto:false, addOn:false}; });
   return mine;
 }
-/** Yearly income for the cards' income bars: what you typed, or your monthly take-home × 12. */
+/** Yearly income for the cards' income bars: what you typed, or your gross pay × 12 (Plan → Salary & fixed payments:
+    banks go by gross income), or your monthly take-home × 12 when the gross isn't set. */
 function tripIncome(plan){
   if(plan.income !== null) return {amt:plan.income, from:"you"};
+  if(OFFER.gross > 0) return {amt:Math.round(OFFER.gross * 12), from:"salary"};
   return settings.inc ? {amt:Math.round(settings.inc * 12), from:"salary"} : {amt:null, from:null};
 }
 

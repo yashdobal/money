@@ -56,7 +56,7 @@ function Stepper({ k, label, value, max }) {
   );
 }
 /** A rupee amount you can type over (the planner's .sl-num). Empty hands back null: use the app's own figure. */
-function Amount({ value, placeholder, onDone, label, width = 112, plain }) {
+export function Amount({ value, placeholder, onDone, label, width = 112, plain }) {
   const C = useC();
   const [text, setText] = useState(null);
   const shown = text !== null ? text : value === null || value === undefined ? "" : hidden() && !plain ? "••••" : money(value);
@@ -71,7 +71,7 @@ function Q({ children, top }) {
   const C = useC();
   return <T f={F.semi} s={11.5} lh={16} c={C.ink3} style={{ letterSpacing: 0.5, textTransform: "uppercase", marginTop: top ? 2 : 18, marginBottom: 8 }}>{children}</T>;
 }
-function Line({ label, sub, children }) {
+export function Line({ label, sub, children }) {
   const C = useC();
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 48 }}>

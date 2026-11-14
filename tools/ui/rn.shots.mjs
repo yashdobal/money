@@ -47,7 +47,7 @@ const tap = async (p, text, opts) => { const el = p.getByText(text, { exact: tru
 for (const scheme of ["light", "dark"]) {
   const { ctx, p } = await open(scheme);
   await shot(p, scheme + "-today");
-  for (const [tab_, name] of [["Plan", "plan"], ["Cards", "cards"], ["Spending", "spend"], ["Activity", "activity"], ["Trips", "trips"]]) {
+  for (const [tab_, name] of [["Plan", "plan"], ["Cards", "cards"], ["Spending", "spend"], ["Activity", "activity"], ["Trips", "trips"], ["Rewards", "rewards"]]) {
     await tab(p, tab_); await p.waitForTimeout(600); await shot(p, scheme + "-" + name);
   }
   if (scheme === "light") {

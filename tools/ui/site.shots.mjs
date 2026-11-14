@@ -10,7 +10,7 @@ const browser = await chromium.launch({ executablePath: CHROMIUM, args: ["--use-
 const bad = [];
 for (const width of (process.env.WIDTHS || "390,1280").split(",").map(Number)) for (const scheme of (process.env.SCHEMES || "light,dark").split(",")) {
   const { ctx, p, errors } = await openSite(browser, { width, height: width < 700 ? 844 : 800, scheme, scale: 1 });
-  for (const v of (process.env.VIEWS || "Today,Plan,Cards,Spending,Activity,Trips,Settings").split(",")) {
+  for (const v of (process.env.VIEWS || "Today,Plan,Cards,Spending,Activity,Trips,Rewards,Settings").split(",")) {
     if (v !== "Today") { if (v === "Settings" && width < 980) await p.getByLabel("Settings", { exact: true }).filter({ visible: true }).first().click(); else await tab(p, v); }
     await p.waitForTimeout(1600);
     // the whole screen, not just the window: grow the window to the screen's own scroll height

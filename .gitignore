@@ -13,3 +13,4 @@ dist/
 __pycache__/
 /build/
 rn/dist-web/
+tools/ui/.tmp/

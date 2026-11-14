@@ -27,7 +27,7 @@ PROFILE = {
               {"key": "heron", "name": "Heron", "full": "Heron Bank", "match": "Heron Bank"}],
     "groups": {
         "orbit":   {"short": "Lotus Orbit", "sub": "Visa + RuPay (·1111, ·2222) — one card account", "issuer": "Lotus", "stmtDay": 30, "dueAfter": 18, "net": "VISA · RUPAY"},
-        "shopper": {"short": "Lotus Shopper ·3333", "issuer": "Lotus", "stmtDay": 15, "dueAfter": 18, "net": "VISA"},
+        "shopper": {"short": "Lotus Shopper ·3333", "issuer": "Lotus", "stmtDay": 15, "dueAfter": 18, "net": "VISA", "catalog": "icici-amazon-pay"},
         "miles":   {"short": "Harbour Miles add-on ·4444", "issuer": "Harbour", "stmtDay": 10, "dueAfter": 21, "net": "VISA", "catalog": "sbi-miles"},
     },
     "cards": {

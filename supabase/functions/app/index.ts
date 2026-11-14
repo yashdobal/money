@@ -11,6 +11,10 @@
  *   POST {action: "register-device", name}
  *        The Android app, once you're signed in: a device key for its background work (the device function).
  *        The phone's browser alerts are switched off at the same time, since the app now shows them (no doubles).
+ *   POST {action: "rew-parse", text, kinds: [[id, name]], shops: [[id, name]]}
+ *        The Rewards search: an AI model reads what you typed ("₹40k flight to Tokyo") as {kind, shop, amt, online,
+ *        intl}, picking the kind and shop from the app's lists. Needs the ANTHROPIC_API_KEY secret (Supabase →
+ *        Edge Functions → Secrets); without it this answers {ok: false} and the app keeps its own keyword reading.
  */
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 import { sendToAll } from "../_shared/push.ts";
@@ -59,6 +63,38 @@ async function putSetting(key: string, value: unknown) {
   if (error) throw new Error(error.message);
 }
 
+/* ---------------- the Rewards search's AI step ---------------- */
+const AI_MODEL = Deno.env.get("REWARDS_MODEL") ?? "claude-haiku-5-5";
+const pairs = (v: unknown, n: number) => (Array.isArray(v) ? v : []).filter((x) => Array.isArray(x) && typeof x[0] === "string" && typeof x[1] === "string")
+  .slice(0, n).map((x) => [String(x[0]).slice(0, 40), String(x[1]).slice(0, 60)]);
+async function rewParse(body: Record<string, unknown>) {
+  const key = Deno.env.get("ANTHROPIC_API_KEY");
+  if (!key) return { ok: false, reason: "no-key" };
+  const text = String(body.text ?? "").slice(0, 300).trim();
+  if (!text) return { ok: false, reason: "empty" };
+  const kinds = pairs(body.kinds, 60), shops = pairs(body.shops, 150);
+  const system = "You read what an Indian credit-card user is about to spend money on, so an app can pick the card that earns most. " +
+    "Reply with one JSON object and nothing else: {\"kind\": <kind id>, \"shop\": <shop id or null>, \"amt\": <rupees as a number, or null>, \"online\": <true|false>, \"intl\": <true|false>}.\n" +
+    "kind: the id that best fits, from: " + kinds.map((k) => k[0] + " (" + k[1] + ")").join(", ") + ".\n" +
+    "shop: the id of a shop the person names or clearly means (\"Instamart order\" is instamart), from: " + shops.map((s) => s[0] + " (" + s[1] + ")").join(", ") + "; null when no listed shop is meant.\n" +
+    "amt: only an amount the person states, in rupees (k = 1,000, lakh = 1,00,000); convert a foreign amount at about 95 rupees to the dollar and 105 to the euro; null if none.\n" +
+    "online: false for a shop, restaurant or pump you walk into; true for an app or website.\n" +
+    "intl: true only when it is paid in a foreign currency (shopping or eating abroad, a foreign website); flights and hotels abroad booked from India are paid in rupees, so false.";
+  const r = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+    body: JSON.stringify({ model: AI_MODEL, max_tokens: 200, system, messages: [{ role: "user", content: text }] }),
+  });
+  if (!r.ok) return { ok: false, reason: "ai-" + r.status };
+  const j = await r.json() as { content?: { type: string; text?: string }[] };
+  const out = (j.content ?? []).filter((c) => c.type === "text").map((c) => c.text ?? "").join("");
+  const m = out.match(/\{[\s\S]*\}/);
+  if (!m) return { ok: false, reason: "no-json" };
+  let spend: Record<string, unknown>;
+  try { spend = JSON.parse(m[0]); } catch { return { ok: false, reason: "bad-json" }; }
+  return { ok: true, spend: { kind: spend.kind, shop: spend.shop ?? null, amt: spend.amt ?? null, online: spend.online, intl: spend.intl } };
+}
+
 Deno.serve(async (req) => {
   const h = cors(req.headers.get("origin"));
   const reply = (status: number, body: unknown) => new Response(JSON.stringify(body), { status, headers: { ...h, "content-type": "application/json" } });
@@ -104,6 +140,7 @@ Deno.serve(async (req) => {
       const { count } = await db.from("push_subscriptions").delete({ count: "exact" }).eq("user_id", OWNER).eq("device_name", "Android phone");
       return reply(200, { ok: true, token: r.token, browserAlertsOff: count ?? 0 });
     }
+    if (body.action === "rew-parse") return reply(200, await rewParse(body));
     return reply(400, { error: "unknown action" });
   } catch (e) {
     return reply(500, { error: e instanceof Error ? e.message : String(e) });

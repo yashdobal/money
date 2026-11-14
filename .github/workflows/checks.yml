@@ -31,6 +31,8 @@ jobs:
           node tools/engine/ist.test.mjs
       - name: "Trips on points: the maths against figures worked out by hand"
         run: node tools/rn/trips.test.mjs
+      - name: Rewards (the card rules, the search, the caps) against figures worked out by hand
+        run: node tools/rn/rewards.test.mjs
       - name: "The app, clicked through: add, search, edit, balances, hide amounts, plan, goals, cards, trips, settings"
         run: node tools/ui/rn.click.test.mjs
       - name: "The website: screens moving, address and Back, the lock, carry-over, alerts, laptop layout, inside the Android app"

@@ -5875,7 +5875,8 @@
 "issuer": "Lotus",
 "stmtDay": 15,
 "dueAfter": 18,
-"net": "VISA"
+"net": "VISA",
+"catalog": "icici-amazon-pay"
 },
 "miles": {
 "short": "Harbour Miles add-on \u00b74444",

@@ -10,6 +10,7 @@ export const TABS = [
   { id: "spend", label: "Spending", icon: "chart-bar", on: "chart-bar" },
   { id: "activity", label: "Activity", icon: "format-list-bulleted", on: "format-list-bulleted" },
   { id: "trips", label: "Trips", icon: "airplane", on: "airplane" },
+  { id: "rewards", label: "Rewards", icon: "gift", on: "gift" },
 ];
 const ORDER = TABS.map((t) => t.id).concat(["settings"]);
 

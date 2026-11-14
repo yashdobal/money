@@ -15,6 +15,12 @@ saved with your account (and set in the app); every test runs on invented data.
   can be brought in from Settings → Your banks and cards, by pasting it or opening a setup link.
 - `app/shape.js` turns the database rows into what the engine reads; `app/trips.js` is the Trips tab (public card,
   airline and hotel data only, each number with its source and the day it was checked).
+- `app/rewards.js` is the Rewards tab: "what are you buying?" → the best card you hold and the way to pay (straight on
+  the card, HDFC SmartBuy, a SmartBuy brand voucher, Amazon Pay), worth as cash and as airline or hotel points, with
+  bonus rates, spending that earns nothing and caps (counting what this month's spending already used); the cards you
+  could get on your income that would do better; this month's points, what you left on the table, your next card, and
+  milestones. The card rules are public data with sources and a checked date. An AI model reads what you type (the
+  `app` function's `rew-parse`, with `ANTHROPIC_API_KEY` in Supabase); without the key the app reads it by keywords.
 - `rn/` is the app (React Native, Expo). It is also the website: `tools/build_site.py` builds it for the browser
   (react-native-web) into `dist/`, which Cloudflare Pages serves, with a sidebar and two columns on a wide window. What
   differs between the phone, a browser and the Android app's WebView lives in `rn/src/host.js` and
@@ -37,8 +43,8 @@ saved with your account (and set in the app); every test runs on invented data.
 All of them run on `tools/demo/demo-fixture.json`, invented data written by `tools/demo/make_demo.py` (invented banks,
 cards, employer and people).
 - `tools/rn/engine.test.mjs`: the app's engine gives the server's figures. `tools/engine/ist.test.mjs`: the server's
-  figures are the same in UTC (as Supabase runs) as in India. `tools/rn/trips.test.mjs`: the Trips maths against
-  figures worked out by hand.
+  figures are the same in UTC (as Supabase runs) as in India. `tools/rn/trips.test.mjs` and `tools/rn/rewards.test.mjs`:
+  the Trips and Rewards maths against figures worked out by hand.
 - `tools/ui/rn.click.test.mjs`: the app used like a person would (Playwright). `tools/ui/site.test.mjs`: the website
   as served (every screen moving, address and Back, links, the lock code, the alerts offer, the laptop layout, and
   inside the Android app with a stand-in bridge). `rn.shots.mjs` and `site.shots.mjs` take pictures of every screen.
@@ -50,6 +56,7 @@ cards, employer and people).
   new versions can't install over the app.
 - `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`: put the website live.
 - `SUPABASE_ACCESS_TOKEN`: deploys the Supabase functions.
+- In Supabase (Edge Functions → Secrets), not GitHub: `ANTHROPIC_API_KEY` for the Rewards search's AI step (optional).
 - The Supabase address and the two public keys in `app/public-config.json` are public by design: every visitor's
   browser gets them, and row-level security keeps each account to its own rows.
 

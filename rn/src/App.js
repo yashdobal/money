@@ -34,6 +34,7 @@ import Cards from "./screens/Cards";
 import Spend from "./screens/Spend";
 import Activity from "./screens/Activity";
 import Trips from "./screens/Trips";
+import Rewards from "./screens/Rewards";
 import Settings from "./screens/Settings";
 import * as Lock from "./native/lock";
 import * as Alerts from "./native/alerts";
@@ -41,8 +42,8 @@ import * as Sms from "./native/sms";
 import { pushWidget, WidgetGallery } from "./native/widget";
 import { schedule } from "./native/background";
 
-const SCREENS = { today: Today, plan: Plan, cards: Cards, spend: Spend, activity: Activity, trips: Trips, settings: Settings };
-const TITLES = { today: "Today", plan: "Plan", cards: "Cards", spend: "Spending", activity: "Activity", trips: "Trips", settings: "Settings" };
+const SCREENS = { today: Today, plan: Plan, cards: Cards, spend: Spend, activity: Activity, trips: Trips, rewards: Rewards, settings: Settings };
+const TITLES = { today: "Today", plan: "Plan", cards: "Cards", spend: "Spending", activity: "Activity", trips: "Trips", rewards: "Rewards", settings: "Settings" };
 const IDS = TABS.map((t) => t.id);
 
 export default function App() {

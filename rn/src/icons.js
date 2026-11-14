@@ -28,7 +28,7 @@ const num = (v) => (v === undefined ? undefined : parseFloat(v));
 
 /* where each animated part turns or grows from (CSS transform-box: fill-box; origin centre, bars from the bottom) */
 const ORIGIN = { "p-rays": [12, 12], "p-sun": [12, 12], "p-k1": [15, 7], "p-k2": [9, 17], "p-card": [12, 12],
-  "p-b1": [5, 20], "p-b2": [10, 20], "p-b3": [15, 20], "p-b4": [20, 20], "p-l1": [4, 6], "p-l2": [4, 12], "p-l3": [4, 18] };
+  "p-lid": [12, 11.5], "p-b1": [5, 20], "p-b2": [10, 20], "p-b3": [15, 20], "p-b4": [20, 20], "p-l1": [4, 6], "p-l2": [4, 12], "p-l3": [4, 18] };
 /** A part's transform at progress k (0 = the start of its flourish, 1 = at rest). */
 function partTransform(cls, k) {
   if (!cls || k >= 1) return null;
@@ -42,6 +42,7 @@ function partTransform(cls, k) {
   if (cls === "p-card") return { t: around("scale(" + lerp(-1, 1) + " 1)") };
   if (/^p-b/.test(cls)) return { t: around("scale(1 " + lerp(0.15, 1) + ")") };
   if (/^p-l/.test(cls)) return { t: "translate(" + lerp(-6, 0) + " 0)", o: k };
+  if (cls === "p-lid") return { t: "translate(0 " + lerp(-4, 0) + ") " + around("rotate(" + lerp(-14, 0) + ")") };
   if (cls === "p-plane") return { t: "translate(" + lerp(-6, 0) + " " + lerp(6, 0) + ") " + around("scale(" + lerp(0.6, 1) + ")") };
   return null;
 }
