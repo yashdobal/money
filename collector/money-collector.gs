@@ -506,6 +506,10 @@ function parseMessage_(c) {
     hb = hb.replace(/(^|[\s(:])\*+(?=\S)/g, '$1').replace(/(\S)\*+(?=[\s.,;:)]|$)/g, '$1');
     hit = hdfcAccount_(hb, fallback);                      // a savings account first
     if (!hit) m = hb.match(/Rs\.?\s*([\d,]+\.?\d*)\s*(?:has been|is|was)\s*debited from your HDFC Bank Credit Card ending\s*(\d{4})\s*(?:towards|at)\s*(.+?)\s+on\s+(\d{1,2})[ -]([A-Za-z]{3})[a-z]*[, -]+(\d{2,4})(?:\s*at\s*(\d{1,2}):(\d{2}))?/i);
+    // "Thank you for using your HDFC Bank Card XX1234 for Rs. 1999.0 at GOOGLEPLAY on 05-11-2026 18:53:26." (subscriptions,
+    // auto-debits and tap payments use this wording instead)
+    if (!hit && !m) m = hb.match(/using your HDFC Bank (?:Credit )?Card\s*(?:ending\s*)?(?:XX|\*+|x+)?(\d{4})\s*for\s*(?:Rs\.?|INR)\s*([\d,]+\.?\d*)\s*at\s*(.+?)\s+on\s+(\d{1,2})[ -](\d{1,2}|[A-Za-z]{3})[a-z]*[ -](\d{2,4})(?:\s*(\d{1,2}):(\d{2}))?/i);
+    if (m && /using your HDFC/i.test(m[0])) m = [m[0], m[2], m[1], m[3], m[4], m[5], m[6], m[7], m[8]];
     var refund = false;
     // "A transaction reversal of Rs. 2.00 has been initiated to your HDFC Bank Credit Card ending 1234 From Merchant:
     //  PTM*UBER INDIA SYSTEMS Date Time: 30 Oct, 2026 at 17:58:10"
@@ -514,7 +518,7 @@ function parseMessage_(c) {
       refund = !!m;
     }
     if (!hit && m) {
-      var hm = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'].indexOf(m[5].toLowerCase());
+      var hm = /^\d+$/.test(m[5]) ? +m[5] - 1 : ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'].indexOf(m[5].toLowerCase());
       var hy = m[6].length === 2 ? yy_(m[6]) : +m[6];
       // "RSP*SWIGGY PVT LTD FOO" -> "SWIGGY": drop the payment gateway's prefix (Razorpay, Paytm…) and the cut-off company suffix
       var who = m[3].replace(/^[A-Z]{2,5}\s?\*\s?/, '').replace(/\s+(PVT|PRIVATE)?\s*(LTD|LIMITED)\b.*$/i, '').trim() || m[3];
