@@ -54,8 +54,9 @@ const { ctx, p, saves } = await open();
 await step("Today shows Safe to spend until payday with the figure", async () => {
   const t = await text(p);
   must(/Safe to spend until payday/.test(t), "no hero label");
-  // the big figure rolls digit by digit, so it's read from its label
-  must(await p.getByLabel("₹10,080", { exact: true }).count() > 0, "hero figure isn't ₹10,080");
+  // the big figure rolls digit by digit, so it's read from its label. ₹1,380 of it is the demo's hospital bill, spent for
+  // someone else on a card and not yet paid back, so not yours to pay
+  must(await p.getByLabel("₹11,460", { exact: true }).count() > 0, "hero figure isn't ₹11,460");
   must(/Needs attention/.test(t) && /Coming up/.test(t) && /Bank balance/.test(t), "a Today panel is missing");
 });
 await step("Add a payment: saved to your account and shown in Activity", async () => {

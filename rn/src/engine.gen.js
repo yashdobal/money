@@ -401,11 +401,40 @@ function groupState(g, now){
   const credit = Math.max(0, toUnbilled - unbilled);
   const dueIn = days(now, prevUnpaid >= 0.5 ? c.prevDue : c.due);
 
+  // Spent for someone else and still on what you owe: they pay you back, so it isn't yours to pay (owedBack)
+  let othersFrom = Infinity;
+  const othersIn = (a, b) => TX.reduce((s, t) => {
+    if(members.indexOf(t.account) === -1 || t.dir !== "out" || !(t.ts > a && t.ts <= b)) return s;
+    const n = noteOf(t.id); if(!(n && n.for_someone_else)) return s;
+    othersFrom = Math.min(othersFrom, t.ts); return s + t.amt;
+  }, 0);
+  const othersBilled = preFirst ? 0 : Math.min(Math.max(0, billedLeft - prevUnpaid), othersIn(winStart, winEnd));
+  const othersUnbilled = Math.min(unbilledLeft, othersIn(preFirst ? -Infinity : winEnd, Infinity));
+
   return {key:g, label:g, cfg, members, c, okey:g + "|" + iso(c.stmt), billed, billedAlerts, source, st,
           minDue: st && st.min ? st.min : null, hasOverride:ov !== null, from, prevUnpaid, refunds,
           toBilled, billedLeft, preFirst, unbilled, byCard, toUnbilled, unbilledLeft, credit, paid,
-          owed: billedLeft + unbilledLeft, dueIn,
+          owed: billedLeft + unbilledLeft, dueIn, othersBilled, othersUnbilled, othersFrom,
           state: billedLeft < 0.5 ? "settled" : urgency(dueIn)};
+}
+
+/** Money spent on your cards for someone else that's still on an unpaid bill: they'll pay you back, so it isn't yours
+    to pay. Money already paid back to you since the earliest of those spends is in your bank balance, so it's taken
+    off first, oldest bill first. parts: [{c, billed, amt, d}], d = that bill's due date (when it's expected back). */
+function owedBack(cards){
+  const parts = [];
+  cards.forEach(c => {
+    if(c.othersBilled >= 0.5) parts.push({c, billed:true, amt:c.othersBilled, d:c.c.due});
+    if(c.othersUnbilled >= 0.5) parts.push({c, billed:false, amt:c.othersUnbilled, d:c.c.nextDue});
+  });
+  if(!parts.length) return {total:0, parts, got:0};
+  const from = Math.min.apply(null, parts.map(p => p.c.othersFrom));
+  let got = sumOf(TX.filter(t => t.dir === "in" && t.ts >= from && paidBack(t.id)), t => t.amt) +
+            sumOf(manual.filter(m => m.dir === "in" && manualTx(m).paidBack && manualWhen(m) >= from), m => m.amt);
+  const had = got;
+  parts.sort((a, b) => a.d - b.d).forEach(p => { const take = Math.min(got, p.amt); got -= take; p.amt -= take; });
+  const left = parts.filter(p => p.amt >= 0.5);
+  return {total:sumOf(left, p => p.amt), parts:left, got:had - got};
 }
 
 function allCards(){
@@ -793,6 +822,8 @@ function cardBillsFor(cyc){
   if(!billsFromSalary(cyc)) return [];
   const now = sod(new Date()), lo = cyc.p0.getTime(), hi = cyc.p1.getTime(), out = [];
   const inWin = d => d && d.getTime() >= lo && d.getTime() < hi;
+  const back = owedBack(openGroups().map(g => groupState(g, now))).parts;
+  const backOf = (g, billed) => sumOf(back.filter(p => p.c.key === g && p.billed === billed), p => p.amt);
   openGroups().forEach(g => {
     const st = groupState(g, now), c = st.c, cfgG = GROUPS[g], mine = [];
     if(!st.preFirst && inWin(c.due) && st.billed >= 0.5)
@@ -808,7 +839,8 @@ function cardBillsFor(cyc){
     }
     let paid = sumAmt(EFF_PAYMENTS.filter(x => x.group === g && x.ts >= lo && x.ts < hi));     // paid from this salary
     mine.forEach(b => { const take = Math.min(Math.max(0, b.total - b.left), paid); paid -= take;
-      b.amt = b.left + take; b.paid = b.left < 0.5; if(b.amt >= 0.5) out.push(b); });
+      b.back = Math.min(b.left, backOf(g, b.billed));           // spent for someone else: they pay it back
+      b.amt = b.left - b.back + take; b.paid = b.left < 0.5; if(b.amt >= 0.5 || b.back >= 0.5) out.push(b); });
   });
   return out.sort((a, b) => a.due - b.due);
 }       // editable under Plan → Salary & fixed payments
@@ -1028,17 +1060,18 @@ function payCycle(){
 function cycleSpend(cyc){
   const start = cyc.p0.getTime();
   let total = 0;
-  const skipCards = cardsPaidLater(cyc);
+  const skipCards = cardsPaidLater(cyc), own = paybackOwn();
   TX.forEach(t => {
     const x = withRules(t);
     if(x.ts < start) return;
     if(skipCards && CARD_CFG[x.account]) return;            // paid from the salary its bill is due in
     if(x.dir === "out" && x.counted) total += x.amt;
-    else if(x.dir === "in" && (CARD_CFG[x.account] || x.paidBack)) total -= x.amt;    // refund back to a card, or a friend paying you back
+    else if(x.dir === "in" && CARD_CFG[x.account]) total -= x.amt;      // a refund back to a card
+    else if(x.dir === "in" && x.paidBack) total -= ownBack(own, x);   // a friend paying you back (not for what you spent for them)
   });
   manual.forEach(m => { const [y,mo] = String(m.ym).split("-");
     if(new Date(+y, +mo - 1, m.d) < cyc.p0) return;
-    if(m.dir === "in"){ if(m.c === "Paid back") total -= m.amt; return; }    // a friend paying you back
+    if(m.dir === "in"){ if(m.c === "Paid back") total -= ownBack(own, m); return; }    // a friend paying you back
     if(manualCounted(m) && !(skipCards && GROUPS[m.acct])) total += m.amt; });
   return total;
 }
@@ -1111,6 +1144,8 @@ function forecast(cards){
     if(c.billedLeft - c.prevUnpaid >= 0.5) add(c.c.due, -(c.billedLeft - c.prevUnpaid), "card", nm + " bill", {card:c, min:c.minDue});
     if(c.unbilledLeft >= 0.5) add(c.c.nextDue, -c.unbilledLeft, "card", nm + ", spent since " + fmt(c.c.stmt), {card:c});
   });
+  // what you spent on them for someone else comes back by the time the bill is due
+  owedBack(cards).parts.forEach(p => add(p.d, p.amt, "back", short(p.c), {card:p.c, billed:p.billed}));
   let H = addDays(P2, -1);
   ev.forEach(e => { if(e.d > H) H = e.d; });              // already-spent card money is always counted, even if due later
 
@@ -1256,6 +1291,7 @@ function evRow(e){
     if(/ earlier bill$/.test(e.what)) return {title:nm + " earlier bill", detail:"unpaid · due " + when};
     return {title:nm + " bill", detail:"due " + when};
   }
+  if(e.kind === "back") return {title:"Back from others", detail:"spent for someone else on the " + (e.card ? cardShort(e.card.key) : e.what) + " · by " + when};
   if(e.kind === "cardemi") return {title:tidy(e.what), detail:"on the card, due " + when};
   if(e.kind === "fixed") return {title:e.what.replace(/\s+(\d+) of (\d+)$/, " $1/$2"), detail:when};
   if(e.kind === "salary"){
@@ -1302,6 +1338,7 @@ function heroModel(cards){
   const rows = f.b.parts.filter(p => p.set).map(p => ({title:"In your " + p.name + " account", detail:"tracked from alerts", amt:p.bal}));
   f.ev.filter(e => e.kind === "salary").forEach(e => rows.push(Object.assign(evRow(e), {amt:e.amt, tone:"pos"})));
   f.ev.filter(e => /^(card|cardemi|fixed)$/.test(e.kind)).forEach(e => rows.push(Object.assign(evRow(e), {amt:e.amt})));
+  f.ev.filter(e => e.kind === "back").forEach(e => rows.push(Object.assign(evRow(e), {amt:e.amt, tone:"pos"})));
   [["family", familyTitle()], ["sip", "SIP"], ["ef", "Emergency fund"], ["goal", "Goal money to move"]].forEach(([k, title]) => {
     const list = f.ev.filter(e => e.kind === k); if(!list.length) return;
     const v = sumOf(list, e => e.amt); if(!v) return;
@@ -1374,7 +1411,8 @@ function netModel(cards){
   const setAt = k => { const b = bankByKey(k) || BANKS[0]; return b ? settings[b.at] || 0 : 0; };
   const nxtIn = !!(curIn && nxt.sal.credited && nxt.sal.credited.getTime() > setAt(nxt.sal.bank));   // landed before payday
   const oweNext = nxtIn ? stillToSetAside(nxt) : [], oweNextTotal = oweNext.reduce((a,r) => a + r.left, 0);
-  const now = b.bal - oweTotal - oweNextTotal - billed - unbilled;
+  const back = owedBack(cards).total;                  // on the cards, but someone else's to pay
+  const now = b.bal - oweTotal - oweNextTotal - billed - unbilled + back;
   let next = null;
   if(nxt && !nxtIn){
     const s = nxt.sal, e = s.exp || {};
@@ -1382,7 +1420,7 @@ function netModel(cards){
     next = {mp:nxt, status, basis:curIn ? "at your rule" : "from the planner", then:now + nxt.spend + nxt.cardsTotal};   // `now` already takes off every card
   }
   const age = b.since ? Math.floor((Date.now() - b.since) / DAY) : null;
-  return {b, billed, unbilled, owe, oweTotal, oweNext, oweNextTotal, nxtCredited:nxtIn ? nxt.sal.credited : null, now, next, age};
+  return {b, billed, unbilled, back, owe, oweTotal, oweNext, oweNextTotal, nxtCredited:nxtIn ? nxt.sal.credited : null, now, next, age};
 }
 
 /* ---------------- Coming up, and the calendar ---------------- */
@@ -1547,18 +1585,37 @@ function buildMonths(){
   MONTHS = Array.from(set).sort().reverse();
   if(!currentYM || !set.has(currentYM)) currentYM = MONTHS[0];
 }
+/** Money paid back first settles what you spent for someone else (never your spending, so nothing to take off); only
+    the rest comes off your own spending (you paid for the group and a friend paid their share). In date order.
+    Returns id → the part of that payback that comes off your spending. */
+function paybackOwn(){
+  const list = [];
+  TX.forEach(t => {
+    const n = noteOf(t.id);
+    if(t.dir === "out" && n && n.for_someone_else) list.push({ts:t.ts, other:t.amt});
+    else if(t.dir === "in" && paidBack(t.id)) list.push({ts:t.ts, back:t.amt, id:t.id});
+  });
+  manual.forEach(m => { const x = manualTx(m);
+    if(x.forOther) list.push({ts:manualWhen(m), other:m.amt}); else if(x.paidBack) list.push({ts:manualWhen(m), back:m.amt, id:m.id}); });
+  list.sort((a, b) => a.ts - b.ts || (a.other ? -1 : 1));
+  let pool = 0; const own = new Map();
+  list.forEach(e => { if(e.other) pool += e.other; else { const take = Math.min(pool, e.back); pool -= take; own.set(e.id, e.back - take); } });
+  return own;
+}
+const ownBack = (own, x) => own.has(x.id) ? own.get(x.id) : x.amt;
 /** What counts as spending in a list of transactions: counted spends, less refunds to cards and money friends paid back. */
 function spendOf(tx){
   const cardRefunds = sumOf(tx.filter(x => x.dir === "in" && x.kind === "card"), x => x.amt);
-  const paybacks = sumOf(tx.filter(x => x.paidBack), x => x.amt);
+  const back = tx.filter(x => x.paidBack), own = back.length ? paybackOwn() : null;
+  const paybacks = sumOf(back, x => ownBack(own, x));
   return {spend:sumOf(tx.filter(x => x.dir === "out" && x.counted), x => x.amt) - cardRefunds - paybacks, cardRefunds, paybacks};
 }
 /** Month by month: counted spending (manual entries included), less money friends paid back. */
 function trendAll(){
-  const bm = {}, all = TX.map(withRules);
+  const bm = {}, all = TX.map(withRules), own = paybackOwn();
   all.filter(x => x.dir === "out" && x.counted).forEach(x => bm[x.ym] = (bm[x.ym] || 0) + x.amt);
-  manual.forEach(m => { if(manualCounted(m)) bm[m.ym] = (bm[m.ym] || 0) + m.amt; else if(m.dir === "in" && m.c === "Paid back") bm[m.ym] = (bm[m.ym] || 0) - m.amt; });
-  all.filter(x => x.paidBack).forEach(x => bm[x.ym] = (bm[x.ym] || 0) - x.amt);
+  manual.forEach(m => { if(manualCounted(m)) bm[m.ym] = (bm[m.ym] || 0) + m.amt; else if(m.dir === "in" && m.c === "Paid back") bm[m.ym] = (bm[m.ym] || 0) - ownBack(own, m); });
+  all.filter(x => x.paidBack).forEach(x => bm[x.ym] = (bm[x.ym] || 0) - ownBack(own, x));
   return bm;
 }
 function spendModel(ym){
@@ -2949,6 +3006,7 @@ act.setRew = function(k, v){
     get statementNear() { return statementNear; },
     get overrideFor() { return overrideFor; },
     get groupState() { return groupState; },
+    get owedBack() { return owedBack; },
     get allCards() { return allCards; },
     get serverCall() { return serverCall; },
     get hook() { return hook; },
@@ -3070,6 +3128,8 @@ act.setRew = function(k, v){
     get txFor() { return txFor; },
     get MONTHS() { return MONTHS; },
     get buildMonths() { return buildMonths; },
+    get paybackOwn() { return paybackOwn; },
+    get ownBack() { return ownBack; },
     get spendOf() { return spendOf; },
     get trendAll() { return trendAll; },
     get spendModel() { return spendModel; },

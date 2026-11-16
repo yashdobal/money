@@ -101,7 +101,7 @@ function Planner({ first }) {
         <View>
           <SubHead right={<M v={-mp.cardsTotal} s={15} />}>Card bills · paid from this salary</SubHead>
           <Rows>{mp.cards.map((c, k) => <Row key={k} icon={swBox(C.nCard)} title={c.name}
-            detail={(c.billed ? "bill of " + fmt(c.stmt) : "so far · bills " + fmt(c.stmt)) + " · due " + fmt(c.due) + (c.paid ? " · paid" : "")} value={amt(c.amt, { sign: "out" })} />)}</Rows>
+            detail={(c.billed ? "bill of " + fmt(c.stmt) : "so far · bills " + fmt(c.stmt)) + " · due " + fmt(c.due) + (c.paid ? " · paid" : "") + (c.back >= 0.5 ? " · " + (hidden() ? "••••" : money(c.back)) + " back from others" : "")} value={amt(c.amt, { sign: "out" })} />)}</Rows>
         </View>
       ) : null}
       <View style={{ marginTop: 20, padding: 16, borderRadius: 14, backgroundColor: C.accentSoft, overflow: "hidden" }}>

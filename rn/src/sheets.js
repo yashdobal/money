@@ -108,7 +108,7 @@ function TxSheet({ id }) {
           </View>
         </View>
       )}
-      {E.NOTES_OK && x.dir === "out" && !isPay ? <SwRow title="Spent for someone else" detail="they'll pay you back, so it isn't your spending" value={other} onChange={setOther} /> : null}
+      {E.NOTES_OK && x.dir === "out" && !isPay ? <SwRow title="Spent for someone else" detail="not your spending, and on a card bill it's left out of what you have to pay" value={other} onChange={setOther} /> : null}
       {t && x.dir === "in" && x.kind === "bank" ? <SwRow title="A friend paying me back" detail="comes off your spending, like a refund" value={back} onChange={setBack} /> : null}
       {E.NOTES_OK ? <Field label="Note" value={note} onChange={setNote} multiline maxLength={500} placeholder="Anything to remember about it" /> : null}
       {!E.NOTES_OK && E.DATA_IN ? <Note style={{ marginTop: 8 }}>Notes and "spent for someone else" need one database update first (see Settings).</Note> : null}
@@ -229,6 +229,7 @@ function NetSheet() {
         {n.oweNext.length ? r("Set aside from the " + E.fmt(n.nxtCredited) + " salary", E.andList(n.oweNext.map((x) => x.name)), -n.oweNextTotal, { sign: "out" }) : null}
         {r("Billed card dues", "", -n.billed, { sign: "out", tone: n.billed >= 0.5 ? "alert" : "" })}
         {r("Unbilled card spend", "", -n.unbilled, { sign: "out", tone: "info" })}
+        {n.back >= 0.5 ? r("Back from others", "spent for someone else on your cards", n.back, { sign: "in", tone: "pos" }) : null}
         {r("Yours now", "", n.now, { total: true, tone: n.now < 0 ? "alert" : "" })}
       </Rows>
       {n.next ? (() => {
