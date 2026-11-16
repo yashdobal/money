@@ -473,6 +473,18 @@ function parseMessage_(c) {
       hit = { account: 'SBI Card XX' + m[2], kind: 'card',
               date: new Date(yy_(m[6]), +m[5] - 1, +m[4], 12, 0),
               amount: num_(m[1]), direction: 'out', description: m[3], raw: m[3] };
+    } else if (/e-?mandate/i.test(subject) && /processed|success/i.test(subject) && (m = body.match(/Amount:\s*(?:Rs\.?|INR|₹)?\s*([\d,]+\.?\d*)/i))) {
+      // Since Nov 2026: "Recurring E-mandate processed successfully on your SBI Credit Card" — "… SBI Credit Card XX
+      // ending with 1234 … Amount: Rs.2,869.83 Merchant: HDFC ERGO SiHub ID: … Trxn. Ref. No.: … Date: 05-Nov-2026
+      // Time: 14:34:34"
+      var mer = body.match(/Merchant:\s*(.+?)\s*(?:SiHub|Trxn|Date:|To manage|$)/i);
+      var dt = body.match(/Date:\s*(\d{1,2})[- ]([A-Za-z]{3})[a-z]*[- ](\d{4})(?:\s*Time:\s*(\d{1,2}):(\d{2}))?/i);
+      var card = body.match(/ending(?: with)?\s*(\d{4})/i);
+      var mi2 = dt ? MONTHS_.indexOf(dt[2].toLowerCase()) : -1;
+      var who = mer ? mer[1] : 'E-mandate';
+      hit = { account: 'SBI Card XX' + (card ? card[1] : last4_('SBI_CARD_LAST4')), kind: 'card',
+              date: mi2 < 0 ? fallback : new Date(+dt[3], mi2, +dt[1], dt[4] ? +dt[4] : 12, dt[5] ? +dt[5] : 0),
+              amount: num_(m[1]), direction: 'out', description: who + ' (auto-debit)', raw: who + ' e-mandate' };
     } else if (/debit success/i.test(subject)) {
       m = body.match(/Transaction of Rs\.?\s*([\d,]+\.?\d*)\s*at\s*(.+?)\s*against E-?mandate/i);
       if (m) {
