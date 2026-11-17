@@ -181,6 +181,16 @@ function Digit({ n, k, f, s, lh, c, ls, run, delay, dur }) {
     if (!go) { v.setValue(n); return; }
     Animated.timing(v, dur ? { toValue: n, duration: Math.max(400, dur - k * 40), easing: inOutQuart, delay: (delay || 0) + k * 40, useNativeDriver: NATIVE }
       : { toValue: n, duration: 1000, easing: S.soft.ease, delay: 120 + k * 45, useNativeDriver: NATIVE }).start();
+    // The roll must always end on the digit itself. If the page is paused or throttled part-way (an Android WebView
+    // behind the lock screen, a background tab) the animation can stop between two digits, leaving a half-rolled
+    // figure on screen, so a timer after the roll's end, and coming back to the page, put the strip on the digit.
+    if (Platform.OS !== "web") return;   // website and the Android WebView only; the phone app is left as it was
+    const end = dur ? (delay || 0) + k * 40 + Math.max(400, dur - k * 40) : 120 + k * 45 + 1000;
+    const snap = () => v.setValue(n);
+    const timer = setTimeout(snap, end + 250);
+    const back = () => { if (typeof document !== "undefined" && !document.hidden) setTimeout(snap, end + 250); };
+    if (typeof document !== "undefined" && document.addEventListener) document.addEventListener("visibilitychange", back);
+    return () => { clearTimeout(timer); if (typeof document !== "undefined" && document.removeEventListener) document.removeEventListener("visibilitychange", back); };
   }, [n]);
   return (
     <View style={{ height: lh, overflow: "hidden" }}>
