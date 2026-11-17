@@ -174,7 +174,33 @@ export function Odo({ value, f = F.hero, s = 54, c, letterSpacing, run = true, d
   );
 }
 const inOutQuart = (t) => (t < 0.5 ? 8 * t * t * t * t : 1 - Math.pow(-2 * t + 2, 4) / 2);
-function Digit({ n, k, f, s, lh, c, ls, run, delay, dur }) {
+/* On the website (and so in the Android app, which shows the website) a digit's strip is moved by a CSS transition, not
+   by a loop in JavaScript: the browser always ends it on the right digit, even if frames were skipped (the app opening
+   while it refreshes, a slow phone), so a figure can no longer freeze half-way between two digits. Each column is as
+   wide as the digit it shows, so a 1 doesn't hold a gap open. */
+function DigitWeb({ n, k, f, s, lh, c, ls, run, delay, dur }) {
+  const go = run && motionOn();
+  const [at, setAt] = useState(go ? 0 : n);
+  useEffect(() => {
+    if (!go) { setAt(n); return; }
+    const t = setTimeout(() => setAt(n), 40);
+    return () => clearTimeout(t);
+  }, [n]);
+  const ms = dur ? Math.max(400, dur - k * 40) : 1000, wait = dur ? (delay || 0) + k * 40 : 120 + k * 45;
+  const text = { fontFamily: f, fontSize: s, lineHeight: lh, height: lh, color: c, letterSpacing: ls, textAlign: "center", fontVariant: ["proportional-nums"], includeFontPadding: false };
+  return (
+    <Tick k={k} lh={lh}>
+      <View style={{ height: lh, position: "relative", clipPath: "inset(0px -14px 0px -14px)" }}>
+        <Text style={[text, { opacity: 0 }]}>{n}</Text>
+        <View style={{ position: "absolute", left: -14, right: -14, top: 0, transform: [{ translateY: -at * lh }], transitionProperty: "transform",
+          transitionDuration: (go ? ms : 0) + "ms", transitionDelay: (go ? wait : 0) + "ms", transitionTimingFunction: dur ? "cubic-bezier(0.76, 0, 0.24, 1)" : "cubic-bezier(0.22, 1, 0.36, 1)" }}>
+          {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((d) => <Text key={d} style={text}>{d}</Text>)}
+        </View>
+      </View>
+    </Tick>
+  );
+}
+function DigitNative({ n, k, f, s, lh, c, ls, run, delay, dur }) {
   const go = run && motionOn();
   const v = useRef(new Animated.Value(go ? 0 : n)).current;
   useEffect(() => {
@@ -192,6 +218,8 @@ function Digit({ n, k, f, s, lh, c, ls, run, delay, dur }) {
     </View>
   );
 }
+
+const Digit = Platform.OS === "web" ? DigitWeb : DigitNative;
 
 /* ---------------- a screen's page ---------------- */
 /** A wide window (a laptop): the sidebar, and a screen's blocks side by side. */
