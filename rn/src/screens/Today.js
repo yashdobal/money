@@ -5,7 +5,7 @@ import Svg, { Defs, LinearGradient, Stop, Rect } from "react-native-svg";
 import { E } from "../store";
 import { openSheet, goTo } from "../nav";
 import { useC, F, rgba } from "../theme";
-import { T, M, amt, money, Panel, Rows, Row, Tile, Ic, DotIc, Sw, DayHead, Note, Rise, Odo, CountUp, SplitBar, More, Btn, IB, plural, dayName, inDays, settleAt, Page } from "../kit";
+import { T, M, amt, money, Panel, Rows, Row, Tile, Ic, DotIc, Sw, DayHead, Note, Rise, Odo, CountUp, SplitBar, More, Btn, IB, Press, plural, dayName, inDays, settleAt, Page } from "../kit";
 import { HeroChart, BankChart, bankAhead } from "../charts";
 import { HeroLight, Coins, heroTouch } from "../fx";
 import { GL, HeroField } from "../gl";
@@ -151,7 +151,8 @@ function BankPanel({ hero, i, first }) {
   const sub = "From your alerts" + (age !== null ? " · checked " + (age === 0 ? "today" : age === 1 ? "yesterday" : age + " days ago") : "");
   return (
     <Panel title="Bank balance" kind="w" i={i} first={first} right={<View style={{ flexDirection: "row", gap: 14 }}><Btn kind="link" label="Update" onPress={() => openSheet("balance")} /><Btn kind="link" label="History" onPress={() => openSheet("bank")} /></View>}>
-      <View onTouchEnd={() => openSheet("bank")}>
+      {/* a tap opens the history; a finger that scrolls the page past it doesn't (a press is cancelled once the page moves) */}
+      <Press onPress={() => openSheet("bank")} scale={0.985} accessibilityLabel="Bank balance history">
         <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
           <M v={h.now} f={F.fig} s={27} tone={h.now < 0 ? "alert" : ""} style={{ lineHeight: 32 }} />
           <M text={(diff >= 0 ? "▲ " : "▼ ") + amt(Math.abs(diff)) + " in 30 days"} f={F.semi} s={13} c={diff >= 0 ? C.pos : C.warn} />
@@ -165,7 +166,7 @@ function BankPanel({ hero, i, first }) {
           {ahead.length ? <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}><View style={{ width: 14, borderTopWidth: 1.6, borderStyle: "dashed", borderColor: C.ink3 }} />
             <T s={13} c={C.ink2}>By payday </T><M v={ahead[ahead.length - 1].bal} f={F.body} s={13} c={ahead[ahead.length - 1].bal < 0 ? C.alert : C.ink2} /></View> : null}
         </View>
-      </View>
+      </Press>
       {h.missing.length ? (
         <View style={{ marginTop: 10 }}>
           <Note>{"Your " + h.missing.join(" and ") + " balance isn't set, so it counts as ₹0."}</Note>

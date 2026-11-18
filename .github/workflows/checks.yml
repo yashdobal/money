@@ -35,6 +35,8 @@ jobs:
         run: node tools/rn/rewards.test.mjs
       - name: "Spent for someone else: left out of what you pay, and paid back only once"
         run: node tools/rn/others.test.mjs
+      - name: Card payments marked reversed or refunded
+        run: node tools/rn/reverse.test.mjs
       - name: "The app, clicked through: add, search, edit, balances, hide amounts, plan, goals, cards, trips, settings"
         run: node tools/ui/rn.click.test.mjs
       - name: "The website: screens moving, address and Back, the lock, carry-over, alerts, laptop layout, inside the Android app"

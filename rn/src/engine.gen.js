@@ -259,6 +259,47 @@ function takeTx(list){
   SCHEDULED = all.filter(t => t.ts > now).sort((a,b) => a.ts - b.ts);
   return all.filter(t => !(t.ts > now));
 }
+/* Card charges you marked as reversed or refunded in Activity (overrides["rev|<id>"]):
+     true          reversed before its bill closed: as if it never happened, so it's left out of everything (the card
+                   bill, spending, Safe to spend, points)
+     "YYYY-MM-DD"  refunded after its bill closed: the charge stays on that bill and the same amount comes back to the
+                   card that day, off the next bill (as a refund email would)
+   RAW keeps every row the alerts gave, so a mark can be undone; TX is RAW with the marks applied (useTx). */
+let RAW = [];
+const revOf = id => { const v = overrides["rev|" + id]; return v === true ? {gone:true} : isISO(v) ? {on:v} : null; };
+/** TX from RAW and your marks. keep: hold on to the SMS payments the phone added (they're put back on every load). */
+function useTx(keep){
+  const out = [];
+  RAW.forEach(t => {
+    const r = t.dir === "out" && CARD_CFG[t.account] ? revOf(t.id) : null;
+    if(r && r.gone) return;
+    out.push(t);
+    if(r && r.on){
+      const d = parseISO(r.on);
+      out.push(Object.assign({}, t, {id:t.id + "~refund", ts:d.getTime() + 12 * 3600000, day:d.getDate(), ym:r.on.slice(0, 7), dir:"in",
+        desc:"Refund · " + t.desc, cat:"Refunds", counted:false, refundOf:t.id}));
+    }
+  });
+  TX = keep ? out.concat(TX.filter(t => t.sms)) : out;
+}
+/** Whether a card charge is on a statement that has already closed. */
+function billedYet(t){
+  const c0 = CARD_CFG[t.account], cfg = c0 && GROUPS[c0.group];
+  if(!cfg) return false;
+  const c = cycleFor(cfg, new Date()), first = parseISO(cfg.firstStmt);
+  if(first && c.stmt < first) return false;
+  return t.ts <= c.stmt.getTime() + 86400000 - 1;
+}
+/** For the edit sheet: a card charge's mark, whether its bill has closed, and a refund to the same card for the same
+    amount within 90 days after it (the bank's own refund, which already takes it off). null: not a card charge. */
+function revInfo(id){
+  const t = RAW.find(x => x.id === id);
+  if(!t || t.dir !== "out" || !CARD_CFG[t.account]) return null;
+  const r = revOf(id), g = CARD_CFG[t.account].group;
+  const match = r ? null : RAW.find(x => x.dir !== "out" && CARD_CFG[x.account] && CARD_CFG[x.account].group === g && x.ts > t.ts &&
+    x.ts - t.ts < 90 * 86400000 && Math.abs(x.amt - t.amt) <= 1) || null;
+  return {gone:!!(r && r.gone), on:r && r.on ? r.on : null, billed:billedYet(t), match};
+}
 let goals = [], contribs = [], payAssign = {};
 let SELF_TX = new Set(), EFF_PAYMENTS = [], PAY_INFO = {byTx:{}, unresolved:[], candidates:new Set(), detail:{}}, CONTRIB_TX = new Set(), PLANNED_TX = new Map();
 let assignId = null, gFormId = null, gDelPending = null;
@@ -396,9 +437,12 @@ function groupState(g, now){
 
   const toBilled = Math.min(paid, billed);
   const toUnbilled = paid - toBilled;
-  const billedLeft = billed - toBilled + prevUnpaid;
-  const unbilledLeft = Math.max(0, unbilled - toUnbilled);
-  const credit = Math.max(0, toUnbilled - unbilled);
+  // refunds since the statement bigger than the new spending are a credit on the account: it comes off the closed bill
+  // still unpaid first (pay the bill less the refund and it's cleared), and only the rest is a credit left over
+  const offBill = Math.min(Math.max(0, -unbilled), Math.max(0, billed - toBilled + prevUnpaid));
+  const billedLeft = billed - toBilled + prevUnpaid - offBill;
+  const unbilledLeft = Math.max(0, unbilled + offBill - toUnbilled);
+  const credit = Math.max(0, toUnbilled - unbilled - offBill);
   const dueIn = days(now, prevUnpaid >= 0.5 ? c.prevDue : c.due);
 
   // Spent for someone else and still on what you owe: they pay you back, so it isn't yours to pay (owedBack)
@@ -494,13 +538,14 @@ function applyNotes(data){
     widget and the 9 PM summary show exactly what the app shows. Returns whether the settings need saving. */
 function ingest(data){
   if(data.settings && data.settings.profile) applyProfile(data.settings.profile);   // which cards are closed, before the rows are read
-  TX = takeTx(data.tx);
+  RAW = takeTx(data.tx);
   const v4 = Array.isArray(data.events);
   const evSeen = {};
   EVENTS = v4 ? data.events.filter(e => e && e.id && !evSeen[e.id] && (evSeen[e.id] = true)) : [];
   lastRun = data.lastRun || null; lastFetch = Date.now();
   const s = data.settings || {};
   applySettings(s);
+  useTx();
   applyNotes(data);
   buildMonths();
   return !s.seeded;
@@ -531,7 +576,7 @@ function refresh(){
   return Promise.resolve(ask).catch(() => {}).finally(load);
 }
 
-function cacheLocal(){ lsSet(CACHE_KEY, JSON.stringify({tx:TX, events:EVENTS, settings, manual, payments, overrides, catRules, goals, contribs, payAssign, cfg, profile:PROFILE, lastRun, at:lastFetch, notes:NOTES, notesOk:NOTES_OK})); }
+function cacheLocal(){ lsSet(CACHE_KEY, JSON.stringify({tx:RAW, events:EVENTS, settings, manual, payments, overrides, catRules, goals, contribs, payAssign, cfg, profile:PROFILE, lastRun, at:lastFetch, notes:NOTES, notesOk:NOTES_OK})); }
 
 let saveTimer = null;
 const saveMsg = t => { SAVE_MSG = t; hook("saved", t); };
@@ -1572,11 +1617,14 @@ function manualTx(m){
 }
 const manualCounted = m => manualTx(m).counted;
 /** Transactions as the app shows them: one month (ym "2026-12"), or all of them (ym null). */
-function txFor(ym){
+function txFor(ym, withGone){
   const pick = x => !ym || x.ym === ym;
-  return TX.filter(pick).map(withRules)
-    .map(x => CARD_CFG[x.account] ? Object.assign({}, x, {account:acctName(x.account), card:CARD_CFG[x.account].group}) : x)
-    .concat(manual.filter(pick).map(manualTx));
+  const marked = x => { const r = x.dir === "out" && CARD_CFG[x.account] ? revOf(x.id) : null; return r && r.on ? Object.assign({}, x, {refunded:r.on}) : x; };
+  const named = x => CARD_CFG[x.account] ? Object.assign({}, x, {account:acctName(x.account), card:CARD_CFG[x.account].group}) : x;
+  const out = TX.filter(pick).map(withRules).map(marked).map(named).concat(manual.filter(pick).map(manualTx));
+  // reversed charges: only in the Activity list (struck out, so you can undo the mark), never in a figure
+  if(withGone) RAW.forEach(t => { if(pick(t) && t.dir === "out" && CARD_CFG[t.account] && (revOf(t.id) || {}).gone) out.push(named(Object.assign({}, withRules(t), {counted:false, reversed:true}))); });
+  return out;
 }
 let MONTHS = [];
 function buildMonths(){
@@ -1655,7 +1703,7 @@ function spendModel(ym){
 
 /** Every transaction, newest first, for Activity and the CSV export. */
 function allTx(){
-  return txFor(null).sort((a, b) => b.ym.localeCompare(a.ym) || b.day - a.day || (b.ts || 0) - (a.ts || 0));
+  return txFor(null, true).sort((a, b) => b.ym.localeCompare(a.ym) || b.day - a.day || (b.ts || 0) - (a.ts || 0));
 }
 const clockOf = x => x.ts ? new Date(x.ts).toLocaleTimeString("en-IN", {hour:"numeric", minute:"2-digit", hour12:true}).replace(/\s?([ap])\.?m\.?$/i, (m, ap) => " " + ap.toLowerCase() + "m") : "";
 function csvText(){
@@ -1664,7 +1712,7 @@ function csvText(){
   allTx().forEach(x => {
     const [y, m] = x.ym.split("-");
     rows.push([y + "-" + m + "-" + String(x.day).padStart(2, "0"), clockOf(x), x.account, x.desc, x.cat, (x.dir === "in" ? "" : "-") + x.amt.toFixed(2),
-               x.dir === "in" ? "in" : "out", x.counted ? "yes" : "no", x.note || (x.forOther ? "spent for someone else" : "")]);
+               x.dir === "in" ? "in" : "out", x.counted ? "yes" : "no", x.note || (x.reversed ? "reversed" : x.refunded ? "refunded " + x.refunded : x.forOther ? "spent for someone else" : "")]);
   });
   return rows.map(r => r.map(q).join(",")).join("\r\n");
 }
@@ -1832,6 +1880,16 @@ const act = {
     render(); queueSave();
   },
   delManual(id){ manual = manual.filter(m => m.id !== id); if(NOTES[id]) act.saveNote(id, null); buildMonths(); render(); queueSave(); },
+  /** A card charge that was reversed or refunded. Before its bill closed it's dropped altogether; after, the money comes
+      back to the card today, off the next bill. Returns "" or what went wrong; revInfo(id) says which it became. */
+  reverse(id){
+    const t = RAW.find(x => x.id === id);
+    if(!t || t.dir !== "out" || !CARD_CFG[t.account]) return "Only a card payment can be marked as reversed.";
+    overrides["rev|" + id] = billedYet(t) ? todayISO() : true;
+    useTx(true); buildMonths(); render(); queueSave(); return "";
+  },
+  /** Undo reverse(). */
+  unreverse(id){ id = String(id).replace(/~refund$/, ""); delete overrides["rev|" + id]; useTx(true); buildMonths(); render(); queueSave(); },
 
   /* card payments */
   assignPayment(txId, v){ payAssign[txId] = v; render(); queueSave(); },
@@ -1877,14 +1935,14 @@ const act = {
   useTakeHome(){ settings.inc = regularTakeHome(); render(); queueSave(); },
   resetCfg(){ act.setCfg(null); },
   /** Your banks and cards (see applyProfile). */
-  setProfile(p){ applyProfile(p); TX = takeTx(TX.concat(SCHEDULED)); render(); queueSave(); },
+  setProfile(p){ applyProfile(p); RAW = takeTx(RAW.concat(SCHEDULED)); useTx(true); render(); queueSave(); },
   /** A setup brought in from a link or pasted text: {profile, cfg, rename}. The profile replaces yours; salary
       figures, rule and fixed payments only fill what you haven't set; rename moves saved planner choices that an
       earlier version kept under another name (e.g. {"share": "family"}) to the name used now. */
   importSetup(x){
     if(!x || typeof x !== "object" || !x.profile || typeof x.profile !== "object") return "That isn't a Money setup.";
     applyProfile(x.profile);
-    TX = takeTx(TX.concat(SCHEDULED));                   // a card it says is closed drops its scheduled charges
+    RAW = takeTx(RAW.concat(SCHEDULED)); useTx(true);   // a card it says is closed drops its scheduled charges
     const ren = x.rename && typeof x.rename === "object" ? x.rename : {};
     const move = o => { if(o && typeof o === "object") Object.keys(ren).forEach(k => { if(k in o){ if(!(ren[k] in o)) o[ren[k]] = o[k]; delete o[k]; } }); };
     Object.keys(overrides).forEach(k => { if(/^plan\|/.test(k)) move(overrides[k]); });
@@ -1949,10 +2007,11 @@ function start(){
   const raw = lsGet(CACHE_KEY);
   if(raw){ try{ const v = JSON.parse(raw);
     if(v.profile) applyProfile(v.profile);
-    if(Array.isArray(v.tx)) TX = takeTx(v.tx);
+    if(Array.isArray(v.tx)) RAW = takeTx(v.tx);
     if(Array.isArray(v.events)) EVENTS = v.events;
     applySettings(Object.assign({}, v.settings, {manual:v.manual, payments:v.payments, overrides:v.overrides,
       catRules:v.catRules, goals:v.goals, contribs:v.contribs, payAssign:v.payAssign, cfg:v.cfg, profile:v.profile}));
+    useTx();
     if(v.notesOk){ NOTES_OK = true; NOTES = v.notes || {}; }
     lastRun = v.lastRun || null; lastFetch = v.at || null;
   }catch(e){} }
@@ -2116,6 +2175,9 @@ const TRIP_NOMINAL = 50000; // a month's spending used to rank the cards when yo
 const TRIP_NOEARN = ["fuel", "utilities", "rent", "insurance", "education", "govt", "wallets"];
 const tripCountry = id => TRIP_DATA.countries.find(c => c.id === id) || TRIP_DATA.countries[0];
 const tripCardById = id => TRIP_DATA.cards.find(c => c.id === id) || null;
+/* Cards left off the Trips screen (you asked for them to go). Their figures stay here because Rewards uses them, and a
+   card you hold is still shown. */
+const TRIP_LEFT_OUT = ["sbi-miles-elite", "sbi-miles-prime", "sbi-miles"];
 function tripPlan(){
   const o = overrides.trip && typeof overrides.trip === "object" ? overrides.trip : {};
   const int = (v, lo, hi, d) => { const n = Math.round(+v); return isFinite(n) && v !== null && v !== "" && v !== undefined ? Math.max(lo, Math.min(hi, n)) : d; };
@@ -2322,7 +2384,7 @@ function tripModel(){
   const now = new Date();
   let avail = null;
   if(plan.when){ const [y, m] = plan.when.split("-").map(Number); avail = (y - now.getFullYear()) * 12 + (m - 1 - now.getMonth()) - TRIP_LEAD; }
-  const all = TRIP_DATA.cards.map(c => tripCard(c, need, mix, plan, income, avail, held));
+  const all = TRIP_DATA.cards.filter(c => !TRIP_LEFT_OUT.includes(c.id) || held[c.id]).map(c => tripCard(c, need, mix, plan, income, avail, held));
   const best = all.filter(r => r.fl).sort((a, b) => b.rate - a.rate || a.card.fee - b.card.fee || (a.card.name < b.card.name ? -1 : 1));
   return {plan, income, need, prof, mix, known:mix.earning > 0, avail, lead:TRIP_LEAD, all, best, get:best.filter(r => r.canGet),
           yours:all.filter(r => r.owned), off:all.filter(r => !r.fl),
@@ -2773,14 +2835,36 @@ function rewTxEarn(card, sp, used, at){
 function rewUse(used, w, at){ (w.caps || []).forEach(cp => { const k = rewKey(cp, at); used[k] = (used[k] || 0) + (cp.on === "extra" ? w.extra : w.pts); }); }
 const REW_SKIP = new Set(["Transfers to people", "UPI — payee unknown"]);
 /** Your spending this month that a card could have paid (not money sent to people, investments, card bills …). */
-function rewSpends(list){ return list.filter(x => x.dir === "out" && x.counted && !REW_SKIP.has(x.cat) && x.amt > 0).sort((a, b) => a.ts - b.ts); }
+function rewSpends(list){ return list.filter(x => x.dir === "out" && x.counted && !x.refunded && !REW_SKIP.has(x.cat) && x.amt > 0).sort((a, b) => a.ts - b.ts); }
+/** "2.5 per ₹100" on a points card, "5%" on a cashback card. */
+const rewRateText = (card, rate) => { const r = Math.round(rate * 100) / 100; return card.unit === "points" ? r.toLocaleString("en-IN") + " per ₹100" : r.toLocaleString("en-IN") + "%"; };
+/** How one spend earned, in words: the everyday rate, a bonus, a portal, or why it earned nothing. */
+function rewHow(card, w){
+  if(!w) return {key:"none", text:"Earns nothing"};
+  if(!(w.pts > 0)) return {key:"none:" + (w.notes[0] || ""), text:"Earns nothing", why:w.notes[0] || ""};
+  const rate = rewRateText(card, w.rate);
+  if(w.route !== "card") return {key:w.route + ":" + w.label, text:w.label + " · " + rate};
+  if(w.label === "On the card") return {key:"base", text:"Everyday rate · " + rate};
+  // a bonus that says its own rate ("5% on Amazon with Prime") doesn't need it twice
+  return {key:"bonus:" + w.label, text:/\d/.test(w.label) ? w.label : w.label + " · " + rate};
+}
 /** This month on each card you hold: the points so far, what they're worth, and the caps used. */
 function rewMonth(){
-  const now = new Date(), ym = ymOf(now), held = rewHeld(), list = rewSpends(txFor(ym));
+  const now = new Date(), ym = ymOf(now), held = rewHeld(), all = txFor(ym);
+  // what the card earned on: your spending on it, and what you paid for someone else (it earns the same)
+  const list = all.filter(x => x.dir === "out" && x.card && x.amt > 0 && !x.refunded && !REW_SKIP.has(x.cat) && (x.counted || x.forOther)).sort((a, b) => a.ts - b.ts);
   return held.map(h => {
-    const used = {}, mine = list.filter(x => x.card === h.g);
+    const used = {}, mine = list.filter(x => x.card === h.g), items = [], groups = {};
     let pts = 0, spent = 0;
-    if(h.card) mine.forEach(x => { const sp = rewTxSpend(x), w = rewTxEarn(h.card, sp, used, x.ts); if(w){ pts += w.pts; rewUse(used, w, x.ts); } spent += x.amt; });
+    if(h.card) mine.forEach(x => {
+      const sp = rewTxSpend(x), w = rewTxEarn(h.card, sp, used, x.ts);
+      if(w){ pts += w.pts; rewUse(used, w, x.ts); }
+      spent += x.amt;
+      const how = rewHow(h.card, w);
+      items.push({id:x.id, desc:x.desc, ts:x.ts, ym:x.ym, day:x.day, amt:x.amt, kind:sp.kind, pts:w ? w.pts : 0, capped:!!(w && w.capped), how:how.text, why:how.why || "", forOther:!!x.forOther});
+      const gr = groups[how.key] = groups[how.key] || {text:how.text, why:how.why || "", n:0, amt:0, pts:0, none:!(w && w.pts > 0)};
+      gr.n++; gr.amt += x.amt; gr.pts += w ? w.pts : 0;
+    });
     else spent = mine.reduce((s, x) => s + x.amt, 0);
     const caps = [];
     if(h.card){
@@ -2791,7 +2875,10 @@ function rewMonth(){
       look(h.card.cap, "Everything on the card");
       Object.keys(h.card.kindCap || {}).forEach(k => look({id:h.card.id + "-" + k, max:h.card.kindCap[k], per:"month", on:"total"}, rewKind(k).name));
     }
-    return Object.assign({}, h, {pts, spent, n:mine.length, used, caps, worth:h.card ? rewWorth(h.card, pts) : null});
+    const ways = Object.values(groups).sort((a, b) => (a.none - b.none) || b.pts - a.pts || b.amt - a.amt);
+    const full = caps.filter(c => c.per !== "quarter" && c.max > 0 && c.used / c.max >= 0.8).sort((a, b) => b.used / b.max - a.used / a.max);
+    return Object.assign({}, h, {pts, spent, n:mine.length, used, caps, worth:h.card ? rewWorth(h.card, pts) : null,
+      items:items.reverse(), ways, full:full[0] || null});
   });
 }
 
@@ -2835,7 +2922,10 @@ function rewSearch(sp){
 /** Yearly income for the cards' bars: what you typed on Trips, else your gross pay × 12 (Plan → Salary), else
     take-home × 12. */
 function rewIncome(){ return tripIncome(tripPlan()); }
-const rewCanGet = (c, inc) => c.status === "open" && !(inc.amt !== null && c.income && inc.amt < c.income);
+/* Cards left out of every "a card you could get" list (the search's "If you had…" and "Your next card"): you asked for
+   them to go. Their rules stay, so the search still counts one you hold. */
+const REW_LEFT_OUT = ["hsbc-travelone", "hsbc-live-plus"];
+const rewCanGet = (c, inc) => c.status === "open" && !REW_LEFT_OUT.includes(c.id) && !(inc.amt !== null && c.income && inc.amt < c.income);
 
 /* ---------------- the tab ---------------- */
 /** What would the best of `cards` have paid for spend x (straight on the card), with caps counted in `used`. */
@@ -2848,13 +2938,13 @@ function rewBestFor(cards, x, usedBy){
     if(w && w.worth.best > best){ best = w.worth.best; who = c; w0 = w; }
   });
   if(who) rewUse(usedBy[who.id], w0, x.ts);
-  return {best, card:who, sp};
+  return {best, card:who, sp, pts:w0 ? w0.pts : 0};
 }
 /** This month: what you earned against the best of your cards for every spend (paid the same way, straight on a card).
     misses: the biggest gaps. */
 function rewMissed(){
   const now = new Date(), ym = ymOf(now), held = rewHeld(), cards = held.filter(h => h.card).map(h => h.card);
-  const byG = {}; held.forEach(h => { byG[h.g] = h.card; });
+  const byG = {}, nameOf = {}; held.forEach(h => { byG[h.g] = h.card; if(h.card && !nameOf[h.card.id]) nameOf[h.card.id] = cardShort(h.g); });
   const list = rewSpends(txFor(ym)), usedBest = {}, usedReal = {};
   let got = 0, could = 0;
   const misses = [];
@@ -2863,12 +2953,24 @@ function rewMissed(){
     const b = rewBestFor(cards, x, usedBest);
     let real = 0;
     const c = x.card ? byG[x.card] : null;
-    if(c){ const used = usedReal[c.id] = usedReal[c.id] || {}; const w = rewTxEarn(c, rewTxSpend(x), used, x.ts); if(w){ real = w.worth.best; rewUse(used, w, x.ts); } }
+    let realPts = 0;
+    if(c){ const used = usedReal[c.id] = usedReal[c.id] || {}; const w = rewTxEarn(c, rewTxSpend(x), used, x.ts); if(w){ real = w.worth.best; realPts = w.pts; rewUse(used, w, x.ts); } }
     got += real; could += Math.max(real, b.best);
-    if(b.best - real >= 1) misses.push({x, real, best:b.best, card:b.card, gap:b.best - real});
+    if(b.best - real >= 1) misses.push({x, real, realPts, used:c, best:b.best, bestPts:b.pts, card:b.card, kind:b.sp.kind, gap:b.best - real});
   });
   misses.sort((a, b) => b.gap - a.gap);
-  return {got, could, gap:Math.max(0, could - got), misses:misses.slice(0, 3), n:list.length, cards:cards.length};
+  // the same lesson grouped: "for food delivery, use Amazon Pay ICICI"
+  const tips = {};
+  misses.forEach(y => {
+    const k = y.card.id + "|" + y.kind;
+    const t = tips[k] = tips[k] || {card:y.card, short:nameOf[y.card.id] || y.card.name, kind:y.kind, kindName:rewKind(y.kind).name, n:0, amt:0, gap:0, bestPts:0, from:{}, list:[]};
+    t.n++; t.amt += y.x.amt; t.gap += y.gap; t.bestPts += y.bestPts; t.list.push(y);
+    const f = y.used ? y.used.id : "bank";
+    t.from[f] = t.from[f] || {card:y.used || null, short:y.x.card ? cardShort(y.x.card) : "bank or UPI", pts:0, worth:0};
+    t.from[f].pts += y.realPts; t.from[f].worth += y.real;
+  });
+  const tipList = Object.values(tips).map(t => Object.assign(t, {from:Object.values(t.from)})).sort((a, b) => b.gap - a.gap);
+  return {got, could, gap:Math.max(0, could - got), misses:misses.slice(0, 3), tips:tipList.slice(0, 4), n:list.length, cards:cards.length};
 }
 /** Your next card: your last three full months of spending (or this month so far) through your cards and each card
     you could get, the extra a year it would earn on the spends where it beats yours, less its yearly fee (with GST)
@@ -2886,16 +2988,16 @@ function rewNext(){
   const usedMine = {}, base = list.map(x => rewBestFor(mine, x, usedMine).best);
   const rows = REW_CARDS.filter(c => !heldIds.has(c.id) && rewCanGet(c, income)).map(c => {
     const used = {}, kinds = {};
-    let extra = 0, onIt = 0;
+    let extra = 0, onIt = 0, pts = 0;
     list.forEach((x, i) => {
       const sp = rewTxSpend(x);
       const w = rewWays(c, Object.assign({}, sp, {route:"card"}), used, x.ts).find(o => o.route === "card");
-      if(w && w.worth.best > base[i]){ extra += w.worth.best - base[i]; onIt += x.amt; rewUse(used, w, x.ts); kinds[sp.kind] = (kinds[sp.kind] || 0) + w.worth.best - base[i]; }
+      if(w && w.worth.best > base[i]){ extra += w.worth.best - base[i]; onIt += x.amt; pts += w.pts; rewUse(used, w, x.ts); kinds[sp.kind] = (kinds[sp.kind] || 0) + w.worth.best - base[i]; }
     });
-    const year = extra * scale, spendYear = onIt * scale;
+    const year = extra * scale, spendYear = onIt * scale, ptsYear = pts * scale;
     const fee = c.waive && spendYear >= c.waive ? 0 : Math.round((c.fee || 0) * 1.18);
     const top = Object.keys(kinds).sort((a, b) => kinds[b] - kinds[a]).slice(0, 2).map(k => rewKind(k).name.toLowerCase());
-    return {card:c, year, fee, net:year - fee, spendYear, top, waived:!!(c.waive && spendYear >= c.waive && c.fee)};
+    return {card:c, year, fee, net:year - fee, spendYear, ptsYear, top, waived:!!(c.waive && spendYear >= c.waive && c.fee)};
   }).sort((a, b) => b.net - a.net);
   return {rows, basis, n:months.length, income, spent:list.reduce((s, x) => s + x.amt, 0)};
 }
@@ -2964,6 +3066,11 @@ act.setRew = function(k, v){
     get catRules() { return catRules; },
     get SCHEDULED() { return SCHEDULED; },
     get takeTx() { return takeTx; },
+    get RAW() { return RAW; },
+    get revOf() { return revOf; },
+    get useTx() { return useTx; },
+    get billedYet() { return billedYet; },
+    get revInfo() { return revInfo; },
     get goals() { return goals; },
     get contribs() { return contribs; },
     get payAssign() { return payAssign; },
@@ -3154,6 +3261,7 @@ act.setRew = function(k, v){
     get TRIP_NOEARN() { return TRIP_NOEARN; },
     get tripCountry() { return tripCountry; },
     get tripCardById() { return tripCardById; },
+    get TRIP_LEFT_OUT() { return TRIP_LEFT_OUT; },
     get tripPlan() { return tripPlan; },
     get tripHeld() { return tripHeld; },
     get tripIncome() { return tripIncome; },
@@ -3197,9 +3305,12 @@ act.setRew = function(k, v){
     get rewUse() { return rewUse; },
     get REW_SKIP() { return REW_SKIP; },
     get rewSpends() { return rewSpends; },
+    get rewRateText() { return rewRateText; },
+    get rewHow() { return rewHow; },
     get rewMonth() { return rewMonth; },
     get rewSearch() { return rewSearch; },
     get rewIncome() { return rewIncome; },
+    get REW_LEFT_OUT() { return REW_LEFT_OUT; },
     get rewCanGet() { return rewCanGet; },
     get rewBestFor() { return rewBestFor; },
     get rewMissed() { return rewMissed; },

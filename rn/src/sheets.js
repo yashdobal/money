@@ -16,6 +16,7 @@ import { coinsNext } from "./fx";
 import { burst } from "./gl";
 import { guard } from "./native/lock";
 import { pts, span, monthOf, lakh, tripWhere, tripRatio, tripRate } from "./screens/Trips";
+import { RewCardSheet } from "./screens/Rewards";
 
 const useClose = () => useContext(require("./sheet").SheetCtx).close;
 const ex = (v) => (hidden() ? "₹ ••••" : exact(v));
@@ -70,6 +71,8 @@ function TxSheet({ id }) {
   const [fold, setFold] = useState(x ? NOT_SPEND_PICK.includes(x.cat) : false);
   if (!x) return <Note>This transaction isn't here any more.</Note>;
   const [y, m] = x.ym.split("-").map(Number), when = E.fmtD(new Date(y, m - 1, x.day)) + " " + y + (E.clockOf(x) ? " · " + E.clockOf(x) : "");
+  if (x.reversed || x.refundOf) return <RevSheet x={x} when={when} />;
+  const rev = !x.man && x.kind === "card" && x.dir === "out" ? E.revInfo(id) : null;
   const cats = x.dir === "in" ? IN_CATS : SPEND_CATS().filter((c) => !/unknown/.test(c) || c === x.cat);
   const nm = nice(x.desc), payee = nm.title.length > 30 ? nm.title.slice(0, 28) + "…" : nm.title;
   const save = () => {
@@ -112,9 +115,70 @@ function TxSheet({ id }) {
       {t && x.dir === "in" && x.kind === "bank" ? <SwRow title="A friend paying me back" detail="comes off your spending, like a refund" value={back} onChange={setBack} /> : null}
       {E.NOTES_OK ? <Field label="Note" value={note} onChange={setNote} multiline maxLength={500} placeholder="Anything to remember about it" /> : null}
       {!E.NOTES_OK && E.DATA_IN ? <Note style={{ marginTop: 8 }}>Notes and "spent for someone else" need one database update first (see Settings).</Note> : null}
+      {rev ? <Reverse id={id} x={x} rev={rev} /> : null}
       <Actions>
         {x.man ? <Btn kind="ghost" big full danger label="Delete" onPress={() => { E.act.delManual(id); close(); toast("Deleted"); }} /> : null}
         <Btn big full label="Save" onPress={save} />
+      </Actions>
+    </View>
+  );
+}
+
+/** A card payment that was reversed or refunded: mark it (or undo the mark). Before its bill closed it's dropped from
+    everything; after, the money comes back to the card today, off the next bill. */
+function Reverse({ id, x, rev }) {
+  const C = useC();
+  const close = useClose();
+  if (rev.on) return (
+    <View style={{ marginTop: 16, padding: 14, borderRadius: 14, backgroundColor: C.inset }}>
+      <T f={F.semi} s={15} lh={20}>{"Refunded · " + E.fmt(E.parseISO(rev.on))}</T>
+      <T s={13.5} lh={19} c={C.ink2} style={{ marginTop: 2 }}>{"It stays on the bill it was on, and " + ex(x.amt) + " comes off your next " + x.account + " bill. It no longer counts as spending or earns points."}</T>
+      <View style={{ flexDirection: "row", marginTop: 10 }}><Btn small kind="ghost" label="Undo: not refunded" onPress={() => { E.act.unreverse(id); buzz("tick"); toast("Back as a normal payment"); }} /></View>
+    </View>
+  );
+  const mark = () => {
+    const msg = E.act.reverse(id);
+    if (msg) return fail(msg);
+    buzz("confirm"); close();
+    toast(rev.billed ? "Marked as refunded: it comes off your next " + x.account + " bill" : "Marked as reversed: off the bill, your spending and points", { action: { label: "Undo", fn: () => E.act.unreverse(id) } });
+  };
+  return (
+    <View style={{ marginTop: 16 }}>
+      <SubHead>Reversed or refunded?</SubHead>
+      {rev.match ? <Note style={{ marginBottom: 8 }}>{"A " + ex(rev.match.amt) + " refund came back to this card on " + E.fmt(new Date(rev.match.ts)) + ". If that was for this payment, it's already taken off and there's nothing to do."}</Note> : null}
+      <Press onPress={mark} scale={0.985} accessibilityLabel="This payment was reversed or refunded">
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 14, borderRadius: 14, borderWidth: 1.5, borderColor: C.line2 }}>
+          <Ic name="undo" tone="alert" size={34} radius={10} iconSize={18} />
+          <View style={{ flex: 1 }}>
+            <T f={F.semi} s={15} lh={20} c={C.alert}>This payment was reversed or refunded</T>
+            <T s={13} lh={18} c={C.ink3}>{rev.billed ? "Its bill has closed, so the money comes off your next bill instead" : "Takes it off the card bill, your spending and points"}</T>
+          </View>
+        </View>
+      </Press>
+    </View>
+  );
+}
+/** A reversed payment, or the refund you marked for one: what it means, and the way back. */
+function RevSheet({ x, when }) {
+  const C = useC();
+  const close = useClose();
+  const orig = x.refundOf ? E.allTx().find((t) => t.id === x.refundOf) : null;
+  const nm = nice(orig ? orig.desc : x.desc);
+  return (
+    <View>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 14, marginBottom: 6 }}>
+        <Ic name="undo" tone={x.reversed ? "alert" : "info"} size={48} radius={15} iconSize={22} />
+        <View style={{ flex: 1 }}>
+          <M v={x.amt} o={{ exact: true, sign: x.dir === "in" ? "in" : "out" }} f={F.fig} s={27} tone={x.dir === "in" ? "pos" : ""} c={x.reversed ? C.ink3 : undefined} style={{ lineHeight: 32, textDecorationLine: x.reversed ? "line-through" : "none" }} />
+          <T s={13} lh={17} c={C.ink3}>{when + " · " + x.account}</T>
+        </View>
+      </View>
+      <T f={F.medium} s={15} lh={21} style={{ marginTop: 6 }}>{nm.title}</T>
+      <OutLine>{x.reversed
+        ? "You marked this payment as reversed, so it's left out of the card bill, your spending, Safe to spend and points. It stays here so you can undo it."
+        : "The refund you marked for this payment" + (orig ? " (" + E.fmt(new Date(orig.ts)) + ")" : "") + ". It comes off the " + x.account + " bill after it, as a refund email would."}</OutLine>
+      <Actions>
+        <Btn big full kind="ghost" label={x.reversed ? "It wasn't reversed" : "It wasn't refunded"} onPress={() => { E.act.unreverse(x.refundOf || x.id); close(); buzz("tick"); toast("Back as a normal payment"); }} />
       </Actions>
     </View>
   );
@@ -830,6 +894,7 @@ export default {
   setup: (arg) => ({ title: "Your banks and cards", body: <SetupSheet arg={arg} /> }),
   sms: (id) => ({ title: "From your SMS", body: <SmsSheet id={id} /> }),
   "sms-trial": () => ({ title: "SMS vs email", body: <SmsTrialSheet /> }),
+  rewcard: (g) => { const h = E.rewMonth().find((x) => x.g === g); return h ? { title: h.short + " this month", body: <RewCardSheet g={g} /> } : null; },
   tripcard: (id) => (E.tripCardById(id) ? { title: E.tripCardById(id).name, body: <TripCardSheet id={id} /> } : null),
   "trip-sources": () => ({ title: "Where the numbers come from", body: <TripSourcesSheet /> }),
   "trip-income": () => ({ title: "Your income a year", body: <TripIncomeSheet /> }),

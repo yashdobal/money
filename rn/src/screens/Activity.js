@@ -20,7 +20,7 @@ export function txMatches(p) {
     if (f === "in" && x.dir !== "in") return false;
     if (f === "cards" && x.kind !== "card") return false;
     if (f === "bank" && (x.kind !== "bank" || x.man)) return false;
-    if (f === "edited" && !(x.man || x.noted || x.ruled)) return false;
+    if (f === "edited" && !(x.man || x.noted || x.ruled || x.reversed || x.refunded || x.refundOf)) return false;
     if (cat && x.cat !== cat) return false;
     if (card && x.card !== card) return false;
     if (acct && x.account !== acct) return false;
@@ -40,7 +40,10 @@ export function TxRow({ x, first }) {
   if (x.cat === "Card payment") bits.push(x.payOther ? "card ·" + x.payOther + " (not tracked)" : x.payCard ? "paid " + E.cardShort(x.payCard) + (x.payConfirmed ? ", confirmed" : "") : "which card?");
   else bits.push(x.cat);
   if (x.sms) bits.push("from SMS");
-  if (x.forOther) bits.push("for someone else");
+  if (x.reversed) bits.push("reversed, not counted");
+  else if (x.refunded) bits.push("refunded " + E.fmt(E.parseISO(x.refunded)));
+  else if (x.refundOf) bits.push("refund you marked");
+  else if (x.forOther) bits.push("for someone else");
   else if (x.paidBack) bits.push("comes off spending");
   else if (!x.counted && x.dir === "out") bits.push("not counted");
   if (nm.extra) bits.push(nm.extra);

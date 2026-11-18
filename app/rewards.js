@@ -418,14 +418,36 @@ function rewTxEarn(card, sp, used, at){
 function rewUse(used, w, at){ (w.caps || []).forEach(cp => { const k = rewKey(cp, at); used[k] = (used[k] || 0) + (cp.on === "extra" ? w.extra : w.pts); }); }
 const REW_SKIP = new Set(["Transfers to people", "UPI — payee unknown"]);
 /** Your spending this month that a card could have paid (not money sent to people, investments, card bills …). */
-function rewSpends(list){ return list.filter(x => x.dir === "out" && x.counted && !REW_SKIP.has(x.cat) && x.amt > 0).sort((a, b) => a.ts - b.ts); }
+function rewSpends(list){ return list.filter(x => x.dir === "out" && x.counted && !x.refunded && !REW_SKIP.has(x.cat) && x.amt > 0).sort((a, b) => a.ts - b.ts); }
+/** "2.5 per ₹100" on a points card, "5%" on a cashback card. */
+const rewRateText = (card, rate) => { const r = Math.round(rate * 100) / 100; return card.unit === "points" ? r.toLocaleString("en-IN") + " per ₹100" : r.toLocaleString("en-IN") + "%"; };
+/** How one spend earned, in words: the everyday rate, a bonus, a portal, or why it earned nothing. */
+function rewHow(card, w){
+  if(!w) return {key:"none", text:"Earns nothing"};
+  if(!(w.pts > 0)) return {key:"none:" + (w.notes[0] || ""), text:"Earns nothing", why:w.notes[0] || ""};
+  const rate = rewRateText(card, w.rate);
+  if(w.route !== "card") return {key:w.route + ":" + w.label, text:w.label + " · " + rate};
+  if(w.label === "On the card") return {key:"base", text:"Everyday rate · " + rate};
+  // a bonus that says its own rate ("5% on Amazon with Prime") doesn't need it twice
+  return {key:"bonus:" + w.label, text:/\d/.test(w.label) ? w.label : w.label + " · " + rate};
+}
 /** This month on each card you hold: the points so far, what they're worth, and the caps used. */
 function rewMonth(){
-  const now = new Date(), ym = ymOf(now), held = rewHeld(), list = rewSpends(txFor(ym));
+  const now = new Date(), ym = ymOf(now), held = rewHeld(), all = txFor(ym);
+  // what the card earned on: your spending on it, and what you paid for someone else (it earns the same)
+  const list = all.filter(x => x.dir === "out" && x.card && x.amt > 0 && !x.refunded && !REW_SKIP.has(x.cat) && (x.counted || x.forOther)).sort((a, b) => a.ts - b.ts);
   return held.map(h => {
-    const used = {}, mine = list.filter(x => x.card === h.g);
+    const used = {}, mine = list.filter(x => x.card === h.g), items = [], groups = {};
     let pts = 0, spent = 0;
-    if(h.card) mine.forEach(x => { const sp = rewTxSpend(x), w = rewTxEarn(h.card, sp, used, x.ts); if(w){ pts += w.pts; rewUse(used, w, x.ts); } spent += x.amt; });
+    if(h.card) mine.forEach(x => {
+      const sp = rewTxSpend(x), w = rewTxEarn(h.card, sp, used, x.ts);
+      if(w){ pts += w.pts; rewUse(used, w, x.ts); }
+      spent += x.amt;
+      const how = rewHow(h.card, w);
+      items.push({id:x.id, desc:x.desc, ts:x.ts, ym:x.ym, day:x.day, amt:x.amt, kind:sp.kind, pts:w ? w.pts : 0, capped:!!(w && w.capped), how:how.text, why:how.why || "", forOther:!!x.forOther});
+      const gr = groups[how.key] = groups[how.key] || {text:how.text, why:how.why || "", n:0, amt:0, pts:0, none:!(w && w.pts > 0)};
+      gr.n++; gr.amt += x.amt; gr.pts += w ? w.pts : 0;
+    });
     else spent = mine.reduce((s, x) => s + x.amt, 0);
     const caps = [];
     if(h.card){
@@ -436,7 +458,10 @@ function rewMonth(){
       look(h.card.cap, "Everything on the card");
       Object.keys(h.card.kindCap || {}).forEach(k => look({id:h.card.id + "-" + k, max:h.card.kindCap[k], per:"month", on:"total"}, rewKind(k).name));
     }
-    return Object.assign({}, h, {pts, spent, n:mine.length, used, caps, worth:h.card ? rewWorth(h.card, pts) : null});
+    const ways = Object.values(groups).sort((a, b) => (a.none - b.none) || b.pts - a.pts || b.amt - a.amt);
+    const full = caps.filter(c => c.per !== "quarter" && c.max > 0 && c.used / c.max >= 0.8).sort((a, b) => b.used / b.max - a.used / a.max);
+    return Object.assign({}, h, {pts, spent, n:mine.length, used, caps, worth:h.card ? rewWorth(h.card, pts) : null,
+      items:items.reverse(), ways, full:full[0] || null});
   });
 }
 
@@ -480,7 +505,10 @@ function rewSearch(sp){
 /** Yearly income for the cards' bars: what you typed on Trips, else your gross pay × 12 (Plan → Salary), else
     take-home × 12. */
 function rewIncome(){ return tripIncome(tripPlan()); }
-const rewCanGet = (c, inc) => c.status === "open" && !(inc.amt !== null && c.income && inc.amt < c.income);
+/* Cards left out of every "a card you could get" list (the search's "If you had…" and "Your next card"): you asked for
+   them to go. Their rules stay, so the search still counts one you hold. */
+const REW_LEFT_OUT = ["hsbc-travelone", "hsbc-live-plus"];
+const rewCanGet = (c, inc) => c.status === "open" && !REW_LEFT_OUT.includes(c.id) && !(inc.amt !== null && c.income && inc.amt < c.income);
 
 /* ---------------- the tab ---------------- */
 /** What would the best of `cards` have paid for spend x (straight on the card), with caps counted in `used`. */
@@ -493,13 +521,13 @@ function rewBestFor(cards, x, usedBy){
     if(w && w.worth.best > best){ best = w.worth.best; who = c; w0 = w; }
   });
   if(who) rewUse(usedBy[who.id], w0, x.ts);
-  return {best, card:who, sp};
+  return {best, card:who, sp, pts:w0 ? w0.pts : 0};
 }
 /** This month: what you earned against the best of your cards for every spend (paid the same way, straight on a card).
     misses: the biggest gaps. */
 function rewMissed(){
   const now = new Date(), ym = ymOf(now), held = rewHeld(), cards = held.filter(h => h.card).map(h => h.card);
-  const byG = {}; held.forEach(h => { byG[h.g] = h.card; });
+  const byG = {}, nameOf = {}; held.forEach(h => { byG[h.g] = h.card; if(h.card && !nameOf[h.card.id]) nameOf[h.card.id] = cardShort(h.g); });
   const list = rewSpends(txFor(ym)), usedBest = {}, usedReal = {};
   let got = 0, could = 0;
   const misses = [];
@@ -508,12 +536,24 @@ function rewMissed(){
     const b = rewBestFor(cards, x, usedBest);
     let real = 0;
     const c = x.card ? byG[x.card] : null;
-    if(c){ const used = usedReal[c.id] = usedReal[c.id] || {}; const w = rewTxEarn(c, rewTxSpend(x), used, x.ts); if(w){ real = w.worth.best; rewUse(used, w, x.ts); } }
+    let realPts = 0;
+    if(c){ const used = usedReal[c.id] = usedReal[c.id] || {}; const w = rewTxEarn(c, rewTxSpend(x), used, x.ts); if(w){ real = w.worth.best; realPts = w.pts; rewUse(used, w, x.ts); } }
     got += real; could += Math.max(real, b.best);
-    if(b.best - real >= 1) misses.push({x, real, best:b.best, card:b.card, gap:b.best - real});
+    if(b.best - real >= 1) misses.push({x, real, realPts, used:c, best:b.best, bestPts:b.pts, card:b.card, kind:b.sp.kind, gap:b.best - real});
   });
   misses.sort((a, b) => b.gap - a.gap);
-  return {got, could, gap:Math.max(0, could - got), misses:misses.slice(0, 3), n:list.length, cards:cards.length};
+  // the same lesson grouped: "for food delivery, use Amazon Pay ICICI"
+  const tips = {};
+  misses.forEach(y => {
+    const k = y.card.id + "|" + y.kind;
+    const t = tips[k] = tips[k] || {card:y.card, short:nameOf[y.card.id] || y.card.name, kind:y.kind, kindName:rewKind(y.kind).name, n:0, amt:0, gap:0, bestPts:0, from:{}, list:[]};
+    t.n++; t.amt += y.x.amt; t.gap += y.gap; t.bestPts += y.bestPts; t.list.push(y);
+    const f = y.used ? y.used.id : "bank";
+    t.from[f] = t.from[f] || {card:y.used || null, short:y.x.card ? cardShort(y.x.card) : "bank or UPI", pts:0, worth:0};
+    t.from[f].pts += y.realPts; t.from[f].worth += y.real;
+  });
+  const tipList = Object.values(tips).map(t => Object.assign(t, {from:Object.values(t.from)})).sort((a, b) => b.gap - a.gap);
+  return {got, could, gap:Math.max(0, could - got), misses:misses.slice(0, 3), tips:tipList.slice(0, 4), n:list.length, cards:cards.length};
 }
 /** Your next card: your last three full months of spending (or this month so far) through your cards and each card
     you could get, the extra a year it would earn on the spends where it beats yours, less its yearly fee (with GST)
@@ -531,16 +571,16 @@ function rewNext(){
   const usedMine = {}, base = list.map(x => rewBestFor(mine, x, usedMine).best);
   const rows = REW_CARDS.filter(c => !heldIds.has(c.id) && rewCanGet(c, income)).map(c => {
     const used = {}, kinds = {};
-    let extra = 0, onIt = 0;
+    let extra = 0, onIt = 0, pts = 0;
     list.forEach((x, i) => {
       const sp = rewTxSpend(x);
       const w = rewWays(c, Object.assign({}, sp, {route:"card"}), used, x.ts).find(o => o.route === "card");
-      if(w && w.worth.best > base[i]){ extra += w.worth.best - base[i]; onIt += x.amt; rewUse(used, w, x.ts); kinds[sp.kind] = (kinds[sp.kind] || 0) + w.worth.best - base[i]; }
+      if(w && w.worth.best > base[i]){ extra += w.worth.best - base[i]; onIt += x.amt; pts += w.pts; rewUse(used, w, x.ts); kinds[sp.kind] = (kinds[sp.kind] || 0) + w.worth.best - base[i]; }
     });
-    const year = extra * scale, spendYear = onIt * scale;
+    const year = extra * scale, spendYear = onIt * scale, ptsYear = pts * scale;
     const fee = c.waive && spendYear >= c.waive ? 0 : Math.round((c.fee || 0) * 1.18);
     const top = Object.keys(kinds).sort((a, b) => kinds[b] - kinds[a]).slice(0, 2).map(k => rewKind(k).name.toLowerCase());
-    return {card:c, year, fee, net:year - fee, spendYear, top, waived:!!(c.waive && spendYear >= c.waive && c.fee)};
+    return {card:c, year, fee, net:year - fee, spendYear, ptsYear, top, waived:!!(c.waive && spendYear >= c.waive && c.fee)};
   }).sort((a, b) => b.net - a.net);
   return {rows, basis, n:months.length, income, spent:list.reduce((s, x) => s + x.amt, 0)};
 }

@@ -96,9 +96,11 @@ const find = (id) => m.all.find((x) => x.card.id === id);
 const order = () => m.best.map((x) => x.card.id);
 assert.strictEqual(m.need.airline, "ai");
 // Air India points from ₹100: Magnus 6 ÷ 2.5 = 2.4; Horizon, TravelOne, Times Black 2; Diners Black and Infinia 3.33 ÷ 2;
-// Miles Elite and Prime 1; Regalia Gold 2.5 ÷ 3; AURUM 4 ÷ 5; Miles 0.5. Ties go to the lower fee.
+// Regalia Gold 2.5 ÷ 3; AURUM 4 ÷ 5; Miles 0.5 (the demo holds it as an add-on). Ties go to the lower fee.
+// SBI Card Miles Elite and Prime are left off Trips (TRIP_LEFT_OUT); a card you hold stays.
 assert.deepStrictEqual(order(), ["axis-magnus", "axis-horizon", "hsbc-travelone", "icici-times-black", "hdfc-dcb-metal", "hdfc-infinia",
-  "sbi-miles-prime", "sbi-miles-elite", "hdfc-regalia-gold", "sbi-aurum", "sbi-miles"]);
+  "hdfc-regalia-gold", "sbi-aurum", "sbi-miles"]);
+assert.ok(!m.all.some((x) => x.card.id === "sbi-miles-elite" || x.card.id === "sbi-miles-prime"), "SBI Miles Elite and Prime are off Trips");
 assert.strictEqual(find("axis-magnus").rate, 2.4); assert.strictEqual(find("sbi-aurum").rate, 0.8);
 assert.ok(Math.abs(find("hdfc-regalia-gold").rate - 2.5 / 3) < 1e-9);
 for (let i = 1; i < m.best.length; i++) assert.ok(m.best[i - 1].rate >= m.best[i].rate, "ranked by conversion");
@@ -109,9 +111,9 @@ assert.strictEqual(find("hdfc-regalia-gold").fl.pts, 360000, "three Regalia poin
 assert.strictEqual(find("sbi-aurum").fl.pts, 600000); assert.strictEqual(find("sbi-aurum").ht, null);
 assert.ok(find("sbi-aurum").warn.some((w) => /cash/.test(w)));
 // what you can get on ₹12L: open cards whose income bar it clears, in the same order; never the invite-only ones
-assert.deepStrictEqual(m.get.map((x) => x.card.id), ["axis-horizon", "hsbc-travelone", "sbi-miles-prime", "sbi-miles-elite", "sbi-miles"]);
+assert.deepStrictEqual(m.get.map((x) => x.card.id), ["axis-horizon", "hsbc-travelone", "sbi-miles"]);
 e.act.setTrip("income", 500000); m = e.tripModel();
-assert.deepStrictEqual(m.get.map((x) => x.card.id), ["sbi-miles-prime", "sbi-miles-elite", "sbi-miles"]);
+assert.deepStrictEqual(m.get.map((x) => x.card.id), ["sbi-miles"]);
 assert.strictEqual(order()[0], "axis-magnus", "the ranking doesn't move with the income");
 e.act.setTrip("income", 3000000); m = e.tripModel();
 assert.ok(m.get.some((x) => x.card.id === "axis-magnus") && m.get.some((x) => x.card.id === "hdfc-dcb-metal") && !m.get.some((x) => x.card.id === "hdfc-infinia"));
@@ -120,7 +122,7 @@ assert.ok(m.get.some((x) => x.card.id === "axis-magnus") && m.get.some((x) => x.
 e.act.setTrip("income", 1200000); e.act.setTrip("air", "kf"); m = e.tripModel();
 assert.strictEqual(m.need.airline, "kf"); assert.strictEqual(m.need.preferred, "ai"); assert.strictEqual(m.need.flight.total, 168000);
 assert.deepStrictEqual(order().slice(0, 3), ["hdfc-dcb-metal", "hdfc-infinia", "axis-magnus"], "1:1 to KrisFlyer at 3.33 per ₹100 leads");
-assert.ok(m.off.some((x) => x.card.id === "sbi-aurum") && m.off.some((x) => x.card.id === "sbi-miles-elite"), "cards with no KrisFlyer drop out");
+assert.ok(m.off.some((x) => x.card.id === "sbi-aurum") && m.off.some((x) => x.card.id === "sbi-miles"), "cards with no KrisFlyer drop out");
 assert.strictEqual(find("hdfc-regalia-gold").fl.pts, 336000);
 e.act.setTrip("country", "th"); assert.strictEqual(e.tripPlan().air, "", "a chosen airline belongs to its route");
 e.act.setTrip("country", "jp");
@@ -128,7 +130,7 @@ e.act.setTrip("country", "jp");
 // --- business class: only KrisFlyer has a confirmed price to Japan, so it is the airline
 e.act.setTrip("cabin", "j"); m = e.tripModel();
 assert.strictEqual(m.need.cabin, "j"); assert.deepStrictEqual(m.need.airs.map((a) => a.id), ["kf"]); assert.strictEqual(m.need.flight.total, 88000 * 4);
-assert.strictEqual(find("hsbc-travelone").fl.prog, "kf"); assert.strictEqual(find("sbi-miles-elite").fl, null);
+assert.strictEqual(find("hsbc-travelone").fl.prog, "kf"); assert.strictEqual(find("sbi-miles").fl, null);
 // France has no confirmed business price: flights fall back to economy, and the screen is told
 e.act.setTrip("country", "fr"); m = e.tripModel();
 assert.strictEqual(m.need.cabin, "y"); assert.strictEqual(m.need.noBusiness, true); assert.strictEqual(m.need.flight.total, 35000 * 4);

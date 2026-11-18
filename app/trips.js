@@ -151,6 +151,9 @@ const TRIP_NOMINAL = 50000; // a month's spending used to rank the cards when yo
 const TRIP_NOEARN = ["fuel", "utilities", "rent", "insurance", "education", "govt", "wallets"];
 const tripCountry = id => TRIP_DATA.countries.find(c => c.id === id) || TRIP_DATA.countries[0];
 const tripCardById = id => TRIP_DATA.cards.find(c => c.id === id) || null;
+/* Cards left off the Trips screen (you asked for them to go). Their figures stay here because Rewards uses them, and a
+   card you hold is still shown. */
+const TRIP_LEFT_OUT = ["sbi-miles-elite", "sbi-miles-prime", "sbi-miles"];
 function tripPlan(){
   const o = overrides.trip && typeof overrides.trip === "object" ? overrides.trip : {};
   const int = (v, lo, hi, d) => { const n = Math.round(+v); return isFinite(n) && v !== null && v !== "" && v !== undefined ? Math.max(lo, Math.min(hi, n)) : d; };
@@ -357,7 +360,7 @@ function tripModel(){
   const now = new Date();
   let avail = null;
   if(plan.when){ const [y, m] = plan.when.split("-").map(Number); avail = (y - now.getFullYear()) * 12 + (m - 1 - now.getMonth()) - TRIP_LEAD; }
-  const all = TRIP_DATA.cards.map(c => tripCard(c, need, mix, plan, income, avail, held));
+  const all = TRIP_DATA.cards.filter(c => !TRIP_LEFT_OUT.includes(c.id) || held[c.id]).map(c => tripCard(c, need, mix, plan, income, avail, held));
   const best = all.filter(r => r.fl).sort((a, b) => b.rate - a.rate || a.card.fee - b.card.fee || (a.card.name < b.card.name ? -1 : 1));
   return {plan, income, need, prof, mix, known:mix.earning > 0, avail, lead:TRIP_LEAD, all, best, get:best.filter(r => r.canGet),
           yours:all.filter(r => r.owned), off:all.filter(r => !r.fl),

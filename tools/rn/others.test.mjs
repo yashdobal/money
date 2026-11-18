@@ -41,8 +41,8 @@ const other = make([note]);
 ok("the card still owes it, but it's expected back", () => {
   const c0 = base.allCards(), c1 = other.allCards();
   near(c1.reduce((s, c) => s + c.owed, 0), c0.reduce((s, c) => s + c.owed, 0), "the bank still bills it");
-  const b = other.owedBack(c1);
-  near(b.total, open.amt, "back from others");
+  // compared with the demo as it is (it has a spend for someone else of its own once its date has passed)
+  near(other.owedBack(c1).total - base.owedBack(c0).total, open.amt, "back from others");
 });
 
 ok("where you stand and the forecast go up by it", () => {
@@ -56,7 +56,7 @@ ok("where you stand and the forecast go up by it", () => {
 ok("a bill paid from a salary takes only your part", () => {
   for (let cyc = base.payCycle(), i = 0; i < 3; cyc = base.nextCycle(cyc), i++) {
     const a = base.monthPlan(cyc), b = other.monthPlan(cyc);
-    const back = b.cards.reduce((s, c) => s + (c.back || 0), 0);
+    const back = b.cards.reduce((s, c) => s + (c.back || 0), 0) - a.cards.reduce((s, c) => s + (c.back || 0), 0);
     near(a.cardsTotal - b.cardsTotal, back, "cards total less what comes back");
     near(b.spend - a.spend, back, "spending share");
   }
@@ -68,7 +68,7 @@ ok("money paid back settles it, and doesn't come off your spending as well", () 
   const pay = Object.assign({}, bank, { source_ref: "payback-test", direction: "in", amount: Math.round(open.amt * 100), description: "UPI from a friend",
     snippet: "UPI from a friend", occurred_at: when.toISOString(), categories: { name: "Money in" }, counted: false });
   const paid = make([note, { txn_ref: "payback-test", category: null, for_someone_else: false, paid_back: true, note: "" }], [pay]);
-  near(paid.owedBack(paid.allCards()).total, 0, "nothing more to come back");
+  near(paid.owedBack(paid.allCards()).total, base.owedBack(base.allCards()).total, "nothing more to come back than before");
   const ym = paid.ymOf(new Date());
   const s = paid.spendModel(ym), s0 = other.spendModel(ym);
   near(s.spend, s0.spend, "spending unchanged by the payback");

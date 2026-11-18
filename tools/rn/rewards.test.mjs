@@ -129,4 +129,26 @@ ok("the tab: this month's points, what was left on the table, the next card, mil
   m.goals.forEach((g) => assert.ok(g.target > 0 && g.done >= 0));
 });
 
+ok("each card's breakdown adds up, and the missed spends say which card to use", () => {
+  const m = e.rewardsModel();
+  m.month.filter((h) => h.card).forEach((h) => {
+    near(h.items.reduce((s, x) => s + x.pts, 0), h.pts, h.short + ": every spend's points");
+    near(h.ways.reduce((s, w) => s + w.pts, 0), h.pts, h.short + ": the ways add up");
+    near(h.ways.reduce((s, w) => s + w.amt, 0), h.spent, h.short + ": spent");
+    assert.strictEqual(h.items.length, h.n);
+    h.items.forEach((x) => assert.ok(x.how && (x.pts > 0 || x.how === "Earns nothing"), x.desc));
+  });
+  m.missed.tips.forEach((t) => { assert.ok(t.card && t.n > 0 && t.gap >= 1 && t.from.length, t.kindName); });
+  assert.ok(m.missed.tips.reduce((s, t) => s + t.gap, 0) <= m.missed.gap + 0.01, "the tips are part of the gap");
+  m.next.rows.forEach((r) => assert.ok(r.ptsYear >= 0, r.card.id));
+});
+
+ok("cards you asked to drop aren't offered (HSBC); their rules still work", () => {
+  ["hsbc-travelone", "hsbc-live-plus"].forEach((id) => assert.ok(!e.rewCanGet(card(id), { amt: 1e8 }), id));
+  const m = e.rewardsModel();
+  assert.ok(!m.next.rows.some((r) => r.card.bank === "HSBC"), "not in Your next card");
+  assert.ok(!e.rewSearch(e.rewParse("flight to Tokyo 40000")).could.some((x) => x.card.bank === "HSBC"), "not in If you had…");
+  assert.ok(e.rewWays(card("hsbc-travelone"), { amt: 1000, kind: "flights", shop: null }, {}, Date.now())[0].pts > 0);
+});
+
 console.log("\nall " + n + " passed");

@@ -234,7 +234,8 @@ const BankPlot = React.memo(function BankPlot({ pts, ahead, marks, H, big, W, sc
   const id = "bk" + (big ? "B" : "");
   const r = big ? 4 : 3.4;
   return (
-    <GestureDetector gesture={pan}>
+    // pan-y: an up-or-down swipe that starts on the chart still scrolls the page; only a sideways drag reads the days
+    <GestureDetector gesture={pan} touchAction="pan-y">
       <View style={{ height: H, width: W }}>
         {g.zeroY !== null ? <Svg width={W} height={H} style={{ position: "absolute" }}><Line x1={0} x2={W} y1={g.zeroY} y2={g.zeroY} stroke={C.alert} strokeOpacity={0.6} strokeDasharray="2 4" /></Svg> : null}
         <RAnimated.View style={[{ position: "absolute", left: 0, top: 0, height: H, overflow: "hidden" }, clip]}>

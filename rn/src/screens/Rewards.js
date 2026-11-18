@@ -1,14 +1,15 @@
-/* Rewards: which card to pay with. Top to bottom: the search ("What are you buying?") and its answer (the best of
-   your cards and the way to pay, worth as cash and as miles; your other cards; the cards you could get that would do
-   better) → this month's points on each card → the caps used → what you left on the table this month → your next
-   card → milestones and fee waivers → your settings (Prime, what a mile is worth, the income used) and where the
-   numbers come from. The maths and the card rules are app/rewards.js. */
+/* Rewards: which card to pay with. Top to bottom: what each card earned this month (tap one for every spend, how it
+   earned and its caps) → the search ("Which card for…?") and its answer (the best of your cards and the way to pay;
+   your other cards; the cards you could get that would do better) → what you left on the table this month, as
+   "next time, use …" → your next card → milestones and fee waivers → your settings (Prime, what a mile is worth, the
+   income used) and where the numbers come from. Points are shown as points (₹ only to compare cards, and for a
+   cashback card like Amazon Pay ICICI). The maths and the card rules are app/rewards.js. */
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { TextInput, View } from "react-native";
 import { E } from "../store";
 import { nav, setParams, openSheet } from "../nav";
 import { useC, F, darkCard } from "../theme";
-import { T, M, Panel, Rows, Row, Ic, Note, Badge, Chip, Seg, Switch, Btn, Press, Tile, Bar, More, plural, buzz, hidden, nice, cap, Page } from "../kit";
+import { T, M, Panel, Rows, Row, Ic, Note, Badge, Chip, Seg, Switch, Btn, Press, Tile, Bar, SubHead, More, plural, buzz, hidden, nice, cap, Page } from "../kit";
 import { SelectField } from "../form";
 import { Icon } from "../icons";
 import { Amount, Line } from "./Trips";
@@ -18,7 +19,11 @@ import { askAI } from "../ask";
 /** A rupee value: one decimal under ₹10 ("₹2.5"), whole rupees above. */
 export const rs = (v) => (hidden() ? "₹ ••••" : v > 0 && v < 10 ? "₹" + (Math.round(v * 10) / 10).toLocaleString("en-IN") : "₹" + Math.round(v || 0).toLocaleString("en-IN"));
 const pct = (v, amt) => (amt > 0 ? (Math.round((v / amt) * 1000) / 10).toLocaleString("en-IN") + "%" : "");
-const ptsOf = (n) => Math.round(n).toLocaleString("en-IN");
+const ptsOf = (n) => (hidden() ? "••••" : Math.round(n).toLocaleString("en-IN"));
+/** What a card earned, in its own terms: "1,234 pts" on a points card, "₹56" on a cashback card, "120 NeuCoins". */
+export const earnText = (card, n) => (card.unit === "points" ? ptsOf(n) + " pts" : card.unit === "cashback" ? rs(n) : ptsOf(n) + " " + card.unit);
+/** What points are worth, for the line under them: "≈ ₹617" or "≈ ₹1,260 as Air India points". Nothing for cashback. */
+const worthSub = (card, worth) => (card.unit === "cashback" ? "" : "≈ " + rs(worth.best) + (worth.partner && worth.miles > worth.cash ? " as " + E.REW_PARTNER[worth.partner] + " points" : ""));
 const shopName = (id) => (id ? (E.rewShop(id) || {}).name : "");
 const unitOf = (card) => (card.unit === "points" ? "points" : card.unit === "cashback" ? "cashback" : card.unit);
 /** How to pay, in words: "Pay at Amazon with this card", "Book on HDFC SmartBuy", "Buy a Swiggy gift voucher on …". */
@@ -42,9 +47,8 @@ export default function Rewards({ first }) {
   const m = E.rewardsModel();
   return (
     <Page id="rewards">
-      <Search m={m} first={first} />
       <ThisMonth m={m} first={first} />
-      <Caps m={m} first={first} />
+      <Search m={m} first={first} />
       <Missed m={m} first={first} />
       <Next m={m} first={first} />
       <Goals m={m} first={first} />
@@ -76,7 +80,7 @@ function Search({ m, first }) {
   const res = sp ? E.rewSearch(sp) : null;
   return (
     <>
-      <Panel title="What are you buying?" kind="w" i={0} first={first}>
+      <Panel title="Which card for…?" kind="w" i={1} first={first}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10, minHeight: 52, paddingHorizontal: 14, borderRadius: 16, backgroundColor: C.inset }}>
           <View style={{ flexShrink: 0 }}><Icon name="search" size={19} color={C.ink3} /></View>
           <TextInput value={text} onChangeText={setText} onSubmitEditing={() => go(text)} returnKeyType="search" placeholder="A flight, a phone, a Swiggy order…" placeholderTextColor={C.ink3}
@@ -125,7 +129,7 @@ function Answer({ res, first }) {
   const top = res.top, sp = res.sp, kind = E.rewKind(sp.kind).name;
   if (top && top.best && !(top.best.net > 0.004) && top.best.fee && top.best.worth.best > 0) {
     return (
-      <Panel title="Best card" kind="d" i={1} first={first}>
+      <Panel title="Best card" kind="d" i={2} first={first}>
         <T f={F.head} s={20} lh={26}>{"Every card of yours costs more than it earns here"}</T>
         <T s={14.5} lh={21} c={C.ink2} style={{ marginTop: 6 }}>{top.short + " earns " + rs(top.best.worth.best) + " but its " + top.card.fx + "% foreign-currency markup is " + rs(top.best.fee) + "."}</T>
         {res.better ? <T s={14.5} lh={21} c={C.ink2} style={{ marginTop: 6 }}>{res.better.card.name + " would come out " + rs(res.better.best.net) + " ahead."}</T> : null}
@@ -134,7 +138,7 @@ function Answer({ res, first }) {
   }
   if (!top || !(top.best.net > 0.004)) {
     return (
-      <Panel title="Best card" kind="d" i={1} first={first}>
+      <Panel title="Best card" kind="d" i={2} first={first}>
         <T f={F.head} s={20} lh={26}>None of your cards earns on this</T>
         <T s={14.5} lh={21} c={C.ink2} style={{ marginTop: 6 }}>{top && top.best && top.best.notes[0] ? top.best.notes[0] : kind + " earns nothing on the cards you hold."}</T>
         {res.better ? <T s={14.5} lh={21} c={C.ink2} style={{ marginTop: 6 }}>{res.better.card.name + " would earn " + rs(res.better.best.worth.best) + " on it."}</T> : null}
@@ -150,12 +154,12 @@ function Answer({ res, first }) {
   if (card.note) notes.push(card.note);
   if (!res.typedAmt) notes.push("No amount given, so this is for ₹1,000.");
   return (
-    <Panel title={"Best card · " + kind.toLowerCase()} kind="d" i={1} first={first}>
+    <Panel title={"Best card · " + kind.toLowerCase()} kind="d" i={2} first={first}>
       <T f={F.head} s={22} lh={28}>{top.short}</T>
       <T s={14.5} lh={21} c={C.ink2} style={{ marginTop: 2 }}>{wayText(w)}</T>
-      <View style={{ flexDirection: "row", alignItems: "baseline", gap: 10, marginTop: 10 }}>
-        <M text={rs(w.net)} f={F.hero} s={40} />
-        <T f={F.medium} s={15} c={C.ink2}>{pct(w.net, sp.amt) + " back on " + rs(sp.amt)}</T>
+      <View style={{ flexDirection: "row", alignItems: "baseline", flexWrap: "wrap", columnGap: 10, marginTop: 10 }}>
+        <M text={both ? ptsOf(w.pts) : rs(w.net)} f={F.hero} s={40} />
+        <T f={F.medium} s={15} c={C.ink2}>{both ? "points · ≈ " + rs(w.net) + " (" + pct(w.net, sp.amt) + ") on " + rs(sp.amt) : pct(w.net, sp.amt) + " back on " + rs(sp.amt)}</T>
       </View>
       <View style={{ flexDirection: "row", gap: 8, marginTop: 12 }}>
         {both ? (
@@ -165,8 +169,8 @@ function Answer({ res, first }) {
           </>
         ) : <Tile label={cap(unitOf(card))} value={rs(w.worth.cash)} sub={card.cash ? card.cash.how : ""} />}
       </View>
-      {both ? <T s={13} lh={18} c={C.ink3} style={{ marginTop: 8 }}>{ptsOf(w.pts) + " points at " + (Math.round(w.rate * 100) / 100) + " per ₹100"}</T> : null}
-      {res.runner ? <T s={13.5} lh={19} c={C.ink2} style={{ marginTop: 10 }}>{"Next best: " + res.runner.short + ", " + rs(res.runner.best.net) + (wayText(res.runner.best) === "Pay with this card" ? "" : " (" + wayText(res.runner.best).replace(/^Pay with this card · /, "") + ")")}</T> : null}
+      {both ? <T s={13} lh={18} c={C.ink3} style={{ marginTop: 8 }}>{"At " + (Math.round(w.rate * 100) / 100) + " points per ₹100"}</T> : null}
+      {res.runner ? <T s={13.5} lh={19} c={C.ink2} style={{ marginTop: 10 }}>{"Next best: " + res.runner.short + ", " + earnText(res.runner.card, res.runner.best.pts) + (res.runner.card.unit === "cashback" ? "" : " (≈ " + rs(res.runner.best.net) + ")") + (wayText(res.runner.best) === "Pay with this card" ? "" : " · " + wayText(res.runner.best).replace(/^Pay with this card · /, ""))}</T> : null}
       {notes.map((t, i) => <Note key={i} style={{ marginTop: i ? 0 : 10, marginBottom: i === notes.length - 1 ? 0 : 6 }}>{t}</Note>)}
     </Panel>
   );
@@ -174,11 +178,11 @@ function Answer({ res, first }) {
 function Yours({ res, first }) {
   if (res.yours.length < 2 && !res.unknown.length) return null;
   return (
-    <Panel title="Your cards for this" i={2} first={first}>
+    <Panel title="Your cards for this" i={3} first={first}>
       <Rows>
         {res.yours.map((y, i) => (
           <Row key={y.g} first={i === 0} icon={<Ic name="cards" />} title={y.short} detail={y.best ? wayText(y.best) : ""}
-            value={y.best ? rs(y.best.net) : "—"} sub={y.best && y.best.net > 0 ? pct(y.best.net, res.sp.amt) : "earns nothing"} soft={!(y.best && y.best.net > 0)} />
+            value={y.best && y.best.net > 0 ? earnText(y.card, y.best.pts) : "—"} sub={y.best && y.best.net > 0 ? (y.card.unit === "cashback" ? pct(y.best.net, res.sp.amt) : "≈ " + rs(y.best.net)) : "earns nothing"} soft={!(y.best && y.best.net > 0)} />
         ))}
       </Rows>
       {res.unknown.length ? <Note style={{ marginTop: 10, marginBottom: 0 }}>{"Not counted (their rules aren't in the app yet): " + res.unknown.map((h) => h.short).join(", ") + "."}</Note> : null}
@@ -191,12 +195,12 @@ function Could({ res, first }) {
   const rows = res.could.filter((x) => x.best && x.best.net > mine + 0.5).slice(0, 3);
   const inc = res.income;
   return (
-    <Panel title="If you had…" i={3} first={first}>
+    <Panel title="If you had…" i={4} first={first}>
       {rows.length ? (
         <Rows>
           {rows.map((x, i) => (
             <Row key={x.card.id} first={i === 0} icon={<Ic name="cards" />} title={<>{x.card.name + "  "}<Badge text={"+" + rs(x.best.net - mine)} tone="pos" /></>}
-              detail={wayText(x.best)} value={rs(x.best.net)} sub={pct(x.best.net, res.sp.amt)} />
+              detail={wayText(x.best)} value={earnText(x.card, x.best.pts)} sub={x.card.unit === "cashback" ? pct(x.best.net, res.sp.amt) : "≈ " + rs(x.best.net)} />
           ))}
         </Rows>
       ) : <Note>None of the cards open to you would do better than yours on this.</Note>}
@@ -206,84 +210,163 @@ function Could({ res, first }) {
   );
 }
 
-/* ---------------- 3 · this month ---------------- */
+/* ---------------- 1 · this month ---------------- */
 function ThisMonth({ m, first }) {
-  const rows = m.month.filter((h) => h.card);
+  const C = useC();
+  const rows = m.month.filter((h) => h.card), unknown = m.month.filter((h) => !h.card);
   if (!rows.length) return null;
-  const total = rows.reduce((s, h) => s + h.worth.best, 0);
+  const total = rows.reduce((s, h) => s + h.worth.best, 0), spends = rows.reduce((s, h) => s + h.n, 0);
   return (
-    <Panel title={"Points this month · " + E.MONFULL[new Date().getMonth()]} i={4} first={first}>
-      <Note>{"Worth about " + rs(total) + " (the better of cash or miles on each card), from the spending the app has seen on each card."}</Note>
+    <Panel title={"Earned this month · " + E.MONFULL[new Date().getMonth()]} i={0} first={first}>
+      <Note>{spends ? "From " + plural(spends, "card spend") + " the app has seen, worth about " + rs(total) + " in all. Tap a card to see every spend and how it earned." : "No card spending yet this month."}</Note>
       <Rows>
-        {rows.map((h, i) => (
-          <Row key={h.g} first={i === 0} icon={<Ic name="cards" />} title={h.short} detail={plural(h.n, "spend") + " · " + rs(h.spent)}
-            value={rs(h.worth.best)} sub={h.card.unit === "points" ? ptsOf(h.pts) + " points" : "cashback"} />
-        ))}
+        {rows.map((h, i) => {
+          const capLine = h.full ? " · " + capShort(h.full) + " cap " + Math.round((h.full.used / h.full.max) * 100) + "% used" : "";
+          return (
+            <Row key={h.g} first={i === 0} icon={<Ic name="cards" />} title={h.short} chevron onPress={() => openSheet("rewcard:" + h.g)}
+              detail={(h.n ? plural(h.n, "spend") + " · " + rs(h.spent) : "nothing yet") + capLine}
+              value={earnText(h.card, h.pts)} sub={h.card.unit === "cashback" ? "cashback" : worthSub(h.card, h.worth)} soft={!h.n} />
+          );
+        })}
       </Rows>
+      {unknown.length ? <Note style={{ marginTop: 10, marginBottom: 0 }}>{"Not worked out (their rules aren't in the app yet): " + unknown.map((h) => h.short).join(", ") + "."}</Note> : null}
     </Panel>
   );
 }
-function Caps({ m, first }) {
+const capShort = (c) => (c.name.length > 26 ? c.name.slice(0, 24).trim() + "…" : c.name);
+
+/** One card this month: every spend, how it earned (the everyday rate, a bonus, or why it earned nothing) and its caps. */
+export function RewCardSheet({ g }) {
   const C = useC();
-  const list = [];
-  m.month.filter((h) => h.card).forEach((h) => h.caps.forEach((c) => { if (c.per !== "quarter") list.push(Object.assign({ short: h.short }, c)); }));
-  const shown = list.filter((c) => c.used > 0).concat(list.filter((c) => !(c.used > 0) && /bonus/.test(c.name))).slice(0, 6);
-  if (!shown.length) return null;
+  const h = E.rewMonth().find((x) => x.g === g);
+  if (!h || !h.card) return <Note>The app doesn't have this card's rules yet.</Note>;
+  const card = h.card, eff = h.spent > 0 ? (h.pts / h.spent) * 100 : 0;
+  const caps = h.caps.filter((c) => c.per !== "quarter" && (c.used > 0 || /bonus/.test(c.name)));
+  const notes = [];
+  if (h.addOn) notes.push("Yours is an add-on card: the points land with the main cardholder.");
+  if (card.note) notes.push(card.note);
+  notes.push("Worked out from the card's published rules and the spends the app has seen. Your statement has the final number.");
   return (
-    <Panel title="Caps this month" kind="w" i={5} first={first}>
-      {shown.map((c, i) => {
-        const p = (c.used / c.max) * 100, unit = c.on === "extra" ? "bonus points" : "points";
-        return (
-          <View key={c.short + c.id} style={{ marginTop: i ? 14 : 2 }}>
-            <View style={{ flexDirection: "row", gap: 8 }}>
-              <T f={F.medium} s={14} lh={19} style={{ flex: 1 }} lines={2}>{c.name}</T>
-              <T f={F.semi} s={13.5} lh={19} c={p >= 90 ? C.alert : C.ink2}>{ptsOf(c.used) + " of " + ptsOf(c.max)}</T>
-            </View>
-            <T s={12.5} lh={16} c={C.ink3} style={{ marginBottom: 6 }}>{c.short + " · " + unit + " a " + (c.per === "cycle" ? "statement" : "month")}</T>
-            <Bar pct={p} color={p >= 90 ? C.alert : undefined} delay={i * 60} />
-          </View>
-        );
-      })}
-    </Panel>
+    <View>
+      <T s={13.5} lh={18} c={C.ink3}>{E.MONFULL[new Date().getMonth()] + " so far"}</T>
+      <M text={earnText(card, h.pts)} f={F.fig} s={36} style={{ lineHeight: 42 }} />
+      <T s={14} lh={20} c={C.ink2}>{card.unit === "cashback" ? (card.cash ? cap(card.cash.how) : "") : worthSub(card, h.worth) + (card.cash ? " · cash value " + rs(h.worth.cash) + " " + card.cash.how : "")}</T>
+      <View style={{ flexDirection: "row", gap: 8, marginTop: 14 }}>
+        <Tile label="Spent on it" value={rs(h.spent)} sub={plural(h.n, "spend")} />
+        <Tile label="Earned on average" value={h.n ? rewRate(card, eff) : "—"} sub="across every spend" />
+      </View>
+      {h.ways.length ? (
+        <>
+          <SubHead>How you earned them</SubHead>
+          <Rows>
+            {h.ways.map((w, i) => (
+              <Row key={w.text + w.why} first={i === 0} icon={<Ic name={w.none ? "close" : "spark"} tone={w.none ? undefined : "info"} />} title={w.none ? (w.why || "Earns nothing") : w.text}
+                detail={plural(w.n, "spend") + " · " + rs(w.amt)} value={w.none ? "0" : earnText(card, w.pts)} soft={w.none} />
+            ))}
+          </Rows>
+        </>
+      ) : null}
+      {caps.length ? (
+        <>
+          <SubHead>Caps this month</SubHead>
+          <CapBars list={caps} />
+        </>
+      ) : null}
+      {h.items.length ? (
+        <>
+          <SubHead>Every spend</SubHead>
+          <Rows>
+            {h.items.map((x, i) => (
+              <Row key={x.id} first={i === 0} icon={<Ic name={x.pts > 0 ? "spark" : "close"} tone={x.pts > 0 ? "info" : undefined} />} title={nice(x.desc).title}
+                detail={E.fmt(new Date(x.ts)) + " · " + (x.pts > 0 ? x.how : x.why || "earns nothing") + (x.capped ? " · over a cap" : "") + (x.forOther ? " · for someone else" : "")}
+                value={x.pts > 0 ? "+" + earnText(card, x.pts) : "0"} sub={rs(x.amt)} soft={!(x.pts > 0)} onPress={() => openSheet("tx:" + x.id)} />
+            ))}
+          </Rows>
+        </>
+      ) : <Note style={{ marginTop: 12 }}>No spending on this card yet this month.</Note>}
+      {notes.map((t, i) => <Note key={i} style={{ marginTop: i ? 0 : 14, marginBottom: 6 }}>{t}</Note>)}
+    </View>
   );
+}
+const rewRate = (card, rate) => E.rewRateText(card, rate);
+
+/** Caps as bars: how much of each is used this month. */
+function CapBars({ list }) {
+  const C = useC();
+  return list.map((c, i) => {
+    const p = Math.min(100, (c.used / c.max) * 100), unit = c.on === "extra" ? "bonus points" : "points";
+    return (
+      <View key={c.id} style={{ marginTop: i ? 14 : 2 }}>
+        <View style={{ flexDirection: "row", gap: 8 }}>
+          <T f={F.medium} s={14} lh={19} style={{ flex: 1 }} lines={2}>{c.name}</T>
+          <T f={F.semi} s={13.5} lh={19} c={p >= 90 ? C.alert : C.ink2}>{ptsOf(c.used) + " of " + ptsOf(c.max)}</T>
+        </View>
+        <T s={12.5} lh={16} c={C.ink3} style={{ marginBottom: 6 }}>{unit + " a " + (c.per === "cycle" ? "statement" : "month") + (p >= 100 ? " · full: more spending here earns less" : "")}</T>
+        <Bar pct={p} color={p >= 90 ? C.alert : undefined} delay={i * 60} />
+      </View>
+    );
+  });
 }
 
-/* ---------------- 4 · left on the table ---------------- */
+/* ---------------- 3 · left on the table ---------------- */
 function Missed({ m, first }) {
+  const C = useC();
   const x = m.missed;
   if (!x.n || !x.cards) return null;
+  const share = x.could > 0 ? Math.min(100, (x.got / x.could) * 100) : 100;
   return (
-    <Panel title="Left on the table this month" i={6} first={first}>
-      <View style={{ flexDirection: "row", gap: 8, marginBottom: 8 }}>
-        <Tile label="You earned" value={rs(x.got)} />
-        <Tile label="Could have" value={rs(x.could)} sub={x.gap >= 1 ? "+" + rs(x.gap) + " more" : "you got it all"} tone={x.gap >= 1 ? "warn" : "pos"} />
+    <Panel title="Left on the table this month" i={5} first={first}>
+      <T f={F.head} s={21} lh={27}>{x.gap >= 1 ? rs(x.gap) + " more was possible" : "You used your best card every time"}</T>
+      <T s={14} lh={20} c={C.ink2} style={{ marginTop: 2 }}>{x.gap >= 1 ? "with the cards you already have, paying the way shown below." : "on all " + plural(x.n, "spend") + " this month."}</T>
+      <View style={{ marginTop: 12 }}>
+        <Bar pct={share} height={8} color={x.gap >= 1 ? C.warn : C.pos} />
+        <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 6 }}>
+          <T s={12.5} c={C.ink3}>{"You earned " + rs(x.got)}</T>
+          <T s={12.5} c={C.ink3}>{"Best possible " + rs(x.could)}</T>
+        </View>
       </View>
-      {x.misses.length ? (
-        <Rows>
-          {x.misses.map((y, i) => (
-            <Row key={y.x.id || i} first={i === 0} icon={<Ic name="spark" />} title={nice(y.x.desc).title}
-              detail={rs(y.x.amt) + " · " + (y.x.card ? "on " + E.cardShort(y.x.card) : "paid by bank or UPI") + " · best: " + (y.card ? y.card.name : "")} value={"+" + rs(y.gap)} tone="warn" />
-          ))}
-        </Rows>
+      {x.tips.length ? (
+        <>
+          <SubHead>Next time</SubHead>
+          {x.tips.map((t, i) => <Tip key={t.card.id + t.kind} t={t} first={i === 0} />)}
+        </>
       ) : null}
-      <Note style={{ marginTop: 10, marginBottom: 0 }}>Each spend against the best of your cards paid straight on the card, with the caps counted. Money sent to people isn't counted.</Note>
+      <Note style={{ marginTop: 12, marginBottom: 0 }}>Every spend this month against the best of your cards for it, paid straight on the card, with the caps counted. ₹ is used here only to compare cards whose points are worth different amounts. Money sent to people isn't counted.</Note>
     </Panel>
   );
 }
+/** "For food delivery, use Amazon Pay ICICI": the spends, what it would have earned, what you got. */
+function Tip({ t, first }) {
+  const C = useC();
+  const got = t.from.map((f) => (f.card ? earnText(f.card, f.pts) + " on " + f.short : "nothing (paid by bank or UPI)")).join(", ");
+  return (
+    <View style={{ flexDirection: "row", gap: 12, paddingVertical: 12, borderTopWidth: first ? 0 : 1, borderTopColor: C.line }}>
+      <Ic name="spark" tone="warn" />
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <T f={F.semi} s={15} lh={20}>{(t.kind === "other" ? "For other spends" : "For " + t.kindName.toLowerCase()) + ", use " + t.short}</T>
+        <T s={13} lh={18} c={C.ink2} style={{ marginTop: 2 }}>{"It would have earned " + earnText(t.card, t.bestPts) + " on " + plural(t.n, "spend") + " (" + rs(t.amt) + "). You got " + got + "."}</T>
+      </View>
+      <View style={{ alignItems: "flex-end" }}>
+        <T f={F.semi} s={15} lh={20} c={C.warn}>{"+" + rs(t.gap)}</T>
+        <T s={12} lh={16} c={C.ink3}>more</T>
+      </View>
+    </View>
+  );
+}
 
-/* ---------------- 5 · your next card ---------------- */
+/* ---------------- 4 · your next card ---------------- */
 function Next({ m, first }) {
   const x = m.next, rows = x.rows.filter((r) => r.net > 0).slice(0, 4);
   const basis = x.basis === "months" ? "your last " + plural(x.n, "full month") : "this month so far";
   return (
-    <Panel title="Your next card" i={7} first={first}>
-      <Note>{"What each card open to you would add in a year on " + basis + " of spending, on the spends where it beats your cards, after its yearly fee."}</Note>
+    <Panel title="Your next card" i={6} first={first}>
+      <Note>{"What each card open to you would earn in a year on " + basis + " of spending, counting only the spends where it beats your cards. The ₹ under it is that extra, after the card's yearly fee."}</Note>
       {rows.length ? (
         <Rows>
           {rows.map((r, i) => (
             <Row key={r.card.id} first={i === 0} icon={<Ic name="cards" />} title={r.card.name}
               detail={(r.top.length ? "Wins on " + r.top.join(" and ") + " · " : "") + (r.waived ? "fee waived by the spending" : r.fee ? "fee " + rs(r.fee) : "no fee")}
-              value={"+" + rs(r.net)} sub="a year" tone="pos" />
+              value={"+" + earnText(r.card, r.card.unit === "cashback" ? r.year : r.ptsYear)} sub={"a year · " + (r.card.unit === "cashback" && !r.fee ? "" : "≈ ") + rs(r.net) + (r.fee && !r.waived ? " after fee" : "")} tone="pos" />
           ))}
         </Rows>
       ) : <Note>None of the cards open to you would beat yours after the fee.</Note>}

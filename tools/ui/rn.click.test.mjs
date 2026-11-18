@@ -87,6 +87,23 @@ await step("Edit a transaction's category: the note is written", async () => {
   const w = await p.evaluate(() => window.__writes);
   must(w.length > w0 && w.slice(w0).some((x) => x.table === "txn_notes" && x.op === "upsert" && x.row.category === "Groceries"), "no txn_notes write: " + JSON.stringify(w.slice(w0)));
 });
+await step("A card payment marked reversed or refunded: marked in Activity, saved, and undone", async () => {
+  await tab(p, "Activity");
+  const search = p.getByPlaceholder("Search payee, category, amount or note").filter({ visible: true }).first();
+  await search.fill("Zepto"); await p.waitForTimeout(800);
+  await p.getByText("Zepto", { exact: true }).filter({ visible: true }).first().click(); await p.waitForTimeout(900);
+  let t = await text(p);
+  must(/Reversed or refunded\?/.test(t) && /This payment was reversed or refunded/.test(t), "no reverse option on a card payment");
+  await tapText(p, "This payment was reversed or refunded"); await p.waitForTimeout(1500);
+  t = await text(p);
+  must(/Marked as (reversed|refunded)/.test(t), "no confirmation");
+  must(/reversed, not counted|refunded \d+ \w{3}/.test(t), "the row isn't marked: " + t.slice(t.indexOf("Zepto"), t.indexOf("Zepto") + 160));
+  must(saves.some((s) => s.action === "save" && s.settings.overrides && Object.keys(s.settings.overrides).some((k) => /^rev\|/.test(k))), "the mark wasn't saved");
+  await tapText(p, "Undo"); await p.waitForTimeout(1500);
+  t = await text(p);
+  must(!/reversed, not counted|refund you marked/.test(t), "undo didn't bring it back");
+  await search.fill(""); await p.waitForTimeout(600);
+});
 await step("Set the Heron Bank balance: where you stand goes up by it", async () => {
   await tab(p, "Today");
   await p.waitForTimeout(1500);           // Today stayed mounted: its figures count to the new values
@@ -170,7 +187,14 @@ await step("Cards and Spending draw; a category opens Activity filtered", async 
 await step("Rewards: a search finds the best card and the way to pay; the cards you could get; the month's figures", async () => {
   await tab(p, "Rewards");
   let t = await text(p);
-  must(/What are you buying\?/.test(t) && /Points this month/.test(t) && /Your next card/.test(t) && /How it counts/.test(t), "the tab's panels are missing");
+  must(/Earned this month/.test(t) && /Which card for…\?/.test(t) && /Your next card/.test(t) && /How it counts/.test(t), "the tab's panels are missing");
+  must(t.indexOf("Earned this month") < t.indexOf("Which card for…?"), "this month's points aren't first");
+  must(!/HSBC/.test(t.slice(t.indexOf("Your next card"))), "HSBC is still offered as a next card");
+  // a card's breakdown: every spend and how it earned
+  await p.getByText(/^Lotus Shopper/).filter({ visible: true }).first().click(); await p.waitForTimeout(1000);
+  t = await text(p);
+  must(/this month/.test(t) && /How you earned them/.test(t) && /Every spend/.test(t) && /Spent on it/.test(t), "the card's breakdown is missing parts");
+  await p.getByLabel("Close").filter({ visible: true }).last().click(); await p.waitForTimeout(700);
   const box = p.getByLabel("What are you buying?").filter({ visible: true }).first();
   await box.fill("iPhone on Amazon 80000"); await box.press("Enter"); await p.waitForTimeout(1200);
   t = await text(p);
@@ -230,7 +254,7 @@ await step("Trips: the trip, the airline, the points, the best cards, the cards 
   await tapText(p, "Change the income used");
   await fill(p, "Income a year (₹)", "400000"); await tapText(p, "Save"); await p.waitForTimeout(900);
   t = await text(p);
-  must(!/Axis Horizon/.test(got(t)) && /SBI Card Miles Prime/.test(got(t)) && /Going by the income you set/.test(t), "a ₹4L income should leave only the SBI Miles cards");
+  must(!/Axis Horizon/.test(got(t)) && /SBI Card Miles/.test(got(t)) && !/SBI Card Miles (Prime|Elite)/.test(t) && /Going by the income you set/.test(t), "a ₹4L income should leave only your SBI Card Miles (Prime and Elite are off Trips)");
   must(t.indexOf("Axis Magnus") > 0 && t.indexOf("Axis Magnus") < t.indexOf("Cards you can get"), "the best-cards list moved with the income");
   await tapText(p, "Change the income used"); await tapText(p, "Use my salary"); await p.waitForTimeout(700);
   // your month on a card

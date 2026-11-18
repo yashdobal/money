@@ -262,6 +262,47 @@ function takeTx(list){
   SCHEDULED = all.filter(t => t.ts > now).sort((a,b) => a.ts - b.ts);
   return all.filter(t => !(t.ts > now));
 }
+/* Card charges you marked as reversed or refunded in Activity (overrides["rev|<id>"]):
+     true          reversed before its bill closed: as if it never happened, so it's left out of everything (the card
+                   bill, spending, Safe to spend, points)
+     "YYYY-MM-DD"  refunded after its bill closed: the charge stays on that bill and the same amount comes back to the
+                   card that day, off the next bill (as a refund email would)
+   RAW keeps every row the alerts gave, so a mark can be undone; TX is RAW with the marks applied (useTx). */
+let RAW = [];
+const revOf = id => { const v = overrides["rev|" + id]; return v === true ? {gone:true} : isISO(v) ? {on:v} : null; };
+/** TX from RAW and your marks. keep: hold on to the SMS payments the phone added (they're put back on every load). */
+function useTx(keep){
+  const out = [];
+  RAW.forEach(t => {
+    const r = t.dir === "out" && CARD_CFG[t.account] ? revOf(t.id) : null;
+    if(r && r.gone) return;
+    out.push(t);
+    if(r && r.on){
+      const d = parseISO(r.on);
+      out.push(Object.assign({}, t, {id:t.id + "~refund", ts:d.getTime() + 12 * 3600000, day:d.getDate(), ym:r.on.slice(0, 7), dir:"in",
+        desc:"Refund · " + t.desc, cat:"Refunds", counted:false, refundOf:t.id}));
+    }
+  });
+  TX = keep ? out.concat(TX.filter(t => t.sms)) : out;
+}
+/** Whether a card charge is on a statement that has already closed. */
+function billedYet(t){
+  const c0 = CARD_CFG[t.account], cfg = c0 && GROUPS[c0.group];
+  if(!cfg) return false;
+  const c = cycleFor(cfg, new Date()), first = parseISO(cfg.firstStmt);
+  if(first && c.stmt < first) return false;
+  return t.ts <= c.stmt.getTime() + 86400000 - 1;
+}
+/** For the edit sheet: a card charge's mark, whether its bill has closed, and a refund to the same card for the same
+    amount within 90 days after it (the bank's own refund, which already takes it off). null: not a card charge. */
+function revInfo(id){
+  const t = RAW.find(x => x.id === id);
+  if(!t || t.dir !== "out" || !CARD_CFG[t.account]) return null;
+  const r = revOf(id), g = CARD_CFG[t.account].group;
+  const match = r ? null : RAW.find(x => x.dir !== "out" && CARD_CFG[x.account] && CARD_CFG[x.account].group === g && x.ts > t.ts &&
+    x.ts - t.ts < 90 * 86400000 && Math.abs(x.amt - t.amt) <= 1) || null;
+  return {gone:!!(r && r.gone), on:r && r.on ? r.on : null, billed:billedYet(t), match};
+}
 let goals = [], contribs = [], payAssign = {};
 let SELF_TX = new Set(), EFF_PAYMENTS = [], PAY_INFO = {byTx:{}, unresolved:[], candidates:new Set(), detail:{}}, CONTRIB_TX = new Set(), PLANNED_TX = new Map();
 let assignId = null, gFormId = null, gDelPending = null;
@@ -399,9 +440,12 @@ function groupState(g, now){
 
   const toBilled = Math.min(paid, billed);
   const toUnbilled = paid - toBilled;
-  const billedLeft = billed - toBilled + prevUnpaid;
-  const unbilledLeft = Math.max(0, unbilled - toUnbilled);
-  const credit = Math.max(0, toUnbilled - unbilled);
+  // refunds since the statement bigger than the new spending are a credit on the account: it comes off the closed bill
+  // still unpaid first (pay the bill less the refund and it's cleared), and only the rest is a credit left over
+  const offBill = Math.min(Math.max(0, -unbilled), Math.max(0, billed - toBilled + prevUnpaid));
+  const billedLeft = billed - toBilled + prevUnpaid - offBill;
+  const unbilledLeft = Math.max(0, unbilled + offBill - toUnbilled);
+  const credit = Math.max(0, toUnbilled - unbilled - offBill);
   const dueIn = days(now, prevUnpaid >= 0.5 ? c.prevDue : c.due);
 
   // Spent for someone else and still on what you owe: they pay you back, so it isn't yours to pay (owedBack)
@@ -497,13 +541,14 @@ function applyNotes(data){
     widget and the 9 PM summary show exactly what the app shows. Returns whether the settings need saving. */
 function ingest(data){
   if(data.settings && data.settings.profile) applyProfile(data.settings.profile);   // which cards are closed, before the rows are read
-  TX = takeTx(data.tx);
+  RAW = takeTx(data.tx);
   const v4 = Array.isArray(data.events);
   const evSeen = {};
   EVENTS = v4 ? data.events.filter(e => e && e.id && !evSeen[e.id] && (evSeen[e.id] = true)) : [];
   lastRun = data.lastRun || null; lastFetch = Date.now();
   const s = data.settings || {};
   applySettings(s);
+  useTx();
   applyNotes(data);
   buildMonths();
   return !s.seeded;
@@ -534,7 +579,7 @@ function refresh(){
   return Promise.resolve(ask).catch(() => {}).finally(load);
 }
 
-function cacheLocal(){ lsSet(CACHE_KEY, JSON.stringify({tx:TX, events:EVENTS, settings, manual, payments, overrides, catRules, goals, contribs, payAssign, cfg, profile:PROFILE, lastRun, at:lastFetch, notes:NOTES, notesOk:NOTES_OK})); }
+function cacheLocal(){ lsSet(CACHE_KEY, JSON.stringify({tx:RAW, events:EVENTS, settings, manual, payments, overrides, catRules, goals, contribs, payAssign, cfg, profile:PROFILE, lastRun, at:lastFetch, notes:NOTES, notesOk:NOTES_OK})); }
 
 let saveTimer = null;
 const saveMsg = t => { SAVE_MSG = t; hook("saved", t); };
@@ -1575,11 +1620,14 @@ function manualTx(m){
 }
 const manualCounted = m => manualTx(m).counted;
 /** Transactions as the app shows them: one month (ym "2026-12"), or all of them (ym null). */
-function txFor(ym){
+function txFor(ym, withGone){
   const pick = x => !ym || x.ym === ym;
-  return TX.filter(pick).map(withRules)
-    .map(x => CARD_CFG[x.account] ? Object.assign({}, x, {account:acctName(x.account), card:CARD_CFG[x.account].group}) : x)
-    .concat(manual.filter(pick).map(manualTx));
+  const marked = x => { const r = x.dir === "out" && CARD_CFG[x.account] ? revOf(x.id) : null; return r && r.on ? Object.assign({}, x, {refunded:r.on}) : x; };
+  const named = x => CARD_CFG[x.account] ? Object.assign({}, x, {account:acctName(x.account), card:CARD_CFG[x.account].group}) : x;
+  const out = TX.filter(pick).map(withRules).map(marked).map(named).concat(manual.filter(pick).map(manualTx));
+  // reversed charges: only in the Activity list (struck out, so you can undo the mark), never in a figure
+  if(withGone) RAW.forEach(t => { if(pick(t) && t.dir === "out" && CARD_CFG[t.account] && (revOf(t.id) || {}).gone) out.push(named(Object.assign({}, withRules(t), {counted:false, reversed:true}))); });
+  return out;
 }
 let MONTHS = [];
 function buildMonths(){
@@ -1658,7 +1706,7 @@ function spendModel(ym){
 
 /** Every transaction, newest first, for Activity and the CSV export. */
 function allTx(){
-  return txFor(null).sort((a, b) => b.ym.localeCompare(a.ym) || b.day - a.day || (b.ts || 0) - (a.ts || 0));
+  return txFor(null, true).sort((a, b) => b.ym.localeCompare(a.ym) || b.day - a.day || (b.ts || 0) - (a.ts || 0));
 }
 const clockOf = x => x.ts ? new Date(x.ts).toLocaleTimeString("en-IN", {hour:"numeric", minute:"2-digit", hour12:true}).replace(/\s?([ap])\.?m\.?$/i, (m, ap) => " " + ap.toLowerCase() + "m") : "";
 function csvText(){
@@ -1667,7 +1715,7 @@ function csvText(){
   allTx().forEach(x => {
     const [y, m] = x.ym.split("-");
     rows.push([y + "-" + m + "-" + String(x.day).padStart(2, "0"), clockOf(x), x.account, x.desc, x.cat, (x.dir === "in" ? "" : "-") + x.amt.toFixed(2),
-               x.dir === "in" ? "in" : "out", x.counted ? "yes" : "no", x.note || (x.forOther ? "spent for someone else" : "")]);
+               x.dir === "in" ? "in" : "out", x.counted ? "yes" : "no", x.note || (x.reversed ? "reversed" : x.refunded ? "refunded " + x.refunded : x.forOther ? "spent for someone else" : "")]);
   });
   return rows.map(r => r.map(q).join(",")).join("\r\n");
 }
@@ -1835,6 +1883,16 @@ const act = {
     render(); queueSave();
   },
   delManual(id){ manual = manual.filter(m => m.id !== id); if(NOTES[id]) act.saveNote(id, null); buildMonths(); render(); queueSave(); },
+  /** A card charge that was reversed or refunded. Before its bill closed it's dropped altogether; after, the money comes
+      back to the card today, off the next bill. Returns "" or what went wrong; revInfo(id) says which it became. */
+  reverse(id){
+    const t = RAW.find(x => x.id === id);
+    if(!t || t.dir !== "out" || !CARD_CFG[t.account]) return "Only a card payment can be marked as reversed.";
+    overrides["rev|" + id] = billedYet(t) ? todayISO() : true;
+    useTx(true); buildMonths(); render(); queueSave(); return "";
+  },
+  /** Undo reverse(). */
+  unreverse(id){ id = String(id).replace(/~refund$/, ""); delete overrides["rev|" + id]; useTx(true); buildMonths(); render(); queueSave(); },
 
   /* card payments */
   assignPayment(txId, v){ payAssign[txId] = v; render(); queueSave(); },
@@ -1880,14 +1938,14 @@ const act = {
   useTakeHome(){ settings.inc = regularTakeHome(); render(); queueSave(); },
   resetCfg(){ act.setCfg(null); },
   /** Your banks and cards (see applyProfile). */
-  setProfile(p){ applyProfile(p); TX = takeTx(TX.concat(SCHEDULED)); render(); queueSave(); },
+  setProfile(p){ applyProfile(p); RAW = takeTx(RAW.concat(SCHEDULED)); useTx(true); render(); queueSave(); },
   /** A setup brought in from a link or pasted text: {profile, cfg, rename}. The profile replaces yours; salary
       figures, rule and fixed payments only fill what you haven't set; rename moves saved planner choices that an
       earlier version kept under another name (e.g. {"share": "family"}) to the name used now. */
   importSetup(x){
     if(!x || typeof x !== "object" || !x.profile || typeof x.profile !== "object") return "That isn't a Money setup.";
     applyProfile(x.profile);
-    TX = takeTx(TX.concat(SCHEDULED));                   // a card it says is closed drops its scheduled charges
+    RAW = takeTx(RAW.concat(SCHEDULED)); useTx(true);   // a card it says is closed drops its scheduled charges
     const ren = x.rename && typeof x.rename === "object" ? x.rename : {};
     const move = o => { if(o && typeof o === "object") Object.keys(ren).forEach(k => { if(k in o){ if(!(ren[k] in o)) o[ren[k]] = o[k]; delete o[k]; } }); };
     Object.keys(overrides).forEach(k => { if(/^plan\|/.test(k)) move(overrides[k]); });
@@ -1952,10 +2010,11 @@ function start(){
   const raw = lsGet(CACHE_KEY);
   if(raw){ try{ const v = JSON.parse(raw);
     if(v.profile) applyProfile(v.profile);
-    if(Array.isArray(v.tx)) TX = takeTx(v.tx);
+    if(Array.isArray(v.tx)) RAW = takeTx(v.tx);
     if(Array.isArray(v.events)) EVENTS = v.events;
     applySettings(Object.assign({}, v.settings, {manual:v.manual, payments:v.payments, overrides:v.overrides,
       catRules:v.catRules, goals:v.goals, contribs:v.contribs, payAssign:v.payAssign, cfg:v.cfg, profile:v.profile}));
+    useTx();
     if(v.notesOk){ NOTES_OK = true; NOTES = v.notes || {}; }
     lastRun = v.lastRun || null; lastFetch = v.at || null;
   }catch(e){} }
