@@ -26,8 +26,9 @@ jobs:
         run: node tools/rn_engine.mjs --check
       - name: The server engine gives the app's figures in UTC
         run: node tools/engine/ist.test.mjs
+      # a fixed version: "latest" asks GitHub which release is newest, and that lookup can hit GitHub's rate limit
       - uses: supabase/setup-cli@v1
-        with: { version: latest }
+        with: { version: 3.1.0 }
       - name: Deploy
         run: |
           if [ -z "$SUPABASE_ACCESS_TOKEN" ]; then echo "::warning::SUPABASE_ACCESS_TOKEN is not set, so nothing was deployed"; exit 0; fi
