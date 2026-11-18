@@ -1,0 +1,95 @@
+Starting a Gradle Daemon (subsequent builds will be faster)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:mergeReleaseNativeLibs NO-SOURCE
+> Task :app:stripReleaseDebugSymbols NO-SOURCE
+> Task :app:extractReleaseNativeSymbolTables NO-SOURCE
+> Task :app:mergeReleaseNativeDebugMetadata NO-SOURCE
+> Task :app:buildKotlinToolingMetadata
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:generateReleaseBuildConfig
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:generateReleaseResValues
+> Task :app:checkReleaseAarMetadata
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:mergeReleaseResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:javaPreCompileRelease
+> Task :app:mergeReleaseArtProfile
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+
+> Task :app:buildWeb
+Starting Metro Bundler
+
+Web Bundled 19538ms index.js (1097 modules)
+
+› Assets (11):
+assets/fonts/Anek-Body.69fe0ecbef4d6f5d95f7ad4edaffeeee.ttf (44KB)
+assets/fonts/Anek-Bold.d9611fea2c43840908d77cbf05034c56.ttf (44KB)
+assets/fonts/Anek-Book.3402989aebe900c58c857deb6236f5fe.ttf (44KB)
+assets/fonts/Anek-Day.8290f7f81d0e3dafc66bb9404ca35ea9.ttf (44KB)
+assets/fonts/Anek-Fig.7726c9b8b7cbf5bcda9149629fb4c759.ttf (44KB)
+assets/fonts/Anek-Head.d08f9074b2a0db79c1bb76f1b318637b.ttf (44KB)
+assets/fonts/Anek-Hero.70adf150aa90dc8a1a37924185f4799b.ttf (44KB)
+assets/fonts/Anek-Medium.56ca6e167158241dba1c33df98ae525d.ttf (44KB)
+assets/fonts/Anek-Semi.5aa87629f3455b0e94316a5779450c9a.ttf (44KB)
+assets/fonts/Anek-Tile.cef0b12c57cfd649313d228540c26509.ttf (44KB)
+assets/fonts/Anek-Title.5a86c11ec401f73b98d922b2a8cdfb2c.ttf (44KB)
+
+› web bundles (1):
+_expo/static/js/web/index-49d78d725a45b8efde5314b6c0d3b732.js (2.6MB)
+
+› Files (3):
+favicon.ico (15KB)
+index.html (1.2KB)
+metadata.json (49B)
+
+Exported: dist-web
+built /home/runner/work/money/money/android/app/build/web-dist · build 4c76bd8757 · js/app-7b0a66c0e3ec.js · 3.4 MB
+
+> Task :app:syncWeb
+> Task :app:mergeReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processReleaseManifestForPackage
+> Task :app:compressReleaseAssets
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:processReleaseResources
+> Task :app:convertLinkedResourcesToProtoRelease
+
+> Task :app:compileReleaseKotlin
+w: file:///home/runner/work/money/money/android/app/src/main/java/com/yashdobal/money/MainActivity.kt:75:16 'var statusBarColor: Int' is deprecated. Deprecated in Java.
+w: file:///home/runner/work/money/money/android/app/src/main/java/com/yashdobal/money/MainActivity.kt:76:16 'var navigationBarColor: Int' is deprecated. Deprecated in Java.
+w: file:///home/runner/work/money/money/android/app/src/main/java/com/yashdobal/money/MainActivity.kt:79:20 'var isStatusBarContrastEnforced: Boolean' is deprecated. Deprecated in Java.
+
+> Task :app:compileReleaseJavaWithJavac
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:processReleaseJavaRes
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseJavaResource
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertShrunkResourcesToBinaryRelease
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:assembleRelease
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_4-1795018230230.json
+
+BUILD SUCCESSFUL in 1m 20s
+46 actionable tasks: 46 executed
