@@ -79,6 +79,19 @@ impl Engine {
         }
         out
     }
+    /// Every transaction as CSV, for a spreadsheet (Settings → Export).
+    pub fn csv_text(&self) -> String {
+        let q = |v: &str| if v.contains(['"', ',', '\n']) { format!("\"{}\"", v.replace('"', "\"\"")) } else { v.to_string() };
+        let mut rows: Vec<Vec<String>> = vec![["Date", "Time", "Account", "Payee", "Category", "Amount (₹)", "In or out", "Counted as spending", "Note"].iter().map(|s| s.to_string()).collect()];
+        for x in self.all_tx() {
+            let t = &x.t;
+            let note = x.note.clone().unwrap_or_default();
+            let note = if !note.is_empty() { note } else if x.reversed { "reversed".into() } else if let Some(r) = &x.refunded { format!("refunded {}", r) } else if x.for_other { "spent for someone else".into() } else { String::new() };
+            rows.push(vec![format!("{}-{:02}", t.ym, t.day), Self::clock_of(t.ts), t.account.clone(), t.desc.clone(), t.cat.clone(),
+                format!("{}{:.2}", if t.dir == "in" { "" } else { "-" }, t.amt), if t.dir == "in" { "in".into() } else { "out".into() }, if t.counted { "yes".into() } else { "no".into() }, note]);
+        }
+        rows.iter().map(|r| r.iter().map(|v| q(v)).collect::<Vec<_>>().join(",")).collect::<Vec<_>>().join("\r\n")
+    }
     /// Every transaction, newest first.
     pub fn all_tx(&self) -> Vec<Row> {
         let mut v = self.tx_for(None, true);

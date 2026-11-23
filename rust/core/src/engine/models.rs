@@ -583,6 +583,11 @@ impl Engine {
             x.next.as_ref().map(|n| json!([n.k, r2(n.amt), iso(n.d)])).unwrap_or(Value::Null), r2(x.left), r2(x.total), iso(x.last)])).collect();
         let history = self.balance_history().map(|h| json!([h.pts.iter().map(|p| json!([iso(p.0), r2(p.1)])).collect::<Vec<_>>(),
             h.marks.iter().map(|m| json!([iso(m.d), m.kind, r2(m.amt), m.title])).collect::<Vec<_>>(), r2(h.now), h.set.map(|s| Value::from(iso(s))).unwrap_or(Value::Null), h.missing])).unwrap_or(Value::Null);
-        json!({ "hero": hero, "attention": attention, "coming": coming, "history": history, "emis": emis })
+        let calendar: Vec<Value> = self.calendar_events(&cards, h.f.as_ref()).iter().map(|c| json!([iso(c.d), c.dot, c.title, c.detail, c.amt.map(r2), c.soft])).collect();
+        let goals: Vec<Value> = self.goal_plan(&self.pay_cycle()).iter().map(|p| json!([p.g.id, r2(p.g.target), r2(p.saved), r2(p.moved_now), r2(p.need), p.months_left, p.done,
+            p.due.map(|d| Value::from(iso(d))).unwrap_or(Value::Null), r2(p.pct), p.by_rule,
+            if p.emis.is_empty() { Value::Null } else { p.next_emi.as_ref().map(|n| Value::from(n.due.clone())).unwrap_or(Value::Null) }, r2(p.funded), r2(p.short)])).collect();
+        let card_pays: Vec<Value> = cards.iter().map(|c| json!([c.key, self.card_payments(c).iter().map(|(p, how, off, bt)| json!([p.ts, r2(p.amt), p.kind, how, off, bt])).collect::<Vec<_>>()])).collect();
+        json!({ "hero": hero, "attention": attention, "coming": coming, "history": history, "emis": emis, "calendar": calendar, "goals": goals, "cardPays": card_pays, "csv": self.csv_text() })
     }
 }

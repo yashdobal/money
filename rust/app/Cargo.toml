@@ -16,4 +16,4 @@ gloo-timers = { version = "0.3", features = ["futures"] }
 regex = { version = "1", default-features = false, features = ["std", "unicode-case", "unicode-perl"] }
 wasm-bindgen-futures = "0.4"
 js-sys = "0.3"
-web-sys = { version = "0.3", features = ["Window", "Storage", "Document", "Element", "HtmlElement", "Location", "Request", "RequestInit", "RequestMode", "Response", "Headers", "console", "ScrollIntoViewOptions", "ScrollBehavior", "ScrollLogicalPosition"] }
+web-sys = { version = "0.3", features = ["Window", "Storage", "Document", "Element", "HtmlElement", "Location", "Request", "RequestInit", "RequestMode", "Response", "Headers", "console", "ScrollIntoViewOptions", "ScrollBehavior", "ScrollLogicalPosition", "Blob", "BlobPropertyBag", "Url", "HtmlAnchorElement"] }

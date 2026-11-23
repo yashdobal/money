@@ -3,11 +3,25 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#F7F7F5" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#0A0A0C" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#F7F7F5">
   <title>Money · Rust</title>
   <link rel="preload" href="fonts/anek-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="style.css?v=__BUILD__">
+  <script>
+    /* light or dark before anything draws: Settings → Theme (Auto follows the phone, and changes with it) */
+    (function () {
+      var mq = matchMedia("(prefers-color-scheme: dark)");
+      function apply() {
+        var t = "auto"; try { t = localStorage.getItem("money-rs-theme") || "auto"; } catch (e) {}
+        var dark = t === "dark" || (t === "auto" && mq.matches);
+        document.documentElement.classList.toggle("dk", dark);
+        var m = document.querySelector("meta[name=theme-color]"); if (m) m.content = dark ? "#0A0A0C" : "#F7F7F5";
+      }
+      window.moneyTheme = function (t) { try { localStorage.setItem("money-rs-theme", t); } catch (e) {} apply(); };
+      mq.addEventListener("change", apply);
+      apply();
+    })();
+  </script>
 </head>
 <body>
   <div id="main"></div>

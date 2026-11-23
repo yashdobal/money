@@ -41,6 +41,12 @@ for (const a of process.argv.slice(2)) {
     coming: e.comingUp(cards, h.f).map((g) => [iso(g.d), g.n, g.items.map((i) => [i.dot, i.title, i.detail, i.amt === null || i.amt === undefined ? null : r2(i.amt), !!i.soft, !!i.overdue])]),
     history: (() => { const hh = e.balanceHistory(); return hh && [hh.pts.map((p) => [iso(p.d), r2(p.bal)]), hh.marks.map((m) => [iso(m.d), m.kind, r2(m.amt), m.title]), r2(hh.now), iso(hh.set), hh.missing]; })(),
     emis: e.emiModel().map((x) => [x.name, x.where, x.on, x.tenure, x.done, r2(x.per), x.next ? [x.next.k, r2(x.next.amt), iso(x.next.d)] : null, r2(x.left), r2(x.total), iso(x.last)]),
+    // Plan, Cards and the CSV export
+    calendar: e.calendarEvents(cards, h.f || null).map((c) => [iso(c.d), c.dot, c.title, c.detail, c.amt === null || c.amt === undefined ? null : r2(c.amt), !!c.soft]),
+    goals: e.goalPlan(e.payCycle()).map((p) => [p.g.id, r2(p.g.target), r2(p.saved), r2(p.movedNow), r2(p.need), p.monthsLeft, !!p.done, iso(p.due), r2(p.pct), !!p.byRule,
+      p.byEmi ? (p.byEmi.next ? p.byEmi.next.due : null) : null, r2(p.funded), r2(p.short)]),
+    cardPays: cards.map((c) => [c.key, e.cardPayments(c).map((p) => [p.ts, r2(p.amt), p.kind, p.how, p.off, p.beforeText])]),
+    csv: e.csvText(),
   };
   out.push({ at, snap, screens });
   globalThis.Date = RealDate;
