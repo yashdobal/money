@@ -318,3 +318,52 @@ impl Engine {
     }
     pub fn sod_now(&self) -> Ms { sod(self.now()) }
 }
+
+/// A point on the balance history: a salary in, a card bill paid, or the day you set a balance.
+#[derive(Clone, Debug)]
+pub struct Mark { pub d: Ms, pub kind: String, pub amt: f64, pub title: String }
+#[derive(Clone, Debug)]
+pub struct History { pub pts: Vec<(Ms, f64)>, pub marks: Vec<Mark>, pub now: f64, pub set: Option<Ms>, pub parts: Vec<AccountBalance>, pub missing: Vec<String> }
+
+impl Engine {
+    /// Your bank balance at the end of each day: forwards from the balance you set with every alert since, backwards
+    /// by undoing the ones before (balanceHistory).
+    pub fn balance_history(&self) -> Option<History> {
+        let b = self.bank_balance()?;
+        let set: Vec<&AccountBalance> = b.parts.iter().filter(|p| p.set).collect();
+        let since_of = |acct: &str| self.bank_of(acct).and_then(|bk| set.iter().find(|p| p.key == bk.key)).map(|p| p.since);
+        let mut ax: Vec<Row> = self.bank_tx().into_iter().filter(|t| since_of(&t.t.account).is_some()).collect();
+        ax.sort_by_key(|t| t.t.ts);
+        let today = self.today();
+        let first = ax.first().map(|t| crate::time::sod(t.t.ts)).unwrap_or(today);
+        let start = first.max(crate::time::add_days(today, -400));
+        let mut v: f64 = set.iter().map(|p| p.ob).sum();
+        for t in &ax {
+            let since = since_of(&t.t.account).unwrap();
+            let ts = t.t.ts as f64;
+            if ts > since && t.t.ts < start { v += t.t.signed(); } else if ts <= since && t.t.ts >= start { v -= t.t.signed(); }
+        }
+        let (mut pts, mut marks) = (vec![], vec![]);
+        let mut i = 0;
+        while i < ax.len() && ax[i].t.ts < start { i += 1; }
+        let inc = self.settings.inc0();
+        let mut d = start;
+        while d <= today {
+            let end = crate::time::add_days(d, 1);
+            while i < ax.len() && ax[i].t.ts < end {
+                let t = &ax[i]; i += 1;
+                v += t.t.signed();
+                if self.self_tx.contains(&t.t.id) { continue; }
+                if t.t.dir == "in" && (t.t.cat == "Salary" || self.salary_re.is_match(&format!("{} {}", t.t.desc, t.t.raw)) || (inc != 0.0 && t.t.amt >= 0.7 * inc)) {
+                    marks.push(Mark { d, kind: "salary".into(), amt: t.t.amt, title: "Salary".into() });
+                } else if t.t.out() && self.with_rules(&t.t).t.cat == "Card payment" {
+                    marks.push(Mark { d, kind: "card".into(), amt: -t.t.amt, title: "Card bill paid".into() });
+                }
+            }
+            pts.push((d, v));
+            d = end;
+        }
+        for p in &set { if p.since != 0.0 { marks.push(Mark { d: crate::time::sod(p.since as Ms), kind: "set".into(), amt: p.ob, title: format!("You set the {} balance", p.name) }); } }
+        Some(History { pts, marks, now: b.bal, set: if b.since != 0.0 { Some(b.since as Ms) } else { None }, parts: b.parts.clone(), missing: b.missing.clone() })
+    }
+}

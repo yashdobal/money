@@ -1493,7 +1493,7 @@ function calendarEvents(cards, f){
     else if(e.kind === "bill") out.push({d:e.d, dot:"bill", title:nm + " bill due", detail:"billed " + fmt(cards.find(c => c.key === e.card).c.stmt), amt:-e.amt, card:e.card});
     else if(e.kind === "stmt") out.push({d:e.d, dot:"stmt", title:nm + " statement", detail:e.amt >= 0.5 ? "closes · spent so far" : "closes", amt:e.amt >= 0.5 ? e.amt : null, card:e.card, soft:true});
     else if(e.kind === "next") { if(e.amt >= 0.5) out.push({d:e.d, dot:"bill", title:nm + " next bill", detail:"due, so far", amt:-e.amt, card:e.card}); }
-    else if(e.kind === "charge") out.push({d:e.d, dot:"bill", title:tidy(e.desc || e.what), detail:"charged to " + nm, amt:e.amt, card:e.card, soft:true});
+    else if(e.kind === "charge") out.push({d:e.d, dot:"bill", title:tidy(e.desc || e.what), detail:e.card ? "charged to " + nm : "scheduled", amt:e.amt, card:e.card, soft:true});
   });
   if(f) f.ev.forEach(e => {
     if(e.kind === "card" || e.kind === "cardemi") return;          // the card dates above already cover these

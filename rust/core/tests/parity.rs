@@ -55,6 +55,8 @@ fn same_figures_as_the_current_app() {
         let got = eng.snapshot();
         let mut out = vec![];
         diff("", &e["snap"], &got, &mut out);
+        let scr = eng.screens();
+        diff("screens", &e["screens"], &scr, &mut out);
         if !out.is_empty() {
             bad.push(format!("at {} ({}):\n  {}", money_core::time::iso(at), at, out.join("\n  ")));
             if bad.len() >= 3 { break; }

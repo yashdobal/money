@@ -366,7 +366,7 @@ impl Engine {
                 "bill" => { let st = cards.iter().find(|c| Some(&c.key) == e.card.as_ref()).map(|c| c.c.stmt).unwrap_or(0); out.push(ce(e.d, "bill", format!("{} bill due", nm), format!("billed {}", fmt(st)), Some(-e.amt), e.card.clone(), false)) }
                 "stmt" => out.push(ce(e.d, "stmt", format!("{} statement", nm), if e.amt >= 0.5 { "closes · spent so far".into() } else { "closes".into() }, if e.amt >= 0.5 { Some(e.amt) } else { None }, e.card.clone(), true)),
                 "next" => if e.amt >= 0.5 { out.push(ce(e.d, "bill", format!("{} next bill", nm), "due, so far".into(), Some(-e.amt), e.card.clone(), false)) },
-                "charge" => out.push(ce(e.d, "bill", tidy(if e.desc.is_empty() { &e.what } else { &e.desc }), format!("charged to {}", nm), Some(e.amt), e.card.clone(), true)),
+                "charge" => out.push(ce(e.d, "bill", tidy(if e.desc.is_empty() { &e.what } else { &e.desc }), if e.card.is_some() { format!("charged to {}", nm) } else { "scheduled".into() }, Some(e.amt), e.card.clone(), true)),
                 _ => {}
             }
         }
@@ -557,3 +557,32 @@ pub fn js_join(v: &Value) -> String {
 }
 /// A number as JavaScript prints it in a string ("12.5", "1000").
 pub fn num_js(x: f64) -> String { if x.fract() == 0.0 && x.abs() < 1e15 { format!("{}", x as i64) } else { format!("{}", x) } }
+
+impl Engine {
+    /// What Today shows, in words (the parity check compares it with tools/rust/snapshot.mjs's `screens`).
+    pub fn screens(&mut self) -> Value {
+        let r2 = |v: f64| { let x = round(v * 100.0) / 100.0; if x == 0.0 { 0.0 } else { x } };
+        self.resolve_payments();
+        let cards = self.all_cards();
+        let h = self.hero_model(&cards);
+        let net = self.net_model(&cards);
+        let t = |x: &Tile| json!([r2(x.total), r2(x.per_day), x.days]);
+        let pay = |p: &Option<PayRow>| p.as_ref().map(|p| json!([p.title, p.detail, r2(p.amt), iso(p.d), p.overdue])).unwrap_or(Value::Null);
+        let hero = if h.state != "ok" { json!({ "state": h.state }) } else { json!({
+            "state": h.state, "pace": r2(h.pace), "line": h.line, "tone": h.tone, "explain": h.explain,
+            "rows": h.rows.iter().map(|r| json!([r.title, r.detail, r2(r.amt), r.tone, r.total])).collect::<Vec<_>>(),
+            "fixes": h.fixes.iter().map(|r| json!([r.title, r.detail, r2(r.amt), r.up_to])).collect::<Vec<_>>(), "leftToFind": r2(h.left_to_find),
+            "nextPay": pay(&h.next_pay), "nextBig": pay(&h.next_big),
+            "tiles": [t(&h.tiles.rest), t(&h.tiles.next), h.tiles.usual.as_ref().map(t).unwrap_or(Value::Null)],
+            "chart": [h.chart.pts.iter().map(|p| json!([iso(p.0), r2(p.1)])).collect::<Vec<_>>(), iso(h.chart.from), iso(h.chart.to), r2(h.chart.buffer),
+                [iso(h.chart.low.0), r2(h.chart.low.1)], h.chart.paydays.iter().map(|d| iso(*d)).collect::<Vec<_>>()] }) };
+        let attention: Vec<Value> = self.attention(&cards, &h, net.as_ref()).iter().map(|a| json!([a.tone, a.icon, a.title, a.detail, a.amt.map(r2)])).collect();
+        let coming: Vec<Value> = self.coming_up(&cards, h.f.as_ref()).iter().map(|g| json!([iso(g.d), g.n,
+            g.items.iter().map(|i| json!([i.dot, i.title, i.detail, i.amt.map(r2), i.soft, i.overdue])).collect::<Vec<_>>()])).collect();
+        let emis: Vec<Value> = self.emi_model().iter().map(|x| json!([x.name, x.r#where, x.on, x.tenure, x.done, r2(x.per),
+            x.next.as_ref().map(|n| json!([n.k, r2(n.amt), iso(n.d)])).unwrap_or(Value::Null), r2(x.left), r2(x.total), iso(x.last)])).collect();
+        let history = self.balance_history().map(|h| json!([h.pts.iter().map(|p| json!([iso(p.0), r2(p.1)])).collect::<Vec<_>>(),
+            h.marks.iter().map(|m| json!([iso(m.d), m.kind, r2(m.amt), m.title])).collect::<Vec<_>>(), r2(h.now), h.set.map(|s| Value::from(iso(s))).unwrap_or(Value::Null), h.missing])).unwrap_or(Value::Null);
+        json!({ "hero": hero, "attention": attention, "coming": coming, "history": history, "emis": emis })
+    }
+}
