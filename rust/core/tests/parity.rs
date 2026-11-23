@@ -4,10 +4,11 @@
 
 use money_core::{shape, Engine};
 use serde_json::Value;
-use std::path::PathBuf;
 use std::process::Command;
 
-fn root() -> PathBuf { PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..") }
+mod common;
+use common::{diff, root};
+
 
 /// Moments to compare: every 4 days from 1 Oct 2026 to 28 Feb 2027 at 10:00 India time, and a few late at night.
 fn moments() -> Vec<i64> {
@@ -19,23 +20,6 @@ fn moments() -> Vec<i64> {
     for (d, hm) in [("2026-11-30", "23:45"), ("2026-12-08", "00:10"), ("2026-12-31", "23:59"), ("2027-01-15", "18:30")] { v.push(at(d, hm)); }
     v
 }
-
-fn diff(path: &str, a: &Value, b: &Value, out: &mut Vec<String>) {
-    if out.len() > 40 { return; }
-    match (a, b) {
-        (Value::Number(x), Value::Number(y)) => { if (x.as_f64().unwrap() - y.as_f64().unwrap()).abs() > 0.011 { out.push(format!("{}: js {} rust {}", path, x, y)); } }
-        (Value::Array(x), Value::Array(y)) => {
-            if x.len() != y.len() { out.push(format!("{}: js has {} items, rust {}\n   js   {}\n   rust {}", path, x.len(), y.len(), short(a), short(b))); return; }
-            for (i, (p, q)) in x.iter().zip(y).enumerate() { diff(&format!("{}[{}]", path, i), p, q, out); }
-        }
-        (Value::Object(x), Value::Object(y)) => {
-            for (k, v) in x { match y.get(k) { Some(w) => diff(&format!("{}.{}", path, k), v, w, out), None => out.push(format!("{}.{}: missing in rust", path, k)) } }
-            for k in y.keys() { if !x.contains_key(k) { out.push(format!("{}.{}: only in rust", path, k)); } }
-        }
-        _ => { if a != b { out.push(format!("{}: js {} rust {}", path, short(a), short(b))); } }
-    }
-}
-fn short(v: &Value) -> String { let s = v.to_string(); if s.len() > 300 { format!("{}…", &s[..300]) } else { s } }
 
 #[test]
 fn same_figures_as_the_current_app() {

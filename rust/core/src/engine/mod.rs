@@ -2,6 +2,7 @@
 //! (app/engine.js). One `Engine` holds what engine.js keeps in its top-level variables; its methods are engine.js's
 //! functions with the same names in snake_case, so the two can be read side by side.
 
+mod act;
 mod cards;
 mod pay;
 mod plan;
@@ -15,6 +16,7 @@ pub use plan::*;
 pub use spend::*;
 
 use crate::shape::{Data, Event, Note, Tx};
+pub use act::{jnum, parse_float, parse_int, Edit, Write};
 use crate::time::{self, Ms, DAY};
 use regex::Regex;
 use serde_json::{Map, Value};
@@ -121,6 +123,12 @@ pub struct Engine {
     pub data_in: bool,
     /// The Plan screen's pick: None (on its own), "cur" or "next".
     pub plan_view: Option<String>,
+    /// The lists as saved (manual, payments, goals, contribs), so they're saved back as they were.
+    pub saved: SavedLists,
+    /// Notes and payee rules to write to their tables (the app sends them).
+    pub outbox: Vec<Write>,
+    /// A change since the settings were last saved.
+    pub unsaved: bool,
 
     // worked out by resolve_payments
     pub self_tx: HashSet<String>,
@@ -137,7 +145,7 @@ impl Default for Engine {
             raw: vec![], tx: vec![], scheduled: vec![], events: vec![], manual: vec![], payments: vec![], overrides: Map::new(), cat_rules: BTreeMap::new(),
             goals: vec![], contribs: vec![], pay_assign: Map::new(), settings: Settings::default(), cfg: None, offer: Offer::default(),
             rule: SalaryRule::default(), planned: vec![], notes: BTreeMap::new(), notes_ok: false, last_run: None, app_version: 0, data_in: false,
-            plan_view: None, self_tx: HashSet::new(), eff_payments: vec![], pay_info: PayInfo::default(), contrib_tx: HashSet::new(), planned_tx: HashMap::new() }
+            plan_view: None, saved: SavedLists::default(), outbox: vec![], unsaved: false, self_tx: HashSet::new(), eff_payments: vec![], pay_info: PayInfo::default(), contrib_tx: HashSet::new(), planned_tx: HashMap::new() }
     }
 }
 
@@ -261,22 +269,14 @@ impl Engine {
         if let Some(v) = n("buffer") { self.settings.buffer = v; }
         if let Some(v) = s.get("joined").and_then(|x| x.as_str()) { self.settings.joined = v.to_string(); }
         if let Some(v) = s.get("migrated").and_then(|x| x.as_str()).filter(|x| !x.is_empty()) { self.settings.migrated = Some(v.to_string()); }
-        if let Some(a) = s.get("goals").and_then(|x| x.as_array()) {
-            self.goals = a.iter().map(|g| Goal { id: sv(&g["id"]), name: st(g.get("name")), start: num(g.get("start")).unwrap_or(0.0), target: num(g.get("target")).unwrap_or(0.0),
-                prio: num(g.get("prio")).unwrap_or(0.0), date: st(g.get("date")) }).collect();
-        }
-        if let Some(a) = s.get("contribs").and_then(|x| x.as_array()) {
-            self.contribs = a.iter().map(|c| Contrib { id: sv(&c["id"]), goal: sv(&c["goal"]), amt: num(c.get("amt")).unwrap_or(0.0), date: st(c.get("date")) }).collect();
-        }
+        let list = |k: &str| s.get(k).and_then(|x| x.as_array()).cloned();
+        if let Some(a) = list("goals") { self.saved.goals = a; }
+        if let Some(a) = list("contribs") { self.saved.contribs = a; }
         if let Some(o) = s.get("payAssign").and_then(|x| x.as_object()) { self.pay_assign = o.clone(); }
-        if let Some(a) = s.get("manual").and_then(|x| x.as_array()) {
-            self.manual = a.iter().map(|m| Manual { id: sv(&m["id"]), d: num(m.get("d")).unwrap_or(1.0) as i32, t: st(m.get("t")), amt: num(m.get("amt")).unwrap_or(0.0),
-                c: st(m.get("c")), ym: st(m.get("ym")), dir: st(m.get("dir")), acct: st(m.get("acct")), ts: num(m.get("ts")).map(|t| t as Ms).filter(|t| *t != 0) }).collect();
-        }
+        if let Some(a) = list("manual") { self.saved.manual = a; }
         if let Some(o) = s.get("overrides").and_then(|x| x.as_object()) { self.overrides = o.clone(); }
-        if let Some(a) = s.get("payments").and_then(|x| x.as_array()) {
-            self.payments = a.iter().map(|p| Payment { id: sv(&p["id"]), card: st(p.get("card")), date: st(p.get("date")), amt: num(p.get("amt")).unwrap_or(0.0) }).collect();
-        }
+        if let Some(a) = list("payments") { self.saved.payments = a; }
+        self.derive_lists();
         if let Some(o) = s.get("catRules").and_then(|x| x.as_object()) { self.cat_rules = o.iter().map(|(k, v)| (k.clone(), sv(v))).collect(); }
         if let Some(c) = s.get("cfg").filter(|c| c.is_object()) { self.apply_cfg(Some(c.clone())); }
         if let Some(p) = s.get("profile").filter(|p| p.is_object()) { self.apply_profile(&p.clone()); }
@@ -333,6 +333,9 @@ impl Engine {
         !data.settings.get("seeded").map(|v| v.as_bool().unwrap_or(false) || v.as_f64().map(|n| n != 0.0).unwrap_or(false)).unwrap_or(false)
     }
 }
+
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct SavedLists { pub manual: Vec<Value>, pub payments: Vec<Value>, pub goals: Vec<Value>, pub contribs: Vec<Value> }
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Rev { pub gone: bool, pub on: Option<String> }

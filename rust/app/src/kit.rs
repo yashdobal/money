@@ -35,13 +35,15 @@ pub fn tone_class(t: &str) -> &'static str { match t { "pos" => "t-pos", "alert"
 fn icons() -> &'static HashMap<String, String> {
     static I: OnceLock<HashMap<String, String>> = OnceLock::new();
     I.get_or_init(|| {
-        let re = Regex::new(r"^\s+(\w+):\s*'(.*)',?\s*$").unwrap();
-        include_str!("../../../rn/src/icon-paths.js").lines().filter_map(|l| re.captures(l).map(|c| (c[1].to_string(), c[2].to_string()))).collect()
+        // keys are bare words or "quoted" (the category names)
+        let re = Regex::new(r#"^\s+(?:"([^"]+)"|(\w+)):\s*'(.*)',?\s*$"#).unwrap();
+        include_str!("../../../rn/src/icon-paths.js").lines().filter_map(|l| re.captures(l).map(|c| (c.get(1).or(c.get(2)).unwrap().as_str().to_string(), c[3].to_string()))).collect()
     })
 }
 #[component]
-pub fn Icon(name: String, #[props(default = 20.0)] size: f64, #[props(default = 1.8)] sw: f64) -> Element {
-    let p = icons().get(&name).cloned().unwrap_or_default();
+pub fn Icon(name: String, #[props(default = 20.0)] size: f64, #[props(default = 1.7)] sw: f64) -> Element {
+    // a name it doesn't know (a category of your own) draws "Other"
+    let p = icons().get(&name).or_else(|| icons().get("Other")).cloned().unwrap_or_default();
     rsx! { svg { class: "icon i-{name}", width: "{size}", height: "{size}", view_box: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "{sw}",
         stroke_linecap: "round", stroke_linejoin: "round", dangerous_inner_html: "{p}" } }
 }
