@@ -152,7 +152,7 @@ impl Engine {
         let card_out: f64 = tx.iter().filter(|x| x.t.kind == "card" && x.t.out()).map(|x| x.t.amt).sum();
         let skipped: f64 = tx.iter().filter(|x| x.t.out() && !x.t.counted).map(|x| x.t.amt).sum();
         let counted: Vec<&Row> = tx.iter().filter(|x| x.t.out() && x.t.counted).collect();
-        let (yy, mm): (i32, i32) = (ym[0..4].parse().unwrap(), ym[5..7].parse().unwrap());
+        let (yy, mm) = crate::time::ym_parts(ym);
         let last_day = month_days(yy, mm - 1);
         let mut totals: Ordered<f64> = Ordered::new();
         for x in &counted { *totals.entry(&x.t.cat) += x.t.amt; }

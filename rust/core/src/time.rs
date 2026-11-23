@@ -35,23 +35,28 @@ pub fn dow(ms: Ms) -> i32 { parts(ms).dow }
 
 /// `new Date(y, m, d, h, mi, s)` in India time, rolling over like JavaScript.
 pub fn local_full(y: i32, m: i32, d: i32, h: i64, mi: i64, s: i64) -> Ms {
-    let yy = y + m.div_euclid(12);
-    let mm = m.rem_euclid(12);
-    let base = NaiveDate::from_ymd_opt(yy, (mm + 1) as u32, 1).unwrap_or_default();
-    let day = base + Duration::days((d - 1) as i64);
-    let t = day.and_hms_opt(0, 0, 0).unwrap() + Duration::hours(h) + Duration::minutes(mi) + Duration::seconds(s);
-    t.and_utc().timestamp_millis() - OFF
+    // checked all the way: odd data (a date far out of range) gives 1 Jan 1970 rather than a crash
+    let go = || -> Option<Ms> {
+        let yy = y.checked_add(m.div_euclid(12))?;
+        let mm = m.rem_euclid(12);
+        let base = NaiveDate::from_ymd_opt(yy, (mm + 1) as u32, 1)?;
+        let day = base.checked_add_signed(Duration::try_days((d as i64) - 1)?)?;
+        let secs = h.checked_mul(3600)?.checked_add(mi.checked_mul(60)?)?.checked_add(s)?;
+        let t = day.and_hms_opt(0, 0, 0)?.checked_add_signed(Duration::try_seconds(secs)?)?;
+        Some(t.and_utc().timestamp_millis() - OFF)
+    };
+    go().unwrap_or(-OFF)
 }
 pub fn local(y: i32, m: i32, d: i32) -> Ms { local_full(y, m, d, 0, 0, 0) }
 
 /// Start of the local day.
 pub fn sod(ms: Ms) -> Ms { let p = parts(ms); local(p.y, p.m, p.d) }
-pub fn add_days(ms: Ms, n: i32) -> Ms { let p = parts(ms); local(p.y, p.m, p.d + n) }
+pub fn add_days(ms: Ms, n: i32) -> Ms { let p = parts(ms); local(p.y, p.m, p.d.saturating_add(n)) }
 /// Days in a month (m may roll over).
 pub fn month_days(y: i32, m: i32) -> i32 { parts(local(y, m + 1, 0)).d }
 /// That day of a month, or the month's last day if it's shorter (onDay in engine.js).
 pub fn on_day(y: i32, m: i32, day: i32) -> Ms {
-    let yy = y + m.div_euclid(12);
+    let yy = y.saturating_add(m.div_euclid(12));
     let mm = m.rem_euclid(12);
     local(yy, mm, day.min(month_days(yy, mm)))
 }
@@ -96,18 +101,22 @@ pub fn ordinal(n: i32) -> String {
     let suf = if v >= 20 && (v - 20) % 10 < 4 { s[((v - 20) % 10) as usize] } else if (0..4).contains(&v) { s[v as usize] } else { s[0] };
     format!("{}{}", n, suf)
 }
+/// The year and month (1–12) of "2026-11", without crashing on anything odd (1970-01 then).
+pub fn ym_parts(ym: &str) -> (i32, i32) {
+    let y = ym.get(0..4).and_then(|x| x.parse().ok()).unwrap_or(1970);
+    let m = ym.get(5..7).and_then(|x| x.parse().ok()).filter(|m| (1..=12).contains(m)).unwrap_or(1);
+    (y, m)
+}
 /// "2026-11" plus n months.
 pub fn ym_add(ym: &str, n: i32) -> String {
-    let y: i32 = ym[0..4].parse().unwrap_or(1970);
-    let m: i32 = ym[5..7].parse().unwrap_or(1);
+    let (y, m) = ym_parts(ym);
     let t = local(y, m - 1 + n, 1);
     ym_of(t)
 }
 /// "November 2026".
 pub fn ym_name(ym: &str) -> String {
-    let y: i32 = ym[0..4].parse().unwrap_or(1970);
-    let m: usize = ym[5..7].parse::<usize>().unwrap_or(1);
-    format!("{} {}", MONFULL[m - 1], y)
+    let (y, m) = ym_parts(ym);
+    format!("{} {}", MONFULL[(m - 1) as usize], y)
 }
 
 #[cfg(test)]

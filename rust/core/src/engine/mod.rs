@@ -251,7 +251,7 @@ impl Engine {
             if let Some(on) = r.and_then(|r| r.on) {
                 let d = time::parse_iso(&on).unwrap();
                 let mut x = t.clone();
-                x.id = format!("{}~refund", t.id); x.ts = d + 12 * 3_600_000; x.day = time::date(d); x.ym = on[..7].to_string(); x.dir = "in".into();
+                x.id = format!("{}~refund", t.id); x.ts = d + 12 * 3_600_000; x.day = time::date(d); x.ym = on.get(..7).unwrap_or("").to_string(); x.dir = "in".into();
                 x.desc = format!("Refund · {}", t.desc); x.cat = "Refunds".into(); x.counted = false; x.refund_of = Some(t.id.clone());
                 out.push(x);
             }

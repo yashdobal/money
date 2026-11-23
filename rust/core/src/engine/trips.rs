@@ -284,14 +284,14 @@ impl Engine {
         let mix = Self::trip_mix(&plan, &prof); let held = self.trip_held(&plan);
         let now = parts(self.now());
         let avail = if plan.when.is_empty() { None } else {
-            let y: i32 = plan.when[..4].parse().unwrap(); let m: i32 = plan.when[5..7].parse().unwrap();
+            let (y, m) = crate::time::ym_parts(&plan.when);
             Some((y - now.y) * 12 + (m - 1 - now.m) - TRIP_LEAD)
         };
         let all: Vec<TripRow> = rb.trip_cards.iter().filter(|c| !rb.trip_left_out.contains(&c.id) || held.contains_key(&c.id))
             .map(|c| self.trip_card(c, &need, &mix, &plan, &income, avail, &held)).collect();
         let mut best: Vec<TripRow> = all.iter().filter(|r| r.fl.is_some()).cloned().collect();
         js_sort(&mut best, |a, b| { let d = b.rate - a.rate; if d != 0.0 { return d; } let f = a.card.fee - b.card.fee; if f != 0.0 { return f; } if a.card.name < b.card.name { -1.0 } else { 1.0 } });
-        let when_date = if plan.when.is_empty() { None } else { Some(local(plan.when[..4].parse().unwrap(), plan.when[5..7].parse::<i32>().unwrap() - 1, 1)) };
+        let when_date = if plan.when.is_empty() { None } else { { let (y, m) = crate::time::ym_parts(&plan.when); Some(local(y, m - 1, 1)) } };
         TripModel { known: mix.earning > 0.0, get: best.iter().filter(|r| r.can_get).cloned().collect(), yours: all.iter().filter(|r| r.owned).cloned().collect(),
             off: all.iter().filter(|r| r.fl.is_none()).cloned().collect(), plan, income, need, prof, mix, avail, all, best, when_date }
     }

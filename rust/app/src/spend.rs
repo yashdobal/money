@@ -22,7 +22,7 @@ pub fn Spend() -> Element {
     let vs = s.vs.map(|v| format!("{}{}% vs {}{}", if v > 0.5 { "▲ " } else if v < -0.5 { "▼ " } else { "" }, money_core::fmt::round(v.abs()) as i64, prev,
         if s.is_cur { format!(" by the {}", time::ordinal(s.up_to)) } else { String::new() }));
     let vs_tone = s.vs.map(|v| if v > 0.5 { "warn" } else if v < -0.5 { "pos" } else { "" }).unwrap_or("");
-    let opts: Vec<Opt> = months.iter().take(12).map(|k| opt(k, &if k[0..4] == yr { ym_short(k) } else { format!("{} {}", ym_short(k), &k[2..4]) })).collect();
+    let opts: Vec<Opt> = months.iter().take(12).map(|k| opt(k, &if k.get(0..4) == Some(yr.as_str()) { ym_short(k) } else { format!("{} {}", ym_short(k), k.get(2..4).unwrap_or("")) })).collect();
     let big = s.biggest.clone();
     let max_cat = s.cats.first().map(|c| c.amt).unwrap_or(1.0);
     let ym2 = ym.clone();

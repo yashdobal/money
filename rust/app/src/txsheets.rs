@@ -15,9 +15,9 @@ fn fail(msg: String) { toast(msg, "alert"); }
 
 /// "Tue 2 Dec 2026 · 6:53 pm"
 fn when_of(x: &money_core::engine::Row) -> String {
-    let d = time::local(x.t.ym[0..4].parse().unwrap_or(1970), x.t.ym[5..7].parse::<i32>().unwrap_or(1) - 1, x.t.day);
+    let d = { let (y, m) = time::ym_parts(&x.t.ym); time::local(y, m - 1, x.t.day) };
     let c = Engine::clock_of(x.t.ts);
-    format!("{} {}{}", time::fmt_d(d), &x.t.ym[0..4], if c.is_empty() { String::new() } else { format!(" · {}", c) })
+    format!("{} {}{}", time::fmt_d(d), x.t.ym.get(0..4).unwrap_or(""), if c.is_empty() { String::new() } else { format!(" · {}", c) })
 }
 
 #[component]

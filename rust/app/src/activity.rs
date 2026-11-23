@@ -99,7 +99,7 @@ pub fn Activity() -> Element {
     }
     for it in items.iter_mut() {
         let x = &it.2[0];
-        let d = time::local(x.t.ym[0..4].parse().unwrap_or(1970), x.t.ym[5..7].parse::<i32>().unwrap_or(1) - 1, x.t.day);
+        let d = { let (y, m) = time::ym_parts(&x.t.ym); time::local(y, m - 1, x.t.day) };
         let same: Vec<Tx> = list.iter().filter(|t| t.t.ym == x.t.ym && t.t.day == x.t.day).cloned().collect();
         let total = eng(|e| e.spend_of(&same).spend);
         let left = format!("{}{}", day_name(today, d), if time::days(d, today).abs() > 1 { String::new() } else { format!(" · {}", time::fmt(d)) });
