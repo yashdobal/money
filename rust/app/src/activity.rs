@@ -115,7 +115,7 @@ pub fn Activity() -> Element {
     let data_in = eng(|e| e.data_in);
     let more = n.saturating_sub(shown());
     rsx! {
-        div { class: "page",
+        div { class: "page one",
             div { class: "search rise", style: "--i:0",
                 Icon { name: "search".to_string(), size: 19.0 }
                 input { r#type: "text", enterkeyhint: "search", placeholder: "Search payee, category, amount or note", aria_label: "Search transactions", value: "{q}",

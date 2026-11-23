@@ -627,3 +627,46 @@ html, body { overflow-x: hidden; }
 .crash button { padding: 10px 18px; border-radius: 12px; border: 1px solid #888; background: transparent; color: inherit; font: inherit; }
 .tx-src { font-size: 12.5px; line-height: 17px; color: var(--ink3); margin-top: 4px; }
 .tx-src a { color: var(--accent); text-decoration: underline; }
+
+/* ---------- a laptop (a window 980 px wide or more), as the current website: the bottom bar becomes a sidebar, a
+   screen's blocks flow into two balanced columns (Activity stays one, narrower), sheets open as dialogs ---------- */
+.side-brand, .side-gap, .side-set { display: none; }
+@media (min-width: 980px) {
+  .app { max-width: none; margin: 0; padding: 0 0 48px 254px; }
+  .top, .screen { max-width: 1136px; margin-left: auto; margin-right: auto; padding-left: 28px; padding-right: 28px; }
+  .top { padding-top: 22px; }
+  .set-btn { display: none; }
+
+  .dock { left: 14px; top: 14px; bottom: 14px; transform: none; width: 240px; flex-direction: column; gap: 4px; padding: 10px; border-radius: 22px;
+    background: var(--tray); box-shadow: none; }
+  .pill { display: none; }
+  .side-brand { display: flex; align-items: center; gap: 10px; padding: 6px 8px 14px; }
+  .side-brand i { width: 30px; height: 30px; border-radius: 10px; background: var(--hero); color: var(--hero-ink); display: grid; place-items: center; font-style: normal; font-weight: 700; font-size: 16px; }
+  .side-brand b { font-weight: 620; font-stretch: 115%; font-size: 19px; }
+  .side-gap { display: block; flex: 1; }
+  .side-set { display: flex; }
+  .tab { flex: none; flex-direction: row; gap: 12px; height: 46px; padding: 0 12px; border-radius: 14px; font-size: 14.5px; font-weight: 540; color: var(--ink2); }
+  .tab .icon { width: 22px; height: 22px; }
+  .tab.on { background: var(--surface); box-shadow: var(--card); color: var(--ink); font-weight: 600; }
+  .tab.on .icon { transform: none; color: var(--accent); }
+
+  .page { column-count: 2; column-gap: 16px; }
+  .page > * { break-inside: avoid; }
+  .page > .span { column-span: all; }
+  .page.one { column-count: 1; max-width: 760px; margin: 0 auto; }
+
+  .sheet { top: 50%; bottom: auto; transform: translate(-50%, -50%); border-radius: 28px; max-height: 88vh; padding-bottom: 24px; animation: pop 260ms var(--spring) both; }
+  @keyframes pop { from { transform: translate(-50%, -46%) scale(0.97); opacity: 0; } to { transform: translate(-50%, -50%); opacity: 1; } }
+  .grab { visibility: hidden; height: 0; margin: 0; }
+
+  .fab { right: 28px; bottom: 28px; }
+  .toast { left: calc(50% + 127px); bottom: 28px; }
+  .chips.scroll { margin: 0; padding: 2px 0 4px; }
+}
+/* a mouse: things you can click answer the pointer */
+@media (hover: hover) and (pointer: fine) {
+  button, .row, .chip, .tab { cursor: pointer; }
+  .tab:not(.on):hover { background: color-mix(in srgb, var(--surface) 55%, transparent); }
+  .round:hover { filter: brightness(0.97); }
+  .chip:not(.on):hover { color: var(--ink); }
+}

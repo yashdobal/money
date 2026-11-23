@@ -41,10 +41,12 @@ jobs:
       - name: wasm-bindgen (the same version as in Cargo.lock)
         uses: taiki-e/install-action@v2
         with: { tool: wasm-bindgen@0.2.130 }
-      - name: Build the web app
-        run: ./rust/build-web.sh
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
+      - name: wasm-opt (shrinks the WebAssembly by about a third)
+        run: npm i -g binaryen@132.0.0 --no-audit --no-fund
+      - name: Build the web app
+        run: ./rust/build-web.sh
       - name: Put it live at rust.yash-money.pages.dev
         run: |
           if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then echo "::warning::CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID not set, so the Rust site was not deployed"; exit 0; fi
@@ -77,6 +79,10 @@ jobs:
         with: { workspaces: rust, key: wasm }
       - uses: taiki-e/install-action@v2
         with: { tool: wasm-bindgen@0.2.130 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: wasm-opt (shrinks the WebAssembly by about a third)
+        run: npm i -g binaryen@132.0.0 --no-audit --no-fund
       - name: Build the Rust app for the web
         run: ./rust/build-web.sh
       - uses: actions/setup-java@v4

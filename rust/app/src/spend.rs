@@ -28,7 +28,7 @@ pub fn Spend() -> Element {
     let ym2 = ym.clone();
     rsx! {
         div { class: "page",
-            div { class: "rise", style: "--i:0;margin-bottom:10px", Chips { scroll: true, small: true, value: ym.clone(), options: opts, onchange: move |k| *MONTH.write() = k } }
+            div { class: "rise span", style: "--i:0;margin-bottom:10px", Chips { scroll: true, small: true, value: ym.clone(), options: opts, onchange: move |k| *MONTH.write() = k } }
             section { key: "t{ym}", class: "panel k-d rise", style: "--i:1",
                 div { class: "d-l", "Spent in {name}" }
                 Odo { value: s.spend, class: "odo d-fig" }

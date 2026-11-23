@@ -33,7 +33,7 @@ pub fn Shell() -> Element {
                         Icon { name: if hidden { "eyeOff".to_string() } else { "eye".to_string() }, size: 22.0 } }
                     button { class: if busy { "round spin" } else { "round" }, aria_label: "Refresh", onclick: move |_| { dioxus::core::spawn_forever(async { refresh().await; }); },
                         Icon { name: "refresh".to_string(), size: 22.0 } }
-                    button { class: "round", aria_label: "Settings", onclick: move |_| *TAB.write() = 7, Icon { name: "settings".to_string(), size: 22.0 } }
+                    button { class: "round set-btn", aria_label: "Settings", onclick: move |_| *TAB.write() = 7, Icon { name: "settings".to_string(), size: 22.0 } }
                 }
             }
             main { key: "{tab}", class: "screen push-{dir}",
@@ -66,11 +66,17 @@ fn Dock(tab: usize, from: usize) -> Element {
         if right_moves { 420 } else { 240 }, if right_moves { 240 } else { 420 });
     rsx! {
         nav { class: "dock",
+            // on a laptop the bar is a sidebar: the app's name on top, the screens, and Settings at the foot
+            div { class: "side-brand", i { "₹" } b { "Money" } }
             div { class: if tab < TABS.len() { "pill" } else { "pill gone" }, style: "{style}" }
             for (i, (name, icon)) in TABS.iter().enumerate() {
                 button { key: "{i}", class: if i == tab { "tab on" } else { "tab" }, aria_label: "{name}", onclick: move |_| *TAB.write() = i,
                     Icon { name: icon.to_string(), size: 23.0 } span { "{name}" }
                 }
+            }
+            div { class: "side-gap" }
+            button { class: if tab == 7 { "tab side-set on" } else { "tab side-set" }, aria_label: "Settings", onclick: move |_| *TAB.write() = 7,
+                Icon { name: "settings".to_string(), size: 22.0 } span { "Settings" }
             }
         }
     }

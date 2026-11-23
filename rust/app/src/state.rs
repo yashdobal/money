@@ -130,12 +130,20 @@ pub fn start() {
     if param("demo").is_some() {
         *DEMO.write() = true;
         let at = param("at").and_then(|d| money_core::time::parse_iso_at(&d, 10));
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../tools/demo/demo-fixture.json")).unwrap();
-        let data = shape::shape_data(&shape::rows_from_fixture(&fixture));
-        eng_mut(|e| { *e = Engine::new(); e.clock = at; e.ingest(&data); });
-        *FEED.write() = Feed { tone: "ok", text: "Made-up data · the demo".into() };
-        *PHASE.write() = Phase::Ready;
-        bump();
+        // the made-up data is its own file (dist/demo.json), so the app itself doesn't carry it
+        dioxus::core::spawn_forever(async move {
+            step("reading the demo data");
+            let fixture = match gloo_net::http::Request::get("demo.json").send().await {
+                Ok(r) => r.json::<serde_json::Value>().await.unwrap_or(serde_json::Value::Null),
+                Err(_) => serde_json::Value::Null,
+            };
+            step("working out the demo's figures");
+            let data = shape::shape_data(&shape::rows_from_fixture(&fixture));
+            eng_mut(|e| { *e = Engine::new(); e.clock = at; e.ingest(&data); });
+            *FEED.write() = if fixture.is_null() { Feed { tone: "warn", text: "Couldn't load the demo data".into() } } else { Feed { tone: "ok", text: "Made-up data · the demo".into() } };
+            *PHASE.write() = Phase::Ready;
+            bump();
+        });
         return;
     }
     match ls_get(SESSION_KEY).and_then(|s| serde_json::from_str::<Session>(&s).ok()) {
