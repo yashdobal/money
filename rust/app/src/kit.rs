@@ -308,3 +308,15 @@ pub fn exact_s(n: f64, sign: &str) -> String {
     let s = match sign { "out" if v >= 0.5 => "−", "in" if v >= 0.5 => "+", _ => "" };
     format!("{}{}", s, body)
 }
+/// "₹980", "₹12.5k", "₹1.25L" for small labels.
+pub fn compact(n: f64) -> String {
+    let v = n.abs(); let s = if n < 0.0 { "−" } else { "" };
+    if v < 1000.0 { return format!("{}₹{}", s, round(v)); }
+    if v < 1e5 { let k = v / 1000.0; return format!("{}₹{}k", s, if k < 10.0 { round(k * 10.0) / 10.0 } else { round(k) }); }
+    let l = v / 1e5; format!("{}₹{}L", s, if l < 10.0 { round(l * 100.0) / 100.0 } else { round(l * 10.0) / 10.0 })
+}
+/// "Nov" for "2026-11".
+pub fn ym_short(ym: &str) -> String {
+    const M: [&str; 12] = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    M[ym.get(5..7).and_then(|m| m.parse::<usize>().ok()).unwrap_or(1).clamp(1, 12) - 1].to_string()
+}

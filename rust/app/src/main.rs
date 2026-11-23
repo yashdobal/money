@@ -7,6 +7,7 @@ mod kit;
 mod settings;
 mod sheets;
 mod shell;
+mod spend;
 mod state;
 mod today;
 mod txsheets;
