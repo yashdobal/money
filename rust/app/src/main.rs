@@ -2,6 +2,7 @@
 
 mod activity;
 mod api;
+mod cards;
 mod kit;
 mod settings;
 mod sheets;

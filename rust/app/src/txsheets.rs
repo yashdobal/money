@@ -147,6 +147,7 @@ fn Reverse(id: String, account: String, amt: f64, on: Option<String>, billed: bo
 /// A reversed payment, or the refund you marked for one: what it means, and the way back.
 #[component]
 fn RevSheet(id: String) -> Element {
+    let _ = VER();
     let x = eng(|e| e.all_tx().into_iter().find(|t| t.t.id == id));
     let Some(x) = x else { return rsx! {} };
     let orig = x.t.refund_of.as_ref().and_then(|o| eng(|e| e.all_tx().into_iter().find(|t| &t.t.id == o)));
@@ -178,6 +179,7 @@ fn RevSheet(id: String) -> Element {
 /// Add money the alerts missed: out (a payment) or in (salary, from someone, paid back, a refund).
 #[component]
 pub fn AddSheet() -> Element {
+    let _ = VER();
     let (today, yest, banks, groups) = eng(|e| {
         let t = e.today();
         (time::iso(t), time::iso(time::add_days(t, -1)), e.banks.iter().map(|b| (b.key.clone(), b.name.clone(), b.full.clone())).collect::<Vec<_>>(),

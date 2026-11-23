@@ -228,6 +228,13 @@ impl Engine {
         self.changed();
         String::new()
     }
+    /// Undo not_card_payment / assign_payment: let the engine decide again.
+    pub fn unassign_payment(&mut self, tx_id: &str) { self.pay_assign.remove(tx_id); self.changed(); }
+    /// A saved figure of your own (overrides[k]): a card's limit ("limit|<group>") and the like; None removes it.
+    pub fn set_override(&mut self, k: &str, v: Option<Value>) {
+        match v { Some(v) => { self.overrides.insert(k.into(), v); } None => { self.overrides.remove(k); } }
+        self.changed();
+    }
     pub fn del_payment(&mut self, id: &str) { self.saved.payments.retain(|p| sv(&p["id"]) != id); self.changed(); }
     /// A statement's total due, typed in (okey: "<group>|<statement date>").
     pub fn set_statement(&mut self, okey: &str, amt: &str) -> String {

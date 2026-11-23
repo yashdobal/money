@@ -59,6 +59,7 @@ fn go_to(go: &str) {
 /// The Safe to spend card: the rolling figure, the line under it, the forecast chart and three tiles.
 #[component]
 fn HeroCard(hero: Hero) -> Element {
+    let _ = VER();
     let (data_in, banks) = eng(|e| (e.data_in, e.bank_names()));
     rsx! {
         section { class: "hero rise", style: "--i:0",
@@ -133,6 +134,7 @@ fn HeroChart(c: Chart, start: f64) -> Element {
 /// Coming up: the next few days with anything dated, grouped by day.
 #[component]
 fn ComingUp(cards: Vec<CardState>, hero: Hero, today: Ms) -> Element {
+    let _ = VER();
     let days = eng(|e| e.coming_up(&cards, hero.f.as_ref()));
     if days.is_empty() { return rsx! {}; }
     let mut more = use_signal(|| false);
@@ -159,6 +161,7 @@ fn ComingUp(cards: Vec<CardState>, hero: Hero, today: Ms) -> Element {
 /// The bank balance: today's total, the last 30 days, and the history chart.
 #[component]
 fn BankPanel(hero: Hero) -> Element {
+    let _ = VER();
     let (h, banks, today) = eng(|e| (e.balance_history(), e.bank_names(), e.today()));
     let Some(h) = h else {
         return rsx! { Panel { title: "Bank balance", kind: "w", i: 4, Note { "Enter what your {banks} app shows once. After that, every alert keeps it up to date and builds the history." } Btn { label: "Set balances", kind: "ghost", small: true, onclick: move |_| open("balance") } } };
@@ -246,6 +249,7 @@ pub fn smooth(p: &[(f64, f64)]) -> String {
 /// A usual month: your salary split by your rule.
 #[component]
 fn Usual() -> Element {
+    let _ = VER();
     let (u, fam) = eng(|e| (e.usual_month(), e.family_title()));
     let Some(u) = u else { return rsx! {} };
     let parts: Vec<(String, f64, &str)> = vec![(fam, u.family, "var(--n-family)"), ("SIP".into(), u.sip, "var(--n-sip)"), ("Emergency fund".into(), u.ef, "var(--n-ef)"), ("Yours to spend".into(), u.spend, "var(--n-yours)")]

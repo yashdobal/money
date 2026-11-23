@@ -6,6 +6,7 @@ use dioxus::prelude::*;
 
 #[component]
 pub fn Settings() -> Element {
+    let _ = VER();
     let s = SESSION();
     let demo = DEMO();
     let n = eng(|e| e.tx.len());

@@ -48,6 +48,7 @@ pub fn acct_short(e: &Engine, x: &Tx) -> String {
 /// One transaction as a row: payee, where and what, and anything you changed about it.
 #[component]
 pub fn TxRow(x: Tx) -> Element {
+    let _ = VER();
     let (title, extra) = nice(&x.t.desc);
     let mut bits = vec![eng(|e| acct_short(e, &x))];
     if x.t.cat == "Card payment" {

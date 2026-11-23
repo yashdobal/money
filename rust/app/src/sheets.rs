@@ -12,6 +12,11 @@ pub fn SheetBody(name: String) -> Element {
     match name.as_str() {
         "explain" => rsx! { Explain {} },
         "add" => rsx! { crate::txsheets::AddSheet {} },
+        n if n.starts_with("pay:") => rsx! { crate::cards::PaySheet { key: "{n}", g: n[4..].to_string() } },
+        n if n.starts_with("payments:") => rsx! { crate::cards::PaymentsSheet { key: "{n}", g: n[9..].to_string() } },
+        n if n.starts_with("limit:") => rsx! { crate::cards::LimitSheet { key: "{n}", g: n[6..].to_string() } },
+        n if n.starts_with("stmt:") => rsx! { crate::cards::StmtSheet { key: "{n}", g: n[5..].to_string() } },
+        "about-float" => rsx! { h2 { class: "sheet-t", "Best card to use today" } Note { "Spend on a card today and it lands on that card's next statement, so you pay it on that statement's due date. The card whose statement closed most recently gives the longest wait, all of it interest-free as long as every bill is paid in full by its due date. Cards with an unpaid bill past its due date are left out: new spending on them is charged interest until that bill is cleared. Under RBI rules you can ask your bank to move a card's billing cycle (at least once), for example so every bill falls due just after payday." } },
         n if n.starts_with("tx:") => rsx! { crate::txsheets::TxSheet { key: "{n}", id: n[3..].to_string() } },
         "net" => rsx! { NetSheet {} },
         "bank" => rsx! { History {} },
@@ -23,6 +28,7 @@ pub fn SheetBody(name: String) -> Element {
 
 #[component]
 fn Explain() -> Element {
+    let _ = VER();
     let hero = eng(|e| { let c = e.all_cards(); e.hero_model(&c) });
     rsx! {
         h2 { class: "sheet-t", "How this is worked out" }
@@ -46,6 +52,7 @@ fn Explain() -> Element {
 
 #[component]
 fn NetSheet() -> Element {
+    let _ = VER();
     let n = eng(|e| { let c = e.all_cards(); e.net_model(&c) });
     let Some(n) = n else { return rsx! { h2 { class: "sheet-t", "Where you stand" } Note { "Set your bank balance first." } } };
     rsx! {
@@ -71,6 +78,7 @@ fn NetSheet() -> Element {
 
 #[component]
 fn History() -> Element {
+    let _ = VER();
     let h = eng(|e| e.balance_history());
     let Some(h) = h else { return rsx! { h2 { class: "sheet-t", "Bank balance" } Note { "Set your bank balance first." } } };
     let n = h.pts.len();
