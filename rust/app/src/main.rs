@@ -53,7 +53,7 @@ fn App() -> Element {
         Phase::Starting | Phase::Loading => rsx! { div { class: "boot", div { class: "boot-dot" } p { "Loading your figures…" }
             if slow() { div { class: "boot-slow",
                 p { "This is taking longer than it should. Stuck on: " b { "{state::current_step()}" } }
-                button { class: "btn", onclick: move |_| { spawn(async { state::load().await; }); }, "Try again" }
+                button { class: "btn", onclick: move |_| { dioxus::core::spawn_forever(async { state::load().await; }); }, "Try again" }
                 button { class: "btn", onclick: move |_| state::sign_out(), "Sign out" }
             } }
         } },

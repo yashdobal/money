@@ -45,7 +45,8 @@ pub fn toast(text: impl Into<String>, tone: &'static str) { toast_undo(text, ton
 pub fn toast_undo(text: impl Into<String>, tone: &'static str, undo: Option<String>) {
     let n = TOAST.read().as_ref().map(|t| t.n + 1).unwrap_or(1);
     *TOAST.write() = Some(Toast { text: text.into(), tone, n, undo: undo.clone() });
-    spawn(async move {
+    // tied to the whole app, not the screen that showed it (a sheet closing would cancel the timer and leave it up)
+    dioxus::core::spawn_forever(async move {
         gloo_timers::future::TimeoutFuture::new(if undo.is_some() { 5000 } else { 2600 }).await;
         if TOAST.read().as_ref().map(|t| t.n) == Some(n) { *TOAST.write() = None; }
     });
@@ -64,7 +65,7 @@ pub fn act<R>(f: impl FnOnce(&mut Engine) -> R) -> R {
     let r = eng_mut(f);
     bump();
     let writes = eng_mut(|e| std::mem::take(&mut e.outbox));
-    if !writes.is_empty() && !*DEMO.read() { spawn(async move { send_writes(writes).await; }); }
+    if !writes.is_empty() && !*DEMO.read() { dioxus::core::spawn_forever(async move { send_writes(writes).await; }); }
     if eng(|e| e.unsaved) { queue_save(); }
     r
 }
@@ -74,7 +75,7 @@ fn queue_save() {
     let g = *SAVE_GEN.read() + 1;
     *SAVE_GEN.write() = g;
     *SAVE_MSG.write() = "Saving…".into();
-    spawn(async move {
+    dioxus::core::spawn_forever(async move {
         gloo_timers::future::TimeoutFuture::new(700).await;
         if *SAVE_GEN.read() == g { save().await; }
     });
@@ -138,7 +139,7 @@ pub fn start() {
         return;
     }
     match ls_get(SESSION_KEY).and_then(|s| serde_json::from_str::<Session>(&s).ok()) {
-        Some(s) => { *SESSION.write() = Some(s); *PHASE.write() = Phase::Loading; spawn(async { load().await; }); }
+        Some(s) => { *SESSION.write() = Some(s); *PHASE.write() = Phase::Loading; dioxus::core::spawn_forever(async { load().await; }); }
         None => *PHASE.write() = Phase::SignedOut,
     }
 }
@@ -148,7 +149,7 @@ pub fn signed_in(s: Session) {
     ls_set("money-rs-email", &s.email);
     *SESSION.write() = Some(s);
     *PHASE.write() = Phase::Loading;
-    spawn(async { load().await; });
+    dioxus::core::spawn_forever(async { load().await; });
 }
 pub fn sign_out() {
     ls_del(SESSION_KEY);

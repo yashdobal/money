@@ -106,16 +106,30 @@ pub fn shape_edits(rule_rows: &[Value], note_rows: &[Value]) -> Edits {
 }
 
 pub fn shape_data(rows: &Rows) -> Data {
-    let tx = live(&rows.tx).map(|r| {
+    let shaped: Vec<(Tx, bool)> = live(&rows.tx).map(|r| {
         let ts = time::parse_ts(&s(r, "occurred_at")).unwrap_or(0);
         let acc = r.get("accounts");
         let account = acc.and_then(|a| a.get("aliases")).and_then(|a| a.get(0)).and_then(|a| a.as_str()).unwrap_or("").to_string();
         let kind = acc.and_then(|a| a.get("kind")).and_then(|a| a.as_str()).unwrap_or("").to_string();
         let dir = s(r, "direction");
         let refd = refine(&kind, &s(r, "description"), r.get("snippet").and_then(|x| x.as_str()).unwrap_or(""), &dir);
-        Tx { id: s(r, "source_ref"), ts, day: time::date(ts), ym: time::ym_of(ts), account, kind, desc: refd.description, cat: refd.category,
-            amt: n(r, "amount").unwrap_or(0.0) / 100.0, dir, counted: refd.counted, raw: refd.raw, refund_of: None, sms: false }
+        let auto = s(r, "description").trim_end().ends_with("(auto-debit)");
+        (Tx { id: s(r, "source_ref"), ts, day: time::date(ts), ym: time::ym_of(ts), account, kind, desc: refd.description, cat: refd.category,
+            amt: n(r, "amount").unwrap_or(0.0) / 100.0, dir, counted: refd.counted, raw: refd.raw, refund_of: None, sms: false }, auto)
     }).collect();
+    // SBI Card sends two emails for one auto-debit: the "spent on your SBI Credit Card … at MERCHANT" alert and
+    // "Recurring E-mandate processed successfully" (read as "MERCHANT (auto-debit)"). One payment, so the auto-debit
+    // copy goes when an alert for the same card, amount and day is there (one to one; shape.js).
+    let mut used: std::collections::HashSet<String> = Default::default();
+    let mut tx = Vec::with_capacity(shaped.len());
+    for (t, auto) in &shaped {
+        if *auto && t.dir == "out" {
+            let cents = (t.amt * 100.0).round();
+            if let Some((x, _)) = shaped.iter().find(|(x, a)| !*a && !used.contains(&x.id) && x.dir == "out" && x.account == t.account
+                && (x.amt * 100.0).round() == cents && x.ym == t.ym && x.day == t.day) { used.insert(x.id.clone()); continue; }
+        }
+        tx.push(t.clone());
+    }
 
     let events = live(&rows.emails).map(|e| {
         let acc = e.get("accounts").cloned().unwrap_or(Value::Null);

@@ -31,7 +31,7 @@ pub fn Shell() -> Element {
                 div { class: "top-r",
                     button { class: "round", aria_label: if hidden { "Show amounts" } else { "Hide amounts" }, onclick: move |_| set_hidden(!hidden),
                         Icon { name: if hidden { "eyeOff".to_string() } else { "eye".to_string() }, size: 22.0 } }
-                    button { class: if busy { "round spin" } else { "round" }, aria_label: "Refresh", onclick: move |_| { spawn(async { refresh().await; }); },
+                    button { class: if busy { "round spin" } else { "round" }, aria_label: "Refresh", onclick: move |_| { dioxus::core::spawn_forever(async { refresh().await; }); },
                         Icon { name: "refresh".to_string(), size: 22.0 } }
                     button { class: "round", aria_label: "Settings", onclick: move |_| *TAB.write() = 7, Icon { name: "settings".to_string(), size: 22.0 } }
                 }

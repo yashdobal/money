@@ -280,9 +280,8 @@ impl Engine {
         let n = parse_int(n).filter(|n| *n != 0).unwrap_or(1).clamp(1, 60);
         if name.is_empty() { return "Say what it's for.".into(); }
         if !(amt > 0.0) { return "Enter an amount above zero.".into(); }
-        if !time::is_iso(due) { return "Pick the first date.".into(); }
+        let Some(d0) = parse_iso(due).filter(|_| time::is_iso(due)) else { return "Pick the first date.".into() };
         let mut c = self.cfg_now();
-        let d0 = parse_iso(due).unwrap();
         let p = time::parts(d0);
         let list = c["planned"].as_array_mut().unwrap();
         for k in 0..n {

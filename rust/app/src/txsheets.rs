@@ -20,6 +20,19 @@ fn when_of(x: &money_core::engine::Row) -> String {
     format!("{} {}{}", time::fmt_d(d), x.t.ym.get(0..4).unwrap_or(""), if c.is_empty() { String::new() } else { format!(" · {}", c) })
 }
 
+/// Where a transaction came from: added by you, an SMS, or a bank email (with a link to open it in Gmail).
+fn source_line(x: &money_core::engine::Row) -> Element {
+    let id = x.t.id.as_str();
+    let gmail = id.len() >= 12 && id.len() <= 20 && id.chars().all(|c| c.is_ascii_hexdigit());
+    if x.man { return rsx! { div { class: "tx-src", "Added by you in the app" } }; }
+    if x.t.sms { return rsx! { div { class: "tx-src", "From a bank SMS" } }; }
+    if gmail {
+        let url = format!("https://mail.google.com/mail/u/0/#all/{}", id);
+        return rsx! { div { class: "tx-src", "From a bank email · " a { href: "{url}", target: "_blank", rel: "noopener", "open it" } } };
+    }
+    rsx! { div { class: "tx-src", "Saved as {id}" } }
+}
+
 #[component]
 pub fn TxSheet(id: String) -> Element {
     let _ = VER();
@@ -72,6 +85,7 @@ pub fn TxSheet(id: String) -> Element {
         }
         div { class: "tx-payee", "{title}" }
         if !extra.is_empty() { div { class: "tx-when", "{extra}" } }
+        {source_line(&x)}
         if is_pay {
             SubHead { text: "Which card did this pay?" }
             Chips { value: card(), onchange: move |v| card.set(v), options: groups.into_iter().chain(std::iter::once(opt("none", "Not a card payment"))).collect::<Vec<_>>() }

@@ -117,6 +117,10 @@ t("2026-10-30", "bank", 6900, "CRED Club", "Cash & transfers", hh=21, mm=2); ema
 email("statement", "4444", "Harbour", "2026-11-11", 18450, 925, "2026-12-01", "2026-11-10")              # overdue: no payment
 for d, amt, desc in [("2026-11-14", 8650, "Bharat Petroleum Corporation Ltd Highway Service Station"), ("2026-11-29", 3420, "Sri Venkateshwara Enterprises Private Limited")]:
     t(d, "miles", amt, desc, "Shopping")
+# an auto-debit SBI-style: the card alert, and the same charge's "E-mandate processed" email (read as "… (auto-debit)"),
+# which the app drops as a copy
+t("2026-11-20", "o2222", 1142.24, "VOICEBOX.IO", "Bills & subscriptions", hh=12, mm=0, ref="demo-mandate-alert")
+t("2026-11-20", "o2222", 1142.24, "VOICEBOX.IO (auto-debit)", "Bills & subscriptions", hh=6, mm=55, ref="demo-mandate-copy")
 
 state = {
     "version": 3, "savedAt": "2026-12-01T09:00:00.000Z",

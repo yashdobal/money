@@ -248,8 +248,7 @@ impl Engine {
             let r = if t.out() && self.card_cfg.contains_key(&t.account) { self.rev_of(&t.id) } else { None };
             if r.as_ref().map(|r| r.gone).unwrap_or(false) { continue; }
             out.push(t.clone());
-            if let Some(on) = r.and_then(|r| r.on) {
-                let d = time::parse_iso(&on).unwrap();
+            if let Some((on, d)) = r.and_then(|r| r.on).and_then(|on| time::parse_iso(&on).map(|d| (on, d))) {
                 let mut x = t.clone();
                 x.id = format!("{}~refund", t.id); x.ts = d + 12 * 3_600_000; x.day = time::date(d); x.ym = on.get(..7).unwrap_or("").to_string(); x.dir = "in".into();
                 x.desc = format!("Refund · {}", t.desc); x.cat = "Refunds".into(); x.counted = false; x.refund_of = Some(t.id.clone());
@@ -302,7 +301,7 @@ impl Engine {
         self.rule = SalaryRule { from: iso_or(r.get("from")).unwrap_or_default(), savings: num(r.get("savings")).unwrap_or(dr.savings), ef: num(r.get("ef")).unwrap_or(dr.ef),
             family: num(r.get("family")).unwrap_or(dr.family), ef_cap_x: num(r.get("efCapX")).unwrap_or(dr.ef_cap_x), bills_from: iso_or(r.get("billsFrom")).unwrap_or_default() };
         let mut planned: Vec<Planned> = self.cfg.as_ref().and_then(|c| c.get("planned")).and_then(|p| p.as_array()).map(|ps| ps.iter().filter(|p| {
-            p.get("name").map(|n| !n.is_null() && sv(n) != "").unwrap_or(false) && num(p.get("amt")).map(|a| a > 0.0).unwrap_or(false) && iso_or(p.get("due")).is_some()
+            p.get("name").map(|n| !n.is_null() && sv(n) != "").unwrap_or(false) && num(p.get("amt")).map(|a| a > 0.0).unwrap_or(false) && iso_or(p.get("due")).and_then(|d| time::parse_iso(&d)).is_some()
         }).map(|p| {
             let goal = st(p.get("goal"));
             Planned { name: sv(&p["name"]), amt: num(p.get("amt")).unwrap(), due: st(p.get("due")), from: if st(p.get("from")) == "savings" { "savings".into() } else { "pay".into() },

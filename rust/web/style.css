@@ -625,3 +625,5 @@ html, body { overflow-x: hidden; }
 .crash { position: fixed; inset: 0; z-index: 9999; background: #111; color: #eee; padding: 24px; overflow: auto; font: 14px system-ui; }
 .crash pre { white-space: pre-wrap; word-break: break-word; font-size: 12px; background: #000; padding: 12px; border-radius: 8px; }
 .crash button { padding: 10px 18px; border-radius: 12px; border: 1px solid #888; background: transparent; color: inherit; font: inherit; }
+.tx-src { font-size: 12.5px; line-height: 17px; color: var(--ink3); margin-top: 4px; }
+.tx-src a { color: var(--accent); text-decoration: underline; }

@@ -85,7 +85,7 @@ pub fn Settings() -> Element {
                     let (name, text) = eng(|e| (format!("money-{}.csv", time::iso(e.today())), e.csv_text()));
                     if export_csv(&name, &text) { toast("Saved to your downloads", ""); } else { toast("Couldn't save the file", "warn"); }
                 } }
-                SetRow { icon: "mail", title: "Read emails now", detail: "ask the collector to check Gmail", onclick: move |_| { toast("Asking the collector to check Gmail…", ""); spawn(async { refresh().await; }); } }
+                SetRow { icon: "mail", title: "Read emails now", detail: "ask the collector to check Gmail", onclick: move |_| { toast("Asking the collector to check Gmail…", ""); dioxus::core::spawn_forever(async { refresh().await; }); } }
                 SetRow { icon: "rule", title: "Saved payee rules", detail: if rules > 0 { plural(rules as i64, "rule") } else { "none yet".to_string() }, onclick: move |_| *SHEET.write() = Some("rules".into()) }
                 SetRow { icon: "card", title: "Your banks and cards", detail: if banks > 0 || groups > 0 { format!("{} · {}", plural(banks as i64, "bank"), plural(groups as i64, "card account")) } else { "not set yet".to_string() },
                     onclick: move |_| *SHEET.write() = Some("setup".into()) }

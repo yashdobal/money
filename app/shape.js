@@ -13,7 +13,7 @@ function shapeData(rows) {
   const ist = (iso) => new Date(Date.parse(iso) + IST_MS);
   const edits = rows.edits || { ok: false };
 
-  const outTx = live(rows.tx).map((r) => {
+  const shapedTx = live(rows.tx).map((r) => {
     const d = ist(r.occurred_at);
     const t = {
       id: r.source_ref, ts: Date.parse(r.occurred_at), day: d.getUTCDate(), ym: d.toISOString().slice(0, 7),
@@ -23,8 +23,21 @@ function shapeData(rows) {
     };
     const ref = refine_(t.kind, t.desc, r.snippet || "", t.dir);       // exactly what getData() did
     t.desc = ref.description; t.cat = ref.category; t.counted = ref.counted; t.raw = ref.raw;
+    t.auto = /\(auto-debit\)\s*$/.test(r.description || "");
     return t;
   });
+  // SBI Card sends two emails for one auto-debit: the usual "spent on your SBI Credit Card … at MERCHANT" alert and
+  // "Recurring E-mandate processed successfully" (read as "MERCHANT (auto-debit)"). One payment, so the auto-debit
+  // copy goes when an alert for the same card, amount and day is there (one to one).
+  const used = {};
+  const outTx = shapedTx.filter((t) => {
+    if (!t.auto || t.dir !== "out") return true;
+    const twin = shapedTx.find((x) => !x.auto && !used[x.id] && x.dir === "out" && x.account === t.account &&
+      Math.round(x.amt * 100) === Math.round(t.amt * 100) && x.ym === t.ym && x.day === t.day);
+    if (twin) { used[twin.id] = true; return false; }
+    return true;
+  });
+  outTx.forEach((t) => { delete t.auto; });
 
   const events = live(rows.emails).map((e) => ({
     id: e.message_id, ts: Date.parse(e.received_at), last4: e.accounts.last4, type: e.kind,

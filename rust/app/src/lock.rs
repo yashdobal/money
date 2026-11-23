@@ -157,7 +157,7 @@ pub fn PinLock() -> Element {
     let mut off = use_signal(|| false);
     let check = Callback::new(move |code: String| match check_pin(&code) {
         Check::Ok => { *LOCKED.write() = false; String::new() }
-        Check::Off => { off.set(true); spawn(async { gloo_timers::future::TimeoutFuture::new(2600).await; *LOCKED.write() = false; sign_out(); });
+        Check::Off => { off.set(true); dioxus::core::spawn_forever(async { gloo_timers::future::TimeoutFuture::new(2600).await; *LOCKED.write() = false; sign_out(); });
             "Too many wrong codes, so the code is now off on this device. Signing you out…".to_string() }
         Check::Left(n) => format!("Wrong code. {} {} left.", n, if n == 1 { "try" } else { "tries" }),
     });
@@ -183,7 +183,7 @@ pub fn PinSheet() -> Element {
         match step() {
             "cur" => match check_pin(&code) {
                 Check::Ok => { step.set("new"); String::new() }
-                Check::Off => { spawn(async { gloo_timers::future::TimeoutFuture::new(2600).await; sign_out(); }); "Too many wrong codes, so the code is now off on this device. Signing you out…".into() }
+                Check::Off => { dioxus::core::spawn_forever(async { gloo_timers::future::TimeoutFuture::new(2600).await; sign_out(); }); "Too many wrong codes, so the code is now off on this device. Signing you out…".into() }
                 Check::Left(n) => format!("Wrong code. {} {} left.", n, if n == 1 { "try" } else { "tries" }),
             },
             "new" => { if obvious(&code) { return "Too easy to guess. Try another.".into(); } first.set(code); step.set("again"); String::new() }
