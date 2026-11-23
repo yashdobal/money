@@ -12,6 +12,11 @@ pub fn SheetBody(name: String) -> Element {
     match name.as_str() {
         "explain" => rsx! { Explain {} },
         "add" => rsx! { crate::txsheets::AddSheet {} },
+        "salary" => rsx! { crate::plan::SalarySheet {} },
+        "fixed" => rsx! { crate::plan::FixedSheet {} },
+        "goal" => rsx! { crate::plan::GoalSheet {} },
+        n if n.starts_with("move:") => rsx! { crate::plan::MoveSheet { key: "{n}", gid: n[5..].to_string() } },
+        "about-goals" => rsx! { h2 { class: "sheet-t", "Goals" } Note { "Goal money comes out of your SIP share under your salary rule (before the rule, out of your pay). The emergency fund gets the rule's share until it reaches its limit. Two or three goals work better than many." } },
         n if n.starts_with("pay:") => rsx! { crate::cards::PaySheet { key: "{n}", g: n[4..].to_string() } },
         n if n.starts_with("payments:") => rsx! { crate::cards::PaymentsSheet { key: "{n}", g: n[9..].to_string() } },
         n if n.starts_with("limit:") => rsx! { crate::cards::LimitSheet { key: "{n}", g: n[6..].to_string() } },

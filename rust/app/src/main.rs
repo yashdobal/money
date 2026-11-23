@@ -4,6 +4,7 @@ mod activity;
 mod api;
 mod cards;
 mod kit;
+mod plan;
 mod settings;
 mod sheets;
 mod shell;
