@@ -18,6 +18,10 @@ pub static VER: GlobalSignal<u64> = Signal::global(|| 0);
 pub static SESSION: GlobalSignal<Option<Session>> = Signal::global(|| None);
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum Phase { Starting, SignedOut, Loading, Ready }
+thread_local! { static STEP: std::cell::RefCell<String> = std::cell::RefCell::new(String::new()); }
+/// What the app is doing right now (shown if something goes wrong).
+pub fn step(s: &str) { STEP.with(|x| *x.borrow_mut() = s.to_string()); }
+pub fn current_step() -> String { STEP.with(|x| x.borrow().clone()) }
 pub static PHASE: GlobalSignal<Phase> = Signal::global(|| Phase::Starting);
 #[derive(Clone, PartialEq, Debug)]
 pub struct Feed { pub tone: &'static str, pub text: String }
@@ -172,13 +176,17 @@ pub async fn load() {
     *BUSY.write() = true;
     let had = eng(|e| !e.tx.is_empty());
     *FEED.write() = Feed { tone: "warn", text: if had { "Checking for new emails…".into() } else { "Loading…".into() } };
+    step("reading your account");
     match api::load(&s).await {
         Ok(rows) => {
+            step("sorting your transactions");
             let data = shape::shape_data(&rows);
+            step("working out your figures");
             let view = eng(|e| e.plan_view.clone());
             eng_mut(|e| { *e = Engine::new(); e.plan_view = view; e.ingest(&data); });
             let (n, ago) = eng(|e| (e.tx.len(), e.last_run.map(|t| e.ago(t)).unwrap_or_else(|| "never".into())));
             *FEED.write() = Feed { tone: "ok", text: if n > 0 { format!("Emails checked {}", ago) } else { "Connected. No transactions yet.".into() } };
+            step("drawing the screen");
             *PHASE.write() = Phase::Ready;
         }
         Err(e) => {

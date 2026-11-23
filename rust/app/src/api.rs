@@ -67,6 +67,7 @@ pub async fn refresh(s: &Session) -> Result<Session, String> {
 async fn table(s: &Session, name: &str, select: &str, order: Option<&str>) -> Result<Vec<Value>, String> {
     let mut out = vec![];
     let mut from = 0;
+    crate::state::step(&format!("reading {}", name));
     loop {
         let mut q = format!("{}/rest/v1/{}?select={}&limit=1000&offset={}", url(), name, js_sys::encode_uri_component(select), from);
         if let Some(o) = order { q.push_str(&format!("&order={}.asc.nullslast", o)); }
