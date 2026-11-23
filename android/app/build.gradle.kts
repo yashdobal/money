@@ -17,13 +17,17 @@ val keystore: String? = System.getenv("MONEY_KEYSTORE")
 // -Pmoney.demo=true: the app runs on the made-up demo data, offline (for the emulator screenshots in GitHub Actions).
 // Never used for the APK you install.
 val demo = (findProperty("money.demo") as String?) == "true"
+// -Pmoney.rust=true: the Rust app (rust/, built first by rust/build-web.sh into rust/dist) instead of the current one,
+// as its own app ("Money · Rust", com.yashdobal.money.rs) that installs beside it. Built by .github/workflows/rust.yml.
+val rust = (findProperty("money.rust") as String?) == "true"
 
 android {
     namespace = "com.yashdobal.money"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.yashdobal.money"
+        applicationId = if (rust) "com.yashdobal.money.rs" else "com.yashdobal.money"
+        manifestPlaceholders["appLabel"] = if (rust) "Money · Rust" else "@string/app_name"
         minSdk = 26
         targetSdk = 35
         versionCode = runNumber                 // every GitHub build is newer than the last, so it installs over it
@@ -80,9 +84,11 @@ val buildWeb = tasks.register<Exec>("buildWeb") {
     inputs.file(repo.resolve("tools/rn_engine.mjs"))
     inputs.file(repo.resolve("collector/money-collector.gs"))
     inputs.property("demo", demo)
+    inputs.property("rust", rust)
     outputs.dir(webOut)
     val out = webOut.get().asFile.absolutePath
-    if (demo) commandLine("python3", "tools/build_site.py", "--demo", "--out", out)
+    if (rust) commandLine("bash", "-c", "test -f rust/dist/index.html || { echo 'Build the Rust app first: rust/build-web.sh'; exit 1; }; rm -rf '$out' && mkdir -p '$out' && cp -r rust/dist/. '$out'")
+    else if (demo) commandLine("python3", "tools/build_site.py", "--demo", "--out", out)
     else commandLine("python3", "tools/build_site.py", "--out", out)
 }
 

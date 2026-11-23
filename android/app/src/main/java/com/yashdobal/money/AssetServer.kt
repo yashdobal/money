@@ -50,6 +50,7 @@ class AssetServer(private val context: Context) {
         "ttf" -> "font/ttf"
         "ico" -> "image/x-icon"
         "txt" -> "text/plain"
+        "wasm" -> "application/wasm"
         else -> "application/octet-stream"
     }
 

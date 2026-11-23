@@ -5,8 +5,10 @@ name: Rust
 on:
   push:
     branches: [main]
-    paths: ["rust/**", "app/**", "tools/rust/**", "tools/demo/**", "rn/src/icon-paths.js", "rn/src/engine.gen.js", "collector/money-collector.gs", ".github/workflows/rust.yml"]
+    paths: ["rust/**", "app/**", "tools/rust/**", "tools/demo/**", "rn/src/icon-paths.js", "rn/src/engine.gen.js", "collector/money-collector.gs", "android/**", ".github/workflows/rust.yml"]
   workflow_dispatch:
+permissions:
+  contents: write
 concurrency: { group: rust-site, cancel-in-progress: false }
 jobs:
   engine:
@@ -56,3 +58,56 @@ jobs:
             echo "live build: $got (want $want)"; [ "$got" = "$want" ] && exit 0; sleep 10
           done
           echo "::error::the Rust site doesn't show this build yet"; exit 1
+
+  # The Rust app as an Android app of its own ("Money · Rust", com.yashdobal.money.rs): the same WebView app as the
+  # current one, carrying the Rust site, signed with the same key, so it installs beside the current app. Released as
+  # rust-NN (a pre-release) on main.
+  apk:
+    needs: engine
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build number (the run's number + 100)
+        run: echo "BUILD=$((GITHUB_RUN_NUMBER + 100))" >> "$GITHUB_ENV"
+      - uses: dtolnay/rust-toolchain@stable
+        with: { targets: wasm32-unknown-unknown }
+      - uses: Swatinem/rust-cache@v2
+        with: { workspaces: rust, key: wasm }
+      - uses: taiki-e/install-action@v2
+        with: { tool: wasm-bindgen@0.2.130 }
+      - name: Build the Rust app for the web
+        run: ./rust/build-web.sh
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 17 }
+      - uses: gradle/actions/setup-gradle@v4
+        with: { gradle-version: "8.10.2" }
+      - name: Signing key
+        env:
+          KS: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          PW: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          if [ -z "$KS" ] || [ -z "$PW" ]; then echo "::error::Add the secrets ANDROID_KEYSTORE_B64 and ANDROID_KEYSTORE_PASSWORD"; exit 1; fi
+          echo "$KS" | base64 -d > "$RUNNER_TEMP/money.jks"
+          echo "MONEY_KEYSTORE=$RUNNER_TEMP/money.jks" >> "$GITHUB_ENV"
+          echo "MONEY_KEYSTORE_PASSWORD=$PW" >> "$GITHUB_ENV"
+      - name: Build the APK
+        run: |
+          set -o pipefail
+          gradle -p android -Pmoney.rust=true assembleRelease --stacktrace 2>&1 | tee apk-build.log || {
+            grep -E "^e: " apk-build.log | head -15 | while IFS= read -r l; do echo "::error::$l"; done
+            echo "::error::$(grep -A12 'What went wrong' apk-build.log | head -14 | tr '\n' ' ' | cut -c1-1500)"
+            exit 1; }
+          APK=android/app/build/outputs/apk/release/app-release.apk
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          "$BT/aapt2" dump badging "$APK" | grep -E "^package|application-label:" | tee badging.txt
+          grep -q "name='com.yashdobal.money.rs'" badging.txt || { echo "::error::The APK isn't the Rust app's package"; exit 1; }
+          "$BT/apksigner" verify --print-certs "$APK" | grep -m1 "SHA-256"
+          cp "$APK" "money-rust-${{ env.BUILD }}.apk"
+      - name: GitHub Release (pre-release)
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          gh release create "rust-${{ env.BUILD }}" "money-rust-${{ env.BUILD }}.apk" --prerelease \
+            --title "Money · Rust · build ${{ env.BUILD }}" \
+            --notes "The Rust version of Money, as its own app beside the current one (it doesn't replace it). On your phone: download money-rust-${{ env.BUILD }}.apk below and open it, then sign in with the email code. Later builds install over it."
