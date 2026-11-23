@@ -14,6 +14,7 @@ pub fn SheetBody(name: String) -> Element {
         "add" => rsx! { crate::txsheets::AddSheet {} },
         "salary" => rsx! { crate::plan::SalarySheet {} },
         "rules" => rsx! { crate::settings::RulesSheet {} },
+        "pin" => rsx! { crate::lock::PinSheet {} },
         n if n.starts_with("tripcard:") => rsx! { crate::trips::TripCardSheet { key: "{n}", id: n[9..].to_string() } },
         "trip-income" => rsx! { crate::trips::TripIncomeSheet {} },
         "trip-spend" => rsx! { crate::trips::TripSpendSheet {} },

@@ -79,6 +79,7 @@ pub fn Settings() -> Element {
                 SetRow { icon: "eyeOff", title: "Hide amounts", detail: "shows dots in place of every amount until you tap the eye",
                     right: rsx! { Switch { on: hidden, label: "Hide amounts", onchange: move |v| set_hidden(v) } } }
             }
+            Security {}
             Group { title: "Your data", i: 1,
                 SetRow { icon: "download", title: "Export to CSV", detail: format!("{}, for a spreadsheet", plural(n_tx as i64, "transaction")), onclick: move |_| {
                     let (name, text) = eng(|e| (format!("money-{}.csv", time::iso(e.today())), e.csv_text()));
@@ -220,5 +221,35 @@ pub fn SetupSheet(#[props(default)] arg: String) -> Element {
         SubHead { text: "Bring in a setup" }
         Field { label: "Paste the setup text", value: text(), multiline: true, placeholder: "{{\"profile\": …}}", oninput: move |t| { text.set(t); err.set(String::new()); } }
         if !text().is_empty() && incoming.is_none() { Note { "That isn't a Money setup." } }
+    }
+}
+
+/// The lock: the fingerprint lock inside the Android app, a 4-digit code in a browser.
+#[component]
+fn Security() -> Element {
+    use crate::lock;
+    let _ = VER();
+    let mut after = use_signal(|| None::<i64>);
+    if lock::in_app() {
+        let info = lock::call_json("lockInfo").unwrap_or_default();
+        let (avail, on) = (info["available"] == true, info["enabled"] == true);
+        let a = after().unwrap_or(info["after"].as_i64().unwrap_or(0));
+        return rsx! {
+            Group { title: "Security", i: 1,
+                SetRow { icon: "lock", title: "Fingerprint lock", detail: if avail { "asks for your fingerprint or phone PIN to open Money" } else { "set a screen lock on your phone first" },
+                    right: rsx! { Switch { on, label: "Fingerprint lock", onchange: move |v: bool| { lock::call("setLock", &[wasm_bindgen::JsValue::from(v)]); } } } }
+                if on { SetRow { icon: "refresh", title: "Lock after", right: rsx! { Seg { value: a.to_string(), onchange: move |v: String| { let n = v.parse().unwrap_or(0); lock::set_after(n); after.set(Some(n)); },
+                    options: vec![opt("0", "Right away"), opt("60", "1 min"), opt("300", "5 min")] } } } }
+            }
+        };
+    }
+    let has = lock::has_pin();
+    let a = after().unwrap_or(lock::after_sec());
+    rsx! {
+        Group { title: "Security", i: 1,
+            SetRow { icon: "lock", title: "App lock code", detail: if has { "on · asked when you come back after being away" } else { "off" }, onclick: move |_| *SHEET.write() = Some("pin".into()) }
+            if has { SetRow { icon: "refresh", title: "Ask again after", right: rsx! { Seg { value: a.to_string(), onchange: move |v: String| { let n = v.parse().unwrap_or(300); lock::set_after(n); after.set(Some(n)); },
+                options: vec![opt("0", "Right away"), opt("60", "1 min"), opt("300", "5 min")] } } } }
+        }
     }
 }

@@ -607,3 +607,15 @@ html, body { overflow-x: hidden; }
 .k-tray > .btn.b-link { padding: 0 6px; }
 .line .seg-o { padding: 0 10px; font-size: 13.5px; }
 .line > .grow { min-width: 0; }
+
+/* ---------- the lock code ---------- */
+.pinpad { display: flex; flex-direction: column; align-items: center; outline: none; }
+.pin-dots { display: flex; gap: 14px; margin: 6px 0 10px; }
+.pin-dots i { width: 14px; height: 14px; border-radius: 7px; border: 1.5px solid var(--line2); transition: background .12s, border-color .12s; }
+.pin-dots i.on { background: var(--accent); border-color: var(--accent); }
+.pin-dots.shake { animation: shake 380ms; }
+.pin-msg { min-height: 38px; margin: 0 0 6px; text-align: center; font-size: 13.5px; line-height: 19px; color: var(--ink3); }
+.pin-keys { display: grid; grid-template-columns: repeat(3, 68px); gap: 8px 12px; }
+.pin-k { width: 68px; height: 60px; border-radius: 20px; background: var(--inset); font-weight: 520; font-stretch: 112%; font-size: 22px; transition: transform .12s var(--spring); display: grid; place-items: center; }
+.pin-k:active { transform: scale(0.9); }
+.pin-k.del { background: transparent; color: var(--ink2); }

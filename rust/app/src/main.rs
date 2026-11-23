@@ -4,6 +4,7 @@ mod activity;
 mod api;
 mod cards;
 mod kit;
+mod lock;
 mod plan;
 mod rewards;
 mod settings;
@@ -24,6 +25,8 @@ fn main() { dioxus::launch(App); }
 fn App() -> Element {
     use_hook(state::start);
     use_hook(back_button);
+    use_hook(lock::start);
+    if lock::LOCKED() { return rsx! { lock::PinLock {} }; }
     match PHASE() {
         Phase::Starting | Phase::Loading => rsx! { div { class: "boot", div { class: "boot-dot" } p { "Loading your figures…" } } },
         Phase::SignedOut => rsx! { shell::SignIn {} },
