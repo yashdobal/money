@@ -11,6 +11,8 @@ pub fn SheetBody(name: String) -> Element {
     let _ = VER();
     match name.as_str() {
         "explain" => rsx! { Explain {} },
+        "add" => rsx! { crate::txsheets::AddSheet {} },
+        n if n.starts_with("tx:") => rsx! { crate::txsheets::TxSheet { key: "{n}", id: n[3..].to_string() } },
         "net" => rsx! { NetSheet {} },
         "bank" => rsx! { History {} },
         "about-coming" => rsx! { h2 { class: "sheet-t", "Coming up" } Note { "Every dated thing from today on: card bills and statements, card EMIs, your salary and what it sends to family, SIP and the emergency fund, and fixed payments. Grey ones are information (a statement closing, a charge on a card), not money leaving your bank that day." } },

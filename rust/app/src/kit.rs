@@ -82,8 +82,8 @@ pub fn Panel(#[props(default)] title: String, #[props(default = "tray".to_string
 #[component]
 pub fn Row(#[props(default)] icon: Option<Element>, title: String, #[props(default)] detail: String, #[props(default)] value: Option<String>,
     #[props(default)] sub: String, #[props(default)] tone: String, #[props(default)] soft: bool, #[props(default)] chevron: bool, #[props(default)] total: bool,
-    #[props(default)] onclick: Option<EventHandler<MouseEvent>>) -> Element {
-    let cls = format!("row{}{}{}", if onclick.is_some() { " press" } else { "" }, if soft { " soft" } else { "" }, if total { " total" } else { "" });
+    #[props(default)] uncounted: bool, #[props(default)] onclick: Option<EventHandler<MouseEvent>>) -> Element {
+    let cls = format!("row{}{}{}{}", if onclick.is_some() { " press" } else { "" }, if soft { " soft" } else { "" }, if total { " total" } else { "" }, if uncounted { " uncounted" } else { "" });
     let vcls = format!("r-val {}", if soft && tone.is_empty() { "t-soft2" } else { tone_class(&tone) });
     let body = rsx! {
         {icon}
@@ -161,4 +161,150 @@ fn OdoDigit(d: i32, k: usize) -> Element {
             }
         }
     }
+}
+
+/* ---------------- words ---------------- */
+/// A payee as a title: "AMAZON WEB SERVICES (USD 24.85 at Rs 86.44)" → ("Amazon Web Services", "USD 24.85 at ₹86.44").
+pub fn nice(desc: &str) -> (String, String) {
+    static PRE: OnceLock<Regex> = OnceLock::new();
+    static FX: OnceLock<Regex> = OnceLock::new();
+    static CAPS: OnceLock<Regex> = OnceLock::new();
+    let pre = PRE.get_or_init(|| Regex::new(r"(?i)^(NEFT|IMPS|RTGS)(\s+(CR|DR))?[\s\-/:]+").unwrap());
+    let fx = FX.get_or_init(|| Regex::new(r"(?i)^(.*?)\s*\(([A-Z]{3})\s+([\d.,]+)\s+at\s+Rs\.?\s*([\d.,]+)\)\s*$").unwrap());
+    let caps = CAPS.get_or_init(|| Regex::new(r"[A-Z]{3}").unwrap());
+    let mut t = pre.replace(desc.trim(), "").to_string();
+    let mut extra = String::new();
+    if let Some(c) = fx.captures(&t.clone()) { extra = format!("{} {} at ₹{}", c[2].to_uppercase(), &c[3], &c[4]); t = c[1].to_string(); }
+    if t.chars().count() > 4 && t == t.to_uppercase() && caps.is_match(&t) {
+        let mut out = String::new(); let mut start = true;
+        for ch in t.to_lowercase().chars() { if start && ch.is_ascii_lowercase() { out.extend(ch.to_uppercase()); } else { out.push(ch); } start = !ch.is_alphanumeric() && ch != '_'; }
+        t = out;
+    }
+    (if t.is_empty() { desc.to_string() } else { t }, extra)
+}
+pub fn cap(t: &str) -> String { let mut c = t.chars(); match c.next() { Some(f) => f.to_uppercase().collect::<String>() + c.as_str(), None => String::new() } }
+/// Category colours (muted), as kit.js CAT_C.
+pub fn cat_hue(c: &str) -> &'static str {
+    match c {
+        "Food & dining" => "#B08968", "Groceries" => "#7F9C7A", "Travel" => "#7A93A8", "Shopping" => "#A88595", "Bills & subscriptions" => "#8A86A8",
+        "Entertainment" => "#9A8AAE", "Health" => "#7FA3A0", "Transfers to people" => "#A08F80", "Investments" => "#7E9A8E", "Cash & transfers" => "#8F8F94",
+        "Card payment" => "#8F8F94", "Moved to goals" => "#7A93A8", "Planned payment" => "#A08F80", "Money in" | "Refunds" | "Paid back" | "Salary" | "Other income" => "#6F9A82",
+        _ => "#9A9A9A",
+    }
+}
+/// The icon a category is drawn with.
+pub fn cat_icon(c: &str) -> String { match c { "Salary" => "salary".into(), "Other income" => "Money in".into(), c => c.into() } }
+/// The row icon for a category.
+#[component]
+pub fn CatIc(cat: String, #[props(default)] big: bool) -> Element {
+    rsx! { div { class: if big { "ic big" } else { "ic" }, Icon { name: cat_icon(&cat), size: if big { 22.0 } else { 20.0 } } } }
+}
+#[component]
+pub fn SubHead(text: String) -> Element { rsx! { h3 { class: "sub-h", "{text}" } } }
+
+/* ---------------- choices ---------------- */
+/// A chip: a single choice you tap. A white pill on grey, dark when chosen.
+#[component]
+pub fn Chip(label: String, #[props(default)] on: bool, #[props(default)] icon: String, #[props(default)] hue: String, #[props(default)] small: bool,
+    #[props(default)] removable: bool, #[props(default)] dashed: bool, onclick: EventHandler<MouseEvent>) -> Element {
+    let cls = format!("chip{}{}{}", if on { " on" } else { "" }, if small { " small" } else { "" }, if dashed { " dashed" } else { "" });
+    let style = if !hue.is_empty() && !on { format!("--hue:{}", hue) } else { String::new() };
+    rsx! {
+        button { class: "{cls}", style: "{style}", role: "radio", aria_checked: "{on}", onclick: move |e| onclick.call(e),
+            if !icon.is_empty() { span { class: "chip-ic", Icon { name: icon.clone(), size: 16.0 } } }
+            span { "{label}" }
+            if removable { Icon { name: "close".to_string(), size: 14.0 } }
+        }
+    }
+}
+/// One choice among several: (value, label, icon, colour).
+#[derive(Clone, PartialEq, Debug, Default)]
+pub struct Opt { pub v: String, pub label: String, pub icon: String, pub hue: String }
+pub fn opt(v: &str, label: &str) -> Opt { Opt { v: v.into(), label: label.into(), ..Default::default() } }
+pub fn cat_opt(c: &str) -> Opt { Opt { v: c.into(), label: c.into(), icon: cat_icon(c), hue: cat_hue(c).into() } }
+#[component]
+pub fn Chips(options: Vec<Opt>, value: String, onchange: EventHandler<String>, #[props(default)] scroll: bool, #[props(default)] small: bool) -> Element {
+    rsx! {
+        div { class: if scroll { "chips scroll" } else { "chips" }, role: "radiogroup",
+            for o in options.into_iter() {
+                Chip { key: "{o.v}", label: o.label.clone(), on: o.v == value, icon: o.icon.clone(), hue: o.hue.clone(), small, onclick: move |_| onchange.call(o.v.clone()) }
+            }
+        }
+    }
+}
+/// Segmented choices: the highlight slides to the one you pick.
+#[component]
+pub fn Seg(options: Vec<Opt>, value: String, onchange: EventHandler<String>, #[props(default)] full: bool) -> Element {
+    let n = options.len().max(1);
+    let at = options.iter().position(|o| o.v == value).unwrap_or(0);
+    rsx! {
+        div { class: if full { "seg full" } else { "seg" }, role: "radiogroup", style: "--n:{n};--at:{at}",
+            div { class: "seg-hl" }
+            for o in options.into_iter() {
+                button { key: "{o.v}", class: if o.v == value { "seg-o on" } else { "seg-o" }, onclick: move |_| onchange.call(o.v.clone()), "{o.label}" }
+            }
+        }
+    }
+}
+#[component]
+pub fn Switch(on: bool, onchange: EventHandler<bool>, #[props(default)] label: String) -> Element {
+    rsx! { button { class: if on { "switch on" } else { "switch" }, role: "switch", aria_checked: "{on}", aria_label: "{label}", onclick: move |_| onchange.call(!on), i {} } }
+}
+/// A setting row in a sheet: a title, a line of detail, a switch.
+#[component]
+pub fn SwRow(title: String, #[props(default)] detail: String, on: bool, onchange: EventHandler<bool>) -> Element {
+    rsx! {
+        div { class: "swrow",
+            div { class: "grow", div { class: "sw-t", "{title}" } if !detail.is_empty() { div { class: "sw-d", "{detail}" } } }
+            Switch { on, onchange, label: title.clone() }
+        }
+    }
+}
+/// A text field with its label; numeric keeps digits and one point.
+#[component]
+pub fn Field(#[props(default)] label: String, value: String, oninput: EventHandler<String>, #[props(default)] numeric: bool, #[props(default)] placeholder: String,
+    #[props(default)] multiline: bool, #[props(default)] error: String, #[props(default)] big: bool, #[props(default)] prefix: String,
+    #[props(default)] kind: String, #[props(default)] max: String) -> Element {
+    let clean = move |v: String| if numeric {
+        let mut seen = false;
+        v.chars().filter(|c| c.is_ascii_digit() || (*c == '.' && !std::mem::replace(&mut seen, true))).collect()
+    } else { v };
+    let cls = format!("fld{}{}", if big { " big" } else { "" }, if error.is_empty() { "" } else { " err" });
+    let ty = if kind.is_empty() { "text".to_string() } else { kind.clone() };
+    rsx! {
+        label { class: "fwrap",
+            if !label.is_empty() { span { class: "f-label", "{label}" } }
+            div { class: "{cls}",
+                if !prefix.is_empty() { span { class: "f-pre", "{prefix}" } }
+                if multiline {
+                    textarea { value: "{value}", placeholder: "{placeholder}", maxlength: "500", oninput: move |e| oninput.call(clean(e.value())) }
+                } else {
+                    input { r#type: "{ty}", value: "{value}", placeholder: "{placeholder}", max: "{max}", inputmode: if numeric { "decimal" } else { "text" }, oninput: move |e| oninput.call(clean(e.value())) }
+                }
+            }
+            if !error.is_empty() { span { class: "f-err", "{error}" } }
+        }
+    }
+}
+
+/// The toast along the bottom.
+#[component]
+pub fn ToastHost() -> Element {
+    let Some(t) = crate::state::TOAST() else { return rsx! {} };
+    rsx! {
+        div { key: "{t.n}", class: "toast t-{t.tone}", role: "status",
+            span { class: "grow", "{t.text}" }
+            if let Some(id) = t.undo.clone() {
+                button { class: "toast-undo", onclick: move |_| { crate::state::act(|e| e.unreverse(&id)); *crate::state::TOAST.write() = None; }, "Undo" }
+            }
+        }
+    }
+}
+/// An amount to the paisa when it has paise ("₹2,148.00" stays "₹2,148"), with a sign like amt_s.
+pub fn exact_s(n: f64, sign: &str) -> String {
+    let v = n.abs();
+    let c = (v * 100.0).round() as u64;
+    let body = if c % 100 != 0 { format!("₹{}.{:02}", group_in(c / 100), c % 100) } else { rup(v) };
+    let s = match sign { "out" if v >= 0.5 => "−", "in" if v >= 0.5 => "+", _ => "" };
+    format!("{}{}", s, body)
 }

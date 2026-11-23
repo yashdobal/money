@@ -32,6 +32,81 @@ pub static DEMO: GlobalSignal<bool> = Signal::global(|| false);
 
 pub fn bump() { *VER.write() += 1; }
 
+/// A message along the bottom for a moment ("Saved", "Couldn't save that"). tone: "" or "alert"/"warn".
+#[derive(Clone, PartialEq, Debug)]
+pub struct Toast { pub text: String, pub tone: &'static str, pub n: u64, pub undo: Option<String> }
+pub static TOAST: GlobalSignal<Option<Toast>> = Signal::global(|| None);
+pub fn toast(text: impl Into<String>, tone: &'static str) { toast_undo(text, tone, None); }
+/// A toast with an Undo button: `undo` is the id to unreverse (the only undo there is so far).
+pub fn toast_undo(text: impl Into<String>, tone: &'static str, undo: Option<String>) {
+    let n = TOAST.read().as_ref().map(|t| t.n + 1).unwrap_or(1);
+    *TOAST.write() = Some(Toast { text: text.into(), tone, n, undo: undo.clone() });
+    spawn(async move {
+        gloo_timers::future::TimeoutFuture::new(if undo.is_some() { 5000 } else { 2600 }).await;
+        if TOAST.read().as_ref().map(|t| t.n) == Some(n) { *TOAST.write() = None; }
+    });
+}
+
+/// What Activity is showing: the filter chip, the search, and filters other screens open it with.
+#[derive(Clone, PartialEq, Debug, Default)]
+pub struct ActParams { pub f: String, pub q: String, pub cat: String, pub card: String, pub acct: String, pub m: String, pub d: String, pub seq: u64 }
+pub static ACT: GlobalSignal<ActParams> = Signal::global(ActParams::default);
+/// Open Activity with these filters (from Spending, Cards …).
+pub fn show_activity(p: ActParams) { let seq = ACT.read().seq + 1; *ACT.write() = ActParams { seq, ..p }; *SHEET.write() = None; *TAB.write() = 4; }
+
+/* ---------------- changes and saving ---------------- */
+/// Make a change (an engine action), redraw, send any note or rule writes, and save the settings a moment later.
+pub fn act<R>(f: impl FnOnce(&mut Engine) -> R) -> R {
+    let r = eng_mut(f);
+    bump();
+    let writes = eng_mut(|e| std::mem::take(&mut e.outbox));
+    if !writes.is_empty() && !*DEMO.read() { spawn(async move { send_writes(writes).await; }); }
+    if eng(|e| e.unsaved) { queue_save(); }
+    r
+}
+static SAVE_GEN: GlobalSignal<u64> = Signal::global(|| 0);
+pub static SAVE_MSG: GlobalSignal<String> = Signal::global(String::new);
+fn queue_save() {
+    let g = *SAVE_GEN.read() + 1;
+    *SAVE_GEN.write() = g;
+    *SAVE_MSG.write() = "Saving…".into();
+    spawn(async move {
+        gloo_timers::future::TimeoutFuture::new(700).await;
+        if *SAVE_GEN.read() == g { save().await; }
+    });
+}
+/// Saves your settings (the app function's "save"), as the current app does: with the version it loaded, so a change
+/// made meanwhile on another device isn't overwritten (that reloads instead).
+async fn save() {
+    if *DEMO.read() { eng_mut(|e| e.unsaved = false); *SAVE_MSG.write() = "The demo doesn't save".into(); return; }
+    let Some(s) = fresh().await else { return };
+    let (blob, base) = eng(|e| (e.save_blob(), e.app_version));
+    match api::call_app(&s, serde_json::json!({ "action": "save", "settings": blob, "baseVersion": base })).await {
+        Ok((200, out)) => {
+            let v = out.get("version").and_then(|v| v.as_i64()).unwrap_or(base);
+            eng_mut(|e| { e.app_version = v; e.unsaved = false; });
+            *SAVE_MSG.write() = "Saved.".into();
+        }
+        Ok((409, _)) => {
+            *SAVE_MSG.write() = "Changed on another device, so this shows the latest.".into();
+            toast("Changed on another device, so this shows the latest.", "warn");
+            load().await;
+        }
+        Ok((st, out)) => {
+            let m = out.get("error").and_then(|x| x.as_str()).map(String::from).unwrap_or_else(|| format!("Save failed ({})", st));
+            *SAVE_MSG.write() = m.clone();
+            toast(format!("Couldn't save that: {}", m), "alert");
+        }
+        Err(e) => { *SAVE_MSG.write() = e.clone(); toast("You're offline, so that isn't saved yet. Try again when you're back online.", "warn"); }
+    }
+}
+async fn send_writes(writes: Vec<money_core::engine::Write>) {
+    let Some(s) = fresh().await else { return };
+    for w in writes {
+        if let Err(e) = api::write(&s, &w).await { toast(format!("Couldn't save that: {}", e), "alert"); }
+    }
+}
+
 fn storage() -> Option<web_sys::Storage> { web_sys::window().and_then(|w| w.local_storage().ok().flatten()) }
 pub fn ls_get(k: &str) -> Option<String> { storage().and_then(|s| s.get_item(k).ok().flatten()) }
 pub fn ls_set(k: &str, v: &str) { if let Some(s) = storage() { let _ = s.set_item(k, v); } }
@@ -80,7 +155,7 @@ pub fn sign_out() {
 }
 
 /// Your sign-in, refreshed if it runs out within a minute.
-async fn fresh() -> Option<Session> {
+pub async fn fresh() -> Option<Session> {
     let s = SESSION.read().clone()?;
     let now = (js_sys::Date::now() / 1000.0) as i64;
     if s.expires_at - now > 60 { return Some(s); }

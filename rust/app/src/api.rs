@@ -112,3 +112,23 @@ pub async fn last_sync(s: &Session) -> Option<i64> {
     let (_, v) = get(s, "ingest_log?select=received_at&kind=eq.sync&result=eq.saved&order=received_at.desc&limit=1").await.ok()?;
     v.get(0).and_then(|r| r.get("received_at")).and_then(|x| x.as_str()).and_then(money_core::time::parse_ts)
 }
+
+/// A note or payee rule, written to its table (store.js writeNow).
+pub async fn write(s: &Session, w: &money_core::engine::Write) -> Result<(), String> {
+    use money_core::engine::Write::*;
+    let auth = format!("Bearer {}", s.access_token);
+    let enc = |v: &str| String::from(js_sys::encode_uri_component(v));
+    let r = match w {
+        Rule { pattern, category } => Request::post(&format!("{}/rest/v1/payee_rules?on_conflict=user_id,pattern", url())).header("apikey", &key()).header("authorization", &auth)
+            .header("content-type", "application/json").header("prefer", "resolution=merge-duplicates,return=minimal")
+            .body(json!({ "pattern": pattern, "category": category }).to_string()).map_err(|e| e.to_string())?.send().await,
+        Unrule { pattern } => Request::delete(&format!("{}/rest/v1/payee_rules?pattern=eq.{}", url(), enc(pattern))).header("apikey", &key()).header("authorization", &auth).send().await,
+        Note { r#ref, row: None } => Request::delete(&format!("{}/rest/v1/txn_notes?txn_ref=eq.{}", url(), enc(r#ref))).header("apikey", &key()).header("authorization", &auth).send().await,
+        Note { r#ref, row: Some(n) } => Request::post(&format!("{}/rest/v1/txn_notes?on_conflict=user_id,txn_ref", url())).header("apikey", &key()).header("authorization", &auth)
+            .header("content-type", "application/json").header("prefer", "resolution=merge-duplicates,return=minimal")
+            .body(json!({ "txn_ref": r#ref, "category": n.category, "for_someone_else": n.for_someone_else, "paid_back": n.paid_back, "note": n.note }).to_string()).map_err(|e| e.to_string())?.send().await,
+    };
+    let r = r.map_err(|e| format!("offline ({})", e))?;
+    if r.status() >= 400 { let v = r.json::<Value>().await.unwrap_or(Value::Null); return Err(err_of(&v, r.status())); }
+    Ok(())
+}

@@ -37,10 +37,12 @@ pub fn Shell() -> Element {
                 }
             }
             main { key: "{tab}", class: "screen push-{dir}",
-                match tab { 0 => rsx! { Today {} }, 7 => rsx! { crate::settings::Settings {} }, t => rsx! { Soon { name: TABS[t].0.to_string() } } }
+                match tab { 0 => rsx! { Today {} }, 4 => rsx! { crate::activity::Activity {} }, 7 => rsx! { crate::settings::Settings {} }, t => rsx! { Soon { name: TABS[t].0.to_string() } } }
             }
+            if tab == 4 { crate::activity::Fab {} }
             Dock { tab, from: prev() }
             SheetHost {}
+            ToastHost {}
         }
     }
 }
