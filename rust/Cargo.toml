@@ -13,3 +13,7 @@ opt-level = "z"     # small WebAssembly for phones
 lto = true
 codegen-units = 1
 panic = "abort"
+
+# the checks run thousands of rewards searches: build them optimised
+[profile.test]
+opt-level = 2

@@ -10,6 +10,7 @@ const F = JSON.parse(fs.readFileSync(path.join(ROOT, "tools/demo/demo-fixture.js
 const S = JSON.parse(fs.readFileSync(path.join(ROOT, "tools/rust/actions.json"), "utf8"));
 const { frozenDate } = await import(path.join(ROOT, "supabase/functions/_shared/ist-date.js"));
 const { makeEngine } = await import(path.join(ROOT, "rn/src/engine.gen.js"));
+const { screensOf } = await import(path.join(ROOT, "tools/rust/screens.mjs"));
 
 const at = Date.parse(S.at);
 let now = at;
@@ -46,9 +47,10 @@ S.steps.forEach((step, i) => {
   const args = fill(args0);
   let ret;
   if (name === "setProfile") ret = e.act.setProfile(merge(e.PROFILE, args[0].merge));
+  else if (name === "override") { e.overrides[args[0]] = args[1]; e.render(); }
   else ret = e.act[name](...args);
   e.pushSettings();
-  out.push({ step: i, name, ret: typeof ret === "string" ? ret : null, blob, writes, snap: e.snapshot() });
+  out.push({ step: i, name, ret: typeof ret === "string" ? ret : null, blob, writes, snap: e.snapshot(), screens: screensOf(e) });
   writes = [];
 });
 // (the engine's save timers would keep node running: stop once everything is written)

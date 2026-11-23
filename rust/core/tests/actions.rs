@@ -73,6 +73,11 @@ fn run(e: &mut Engine, name: &str, a: &[Value]) -> Option<String> {
         }
         "setProfile" => { let p = merge(&e.profile, &a[0]["merge"]); e.set_profile(&p); None }
         "importSetup" => Some(e.import_setup(&a[0])),
+        "setTrip" => { e.set_trip(&s(&a[0]), a[1].clone()); None }
+        "setTripCard" => { e.set_trip_card(&s(&a[0]), a[1] == true, a[2].as_f64().unwrap_or(0.0)); None }
+        "resetTrip" => { e.reset_trip(); None }
+        "setRew" => { e.set_rew(&s(&a[0]), if a[1].is_null() { None } else { Some(a[1].clone()) }); None }
+        "override" => { e.set_override(&s(&a[0]), Some(a[1].clone())); None }
         _ => panic!("no step called {}", name),
     }
 }
@@ -102,6 +107,7 @@ fn same_changes_as_the_current_app() {
         let writes = serde_json::to_value(std::mem::take(&mut e.outbox)).unwrap();
         diff("writes", &js["writes"], &writes, &mut out);
         diff("figures", &js["snap"], &e.snapshot(), &mut out);
+        diff("screens", &js["screens"], &e.screens(), &mut out);
         assert!(out.is_empty(), "step {} ({} {}) differs from engine.js:\n  {}", i, name, serde_json::to_string(&st[1..]).unwrap(), out.join("\n  "));
     }
     println!("{} changes, each saved and worked out the same", steps.len());

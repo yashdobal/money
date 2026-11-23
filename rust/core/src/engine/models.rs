@@ -588,6 +588,58 @@ impl Engine {
             p.due.map(|d| Value::from(iso(d))).unwrap_or(Value::Null), r2(p.pct), p.by_rule,
             if p.emis.is_empty() { Value::Null } else { p.next_emi.as_ref().map(|n| Value::from(n.due.clone())).unwrap_or(Value::Null) }, r2(p.funded), r2(p.short)])).collect();
         let card_pays: Vec<Value> = cards.iter().map(|c| json!([c.key, self.card_payments(c).iter().map(|(p, how, off, bt)| json!([p.ts, r2(p.amt), p.kind, how, off, bt])).collect::<Vec<_>>()])).collect();
-        json!({ "hero": hero, "attention": attention, "coming": coming, "history": history, "emis": emis, "calendar": calendar, "goals": goals, "cardPays": card_pays, "csv": self.csv_text() })
+        json!({ "hero": hero, "attention": attention, "coming": coming, "history": history, "emis": emis, "calendar": calendar, "goals": goals, "cardPays": card_pays, "csv": self.csv_text(),
+            "trips": self.trips_check(), "rewards": self.rewards_check(), "search": CHECK_SEARCHES.iter().map(|q| self.search_check(q)).collect::<Vec<_>>() })
+    }
+    fn trips_check(&self) -> Value {
+        let r2 = |v: f64| { let x = round(v * 100.0) / 100.0; if x == 0.0 { 0.0 } else { x } };
+        let d = |x: Option<Ms>| x.map(|t| Value::from(iso(t))).unwrap_or(Value::Null);
+        let tm = self.trip_model(); let p = &tm.plan; let n = &tm.need;
+        let row = |r: &TripRow| json!([r.card.id, r2(r.rate), r.owned, r.auto, r.add_on, r.have, r.fl.as_ref().map(|f| json!([f.prog, f.miles, f.ratio, f.pts, f.one_way])),
+            r.ht.as_ref().map(|h| json!([h.points, h.ratio, h.pts])), r2(r.total), r2(r.left),
+            r.run.as_ref().map(|x| json!([x.months, x.spend, r2(x.fees), r2(x.bonus), r2(x.per_month), r2(x.counted)])), r.pace, r.far, r.can_get, d(r.ready), r.warn]);
+        let ids = |v: &[TripRow]| v.iter().map(|r| r.card.id.clone()).collect::<Vec<_>>();
+        json!({
+            "plan": [p.country, p.people, p.nights, p.cabin, p.stay, p.hotel, p.air, p.when, p.income, p.spend, p.travel, p.night, p.mine, p.pts.iter().map(|(k, v)| json!([k, v])).collect::<Vec<_>>()],
+            "income": [tm.income.amt, tm.income.from],
+            "need": [n.country.id, n.cabin, n.no_business, n.seats, n.rooms, n.airs.iter().map(|a| json!([a.id, a.one_way, a.total])).collect::<Vec<_>>(), n.preferred, n.airline, n.stay, n.tier,
+                n.usual, n.nightly, n.typed, r2(n.hotel_cost), r2(n.per_point), n.accor_pts],
+            "prof": [tm.prof.by.0.iter().map(|(k, v)| json!([k, v])).collect::<Vec<_>>(), tm.prof.n, tm.prof.basis, r2(tm.prof.everyday), r2(tm.prof.travel), r2(tm.prof.noearn), r2(tm.prof.total)],
+            "mix": [tm.mix.by.0.iter().map(|(k, v)| json!([k, r2(*v)])).collect::<Vec<_>>(), r2(tm.mix.everyday), r2(tm.mix.travel), r2(tm.mix.noearn), r2(tm.mix.earning), r2(tm.mix.total)],
+            "known": tm.known, "avail": tm.avail, "all": tm.all.iter().map(row).collect::<Vec<_>>(), "best": ids(&tm.best), "get": ids(&tm.get), "yours": ids(&tm.yours),
+            "off": ids(&tm.off), "when": d(tm.when_date),
+        })
+    }
+    fn worth_check(w: &Worth) -> Value { let r2 = |v: f64| { let x = round(v * 100.0) / 100.0; if x == 0.0 { 0.0 } else { x } }; json!([r2(w.cash), r2(w.miles), w.partner, r2(w.best)]) }
+    fn way_check(w: &Way) -> Value {
+        let r2 = |v: f64| { let x = round(v * 100.0) / 100.0; if x == 0.0 { 0.0 } else { x } };
+        json!([w.route, w.label, w.how, r2(w.rate), r2(w.pts), r2(w.extra), w.capped, w.caps.iter().map(|c| c.id.clone()).collect::<Vec<_>>(), w.notes, w.free,
+            Self::worth_check(&w.worth), w.fee.map(r2), r2(w.net), w.at])
+    }
+    fn rewards_check(&self) -> Value {
+        let r2 = |v: f64| { let x = round(v * 100.0) / 100.0; if x == 0.0 { 0.0 } else { x } };
+        let m = self.rewards_model(); let x = &m.missed; let nx = &m.next;
+        json!({
+            "month": m.month.iter().map(|h| { let mut used: Vec<(String, f64)> = h.used.iter().map(|(k, v)| (k.clone(), r2(*v))).collect(); used.sort_by(|a, b| a.0.cmp(&b.0));
+                json!([h.g, h.short, h.card.map(|c| c.id.clone()), h.add_on, r2(h.pts), r2(h.spent), h.n, used.iter().map(|(k, v)| json!([k, v])).collect::<Vec<_>>(),
+                h.caps.iter().map(|c| json!([c.id, c.name, c.max, c.per, c.on, r2(c.used)])).collect::<Vec<_>>(), h.worth.as_ref().map(Self::worth_check),
+                h.items.iter().map(|i| json!([i.id, i.kind, r2(i.pts), i.capped, i.how, i.why, i.for_other])).collect::<Vec<_>>(),
+                h.ways.iter().map(|w| json!([w.text, w.why, w.n, r2(w.amt), r2(w.pts), w.none])).collect::<Vec<_>>(), h.full.as_ref().map(|f| f.id.clone())]) }).collect::<Vec<_>>(),
+            "missed": [r2(x.got), r2(x.could), r2(x.gap), x.misses.iter().map(|y| json!([y.x.t.id, r2(y.real), r2(y.real_pts), y.used.map(|c| c.id.clone()), r2(y.best), r2(y.best_pts),
+                y.card.map(|c| c.id.clone()), y.kind, r2(y.gap)])).collect::<Vec<_>>(),
+                x.tips.iter().map(|t| json!([t.card.id, t.short, t.kind, t.kind_name, t.n, r2(t.amt), r2(t.gap), r2(t.best_pts),
+                    t.from.iter().map(|f| json!([f.card.map(|c| c.id.clone()), f.short, r2(f.pts), r2(f.worth)])).collect::<Vec<_>>(), t.list.len()])).collect::<Vec<_>>(), x.n, x.cards],
+            "next": [nx.rows.iter().map(|r| json!([r.card.id, r2(r.year), r.fee, r2(r.net), r2(r.spend_year), r2(r.pts_year), r.top, r.waived])).collect::<Vec<_>>(), nx.basis, nx.n, nx.income.amt, r2(nx.spent)],
+            "goals": m.goals.iter().map(|g| json!([g.g, g.card.id, g.what, g.worth, g.per, g.target, r2(g.done), g.fee])).collect::<Vec<_>>(),
+            "prefs": [m.prefs.prime, m.prefs.ai, m.prefs.kf],
+        })
+    }
+    fn search_check(&self, q: &str) -> Value {
+        let sp = rew_parse(q); let r = self.rew_search(&sp);
+        json!([[sp.text, sp.amt, sp.kind, sp.shop, sp.online, sp.intl], r.sp.amt, r.typed_amt,
+            r.yours.iter().map(|y| json!([y.g, y.card.id, y.ways.iter().map(Self::way_check).collect::<Vec<_>>()])).collect::<Vec<_>>(),
+            r.could.iter().map(|c| json!([c.card.id, c.ways.iter().take(4).map(Self::way_check).collect::<Vec<_>>()])).collect::<Vec<_>>(),
+            r.top.as_ref().and_then(|t| t.g.clone()), r.runner.as_ref().and_then(|t| t.g.clone()), r.better.as_ref().map(|b| b.card.id.clone()),
+            r.unknown.iter().map(|u| u.g.clone()).collect::<Vec<_>>(), r.income.amt])
     }
 }

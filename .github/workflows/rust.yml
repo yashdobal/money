@@ -5,7 +5,7 @@ name: Rust
 on:
   push:
     branches: [main]
-    paths: ["rust/**", "app/**", "tools/rust/**", "tools/demo/**", "rn/src/icon-paths.js", "collector/money-collector.gs", ".github/workflows/rust.yml"]
+    paths: ["rust/**", "app/**", "tools/rust/**", "tools/demo/**", "rn/src/icon-paths.js", "rn/src/engine.gen.js", "collector/money-collector.gs", ".github/workflows/rust.yml"]
   workflow_dispatch:
 concurrency: { group: rust-site, cancel-in-progress: false }
 jobs:
@@ -18,7 +18,9 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
         with: { workspaces: rust }
-      - name: "Same figures as the current app (42 moments on the demo data)"
+      - name: The card rulebooks match app/trips.js and app/rewards.js
+        run: node tools/rust/data.mjs --check
+      - name: "Same figures as the current app (42 moments on the demo data, and 102 changes)"
         working-directory: rust
         run: cargo test -p money-core -- --nocapture
   site:

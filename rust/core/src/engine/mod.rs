@@ -6,6 +6,9 @@ mod act;
 mod cards;
 mod pay;
 mod plan;
+pub mod rulebook;
+mod trips;
+mod rewards;
 mod models;
 mod spend;
 
@@ -13,6 +16,8 @@ pub use cards::*;
 pub use models::*;
 pub use pay::*;
 pub use plan::*;
+pub use trips::*;
+pub use rewards::*;
 pub use spend::*;
 
 use crate::shape::{Data, Event, Note, Tx};
