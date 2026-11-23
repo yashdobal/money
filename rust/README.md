@@ -17,14 +17,25 @@ JavaScript side is `tools/rust/snapshot.mjs`. A change to `app/engine.js` that i
 
     cd rust && cargo test
 
+## The website
+
+    TOOLCHAIN=+stable ./build-web.sh     # needs the wasm32-unknown-unknown target and wasm-bindgen-cli 0.2.130
+
+builds `dist/` (the page, the WebAssembly, the stylesheet and the fonts). GitHub builds it on every change and puts
+it live at https://rust.yash-money.pages.dev — a separate address in the same Cloudflare Pages project as the
+current website, which isn't touched. `?demo&at=2026-12-08` opens it on the made-up demo data at that date.
+
+Sign-in is the same email code as the current app, with its own session (signing in here doesn't sign you out
+there).
+
 ## Progress
 
 | Stage | What | State |
 |---|---|---|
-| 1 | Workspace, GitHub check | done |
+| 1 | Workspace, GitHub check, the website build and deploy | done |
 | 2 | Engine: cards, payments, balances, planner, forecast, hero, where you stand, spending | done, matches engine.js |
-| 2 | Engine: Coming up, Needs attention, EMIs, card payments | ported, not yet in the parity check |
-| 2 | Engine: actions (edit, notes, settings), Rewards, Trips, balance history | to do |
-| 3 | Sign-in, loading data, bottom bar, Today | to do |
+| 2 | Engine: Coming up, Needs attention, EMIs, balance history, Today's words | done, matches engine.js |
+| 2 | Engine: actions (edit, notes, settings), Rewards, Trips, the Cards screen | to do |
+| 3 | Sign-in, loading data, bottom bar, Today (with the explain sheets) | done |
 | 4 | Activity, Cards, Plan, Spending, Rewards, Trips, Settings | to do |
 | 5 | Android APK alongside the current one, then the switch | to do |

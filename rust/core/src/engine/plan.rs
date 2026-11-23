@@ -9,26 +9,26 @@ use crate::time::{add_days, days, iso, local, month_days, on_day, parse_iso, par
 pub struct Cyc { pub p0: Ms, pub p1: Ms, pub upcoming: bool, pub ahead: bool, pub days_left: i32, pub cycle_days: i32, pub day_of: i32 }
 impl Cyc { pub fn new(p0: Ms, p1: Ms) -> Cyc { Cyc { p0, p1, upcoming: false, ahead: false, days_left: 0, cycle_days: 0, day_of: 0 } } }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Expected { pub amt: f64, pub stipend: bool, pub partial: bool, pub join: Option<Ms>, pub worked: i32, pub dim: i32, pub assumed: bool }
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Salary { pub amt: f64, pub credited: Option<Ms>, pub bank: Option<String>, pub in_balance: bool, pub exp: Expected }
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Split { pub amt: f64, pub savings: f64, pub ef: f64, pub family: f64, pub spend: f64, pub cap: f64, pub ef_saved: f64, pub ef_full: bool,
     pub ef_rule: f64, pub ef_take: f64, pub sav_take: f64 }
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct CardBill { pub key: String, pub name: String, pub total: f64, pub left: f64, pub due: Ms, pub stmt: Ms, pub billed: bool, pub back: f64, pub amt: f64, pub paid: bool }
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct PlanDef { pub sal: f64, pub family: f64, pub sip: f64, pub ef: f64 }
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct MonthPlan { pub cyc: Cyc, pub rule: bool, pub sal: Salary, pub amt: f64, pub def: PlanDef, pub family: f64, pub sip: f64, pub ef: f64,
     pub fixed: Vec<Planned>, pub fixed_total: f64, pub cards: Vec<CardBill>, pub cards_total: f64, pub spend: f64, pub split: Option<Split>, pub edited: bool }
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct GoalRow { pub g: Goal, pub saved: f64, pub moved_now: f64, pub need: f64, pub months_left: i32, pub done: bool, pub due: Option<Ms>, pub pct: f64,
     pub by_rule: bool, pub emis: Vec<Planned>, pub next_emi: Option<Planned>, pub funded: f64, pub short: f64 }
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct SetAside { pub name: String, pub kind: String, pub left: f64 }
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Usual { pub amt: f64, pub family: f64, pub sip: f64, pub ef: f64, pub spend: f64, pub ef_full: bool }
 
 impl Engine {

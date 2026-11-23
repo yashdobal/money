@@ -25,7 +25,7 @@ pub fn countdown(n: i32) -> String {
 fn end_of(d: Ms) -> Ms { d + DAY - 1 }
 
 /// One card account's bill (groupState).
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct CardState {
     pub key: String, pub cfg: Group, pub members: Vec<String>, pub c: Cycle, pub okey: String,
     pub billed: f64, pub billed_alerts: f64, pub source: String, pub st: Option<Event>, pub min_due: Option<f64>, pub has_override: bool,
@@ -37,9 +37,9 @@ pub struct CardState {
 }
 
 /// Money spent on your cards for someone else that's still on an unpaid bill (owedBack).
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct BackPart { pub card: String, pub billed: bool, pub amt: f64, pub d: Ms }
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct OwedBack { pub total: f64, pub parts: Vec<BackPart>, pub got: f64 }
 
 impl Engine {
@@ -184,5 +184,5 @@ impl Engine {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct RevInfo { pub gone: bool, pub on: Option<String>, pub billed: bool, pub matched: Option<Tx> }

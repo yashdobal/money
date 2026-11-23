@@ -4,20 +4,20 @@
 use super::*;
 use crate::time::{add_days, sod};
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct EffPayment { pub id: String, pub group: String, pub ts: Ms, pub amt: f64, pub kind: String, pub srcs: Vec<String>, pub tx_id: Option<String>, pub debit: Option<f64>, pub saved: f64 }
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct PayDetail { pub confirmed: bool, pub other: Option<String>, pub srcs: Vec<String>, pub saved: f64 }
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct PayInfo { pub by_tx: HashMap<String, Option<String>>, pub unresolved: Vec<Tx>, pub detail: HashMap<String, PayDetail>, pub candidates: HashSet<String> }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct AccountBalance { pub key: String, pub name: String, pub full: String, pub set: bool, pub bal: f64, pub ob: f64, pub since: f64, pub inn: f64, pub out: f64 }
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct BankBalance { pub bal: f64, pub inn: f64, pub out: f64, pub since: f64, pub parts: Vec<AccountBalance>, pub missing: Vec<String> }
 
 /// A transaction as the app shows it: its category after your edits, and what the engine worked out about it.
-#[derive(Clone, Debug, Default, serde::Serialize)]
+#[derive(Clone, Debug, Default, PartialEq, serde::Serialize)]
 pub struct Row {
     #[serde(flatten)]
     pub t: Tx,
@@ -320,9 +320,9 @@ impl Engine {
 }
 
 /// A point on the balance history: a salary in, a card bill paid, or the day you set a balance.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Mark { pub d: Ms, pub kind: String, pub amt: f64, pub title: String }
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct History { pub pts: Vec<(Ms, f64)>, pub marks: Vec<Mark>, pub now: f64, pub set: Option<Ms>, pub parts: Vec<AccountBalance>, pub missing: Vec<String> }
 
 impl Engine {

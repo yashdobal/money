@@ -5,17 +5,17 @@ use super::*;
 use crate::time::{local, month_days, parts, ym_add, ym_of};
 use std::collections::BTreeMap;
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct CatTotal { pub name: String, pub amt: f64, pub pct: f64 }
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct AcctTotal { pub name: String, pub out: f64, pub n: usize }
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Payee { pub name: String, pub amt: f64, pub n: usize, pub cat: String }
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct MonthBar { pub ym: String, pub amt: f64, pub cur: bool }
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct SpendOf { pub spend: f64, pub card_refunds: f64, pub paybacks: f64 }
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct SpendModel {
     pub ym: String, pub tx: Vec<Row>, pub spend: f64, pub card_out: f64, pub skipped: f64, pub card_refunds: f64, pub paybacks: f64,
     pub cats: Vec<CatTotal>, pub accts: Vec<AcctTotal>, pub by_day: Vec<f64>, pub last_day: i32, pub up_to: i32, pub is_cur: bool,

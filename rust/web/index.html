@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#F7F7F5" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0A0A0C" media="(prefers-color-scheme: dark)">
+  <title>Money · Rust</title>
+  <link rel="preload" href="fonts/anek-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="style.css?v=__BUILD__">
+</head>
+<body>
+  <div id="main"></div>
+  <script type="module">
+    import init from "./money_app.js?v=__BUILD__";
+    init({ module_or_path: "./money_app_bg.wasm?v=__BUILD__" });
+  </script>
+</body>
+</html>

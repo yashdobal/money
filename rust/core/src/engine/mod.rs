@@ -30,16 +30,16 @@ pub fn not_spending(c: &str) -> bool {
 pub const IN_PICK: [(&str, &str); 5] = [("Salary", "Salary"), ("Money in", "From someone"), ("Paid back", "Paid back"), ("Refunds", "Refund"), ("Other income", "Other")];
 
 /// A billing account: cards that share one limit and one statement.
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Group { pub short: String, pub sub: String, pub issuer: String, pub stmt_day: i32, pub due_after: i32, pub first_stmt: Option<String>, pub closed: Option<String>, pub catalog: String }
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct CardCfg { pub group: String, pub last4: String, pub short: String }
 #[derive(Clone, Debug)]
 pub struct Bank { pub key: String, pub name: String, pub full: String, pub re: Regex, pub ob: &'static str, pub at: &'static str }
 #[derive(Clone, Debug)]
 pub struct PayText { pub re: Regex, pub groups: Option<Vec<String>>, pub issuer: String }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Settings { pub ob: Option<f64>, pub ob_at: Option<f64>, pub hob: Option<f64>, pub hob_at: Option<f64>, pub inc: Option<f64>,
     pub pay_day: i32, pub pay_day_v: f64, pub buffer: f64, pub migrated: Option<String>, pub joined: String }
 impl Settings {
@@ -51,21 +51,21 @@ impl Settings {
 }
 
 /// Money you added by hand (the alerts missed it).
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Manual { pub id: String, pub d: i32, pub t: String, pub amt: f64, pub c: String, pub ym: String, pub dir: String, pub acct: String, pub ts: Option<Ms> }
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Payment { pub id: String, pub card: String, pub date: String, pub amt: f64 }
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Goal { pub id: String, pub name: String, pub start: f64, pub target: f64, pub prio: f64, pub date: String }
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Contrib { pub id: String, pub goal: String, pub amt: f64, pub date: String }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Offer { pub gross: f64, pub basic: f64, pub pf: f64, pub pt: f64, pub pt_feb: Option<f64>, pub allow: f64, pub pf_cap: f64, pub pf_cap_from: String, pub first_payday: String, pub stipend: f64, pub v: f64 }
 impl Default for Offer {
     fn default() -> Self { Offer { gross: 0.0, basic: 0.0, pf: 0.12, pt: 0.0, pt_feb: None, allow: 0.0, pf_cap: 0.0, pf_cap_from: String::new(), first_payday: String::new(), stipend: 0.0, v: 2.0 } }
 }
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct SalaryRule { pub from: String, pub savings: f64, pub ef: f64, pub family: f64, pub ef_cap_x: f64, pub bills_from: String }
 impl Default for SalaryRule {
     fn default() -> Self { SalaryRule { from: String::new(), savings: 0.0, ef: 0.0, family: 0.0, ef_cap_x: 6.0, bills_from: String::new() } }
@@ -340,3 +340,7 @@ pub struct Rev { pub gone: bool, pub on: Option<String> }
 pub(crate) fn sum<T>(list: &[T], f: impl Fn(&T) -> f64) -> f64 { list.iter().map(f).sum() }
 pub(crate) const H: Ms = 3_600_000;
 pub(crate) const D: Ms = DAY;
+
+impl PartialEq for Planned {
+    fn eq(&self, o: &Self) -> bool { self.name == o.name && self.amt == o.amt && self.due == o.due && self.from == o.from && self.goal_name == o.goal_name }
+}

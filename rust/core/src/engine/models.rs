@@ -9,48 +9,48 @@ use serde_json::json;
 pub const BIG_BILL: f64 = 10000.0;
 
 /// One dated amount in the forecast.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Ev { pub d: Ms, pub amt: f64, pub kind: String, pub what: String, pub card: Option<String>, pub min: Option<f64>, pub exp: bool, pub pause: bool, pub billed: bool }
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Seg { pub d: Ms, pub bal: f64, pub evs: Vec<usize>, pub why: Option<usize>, pub until: Ms, pub n: i32, pub pay: Option<usize> }
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Env { pub left: f64, pub pace: f64 }
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Forecast {
     pub b: BankBalance, pub today: Ms, pub cur: Cyc, pub p1: Ms, pub p2: Ms, pub h: Ms, pub ev: Vec<Ev>, pub segs: Vec<Seg>, pub end: usize, pub low: usize,
     pub first_short: Option<usize>, pub tight: Option<usize>, pub pace: f64, pub env: Option<Env>, pub buffer: f64, pub next_pay: Option<usize>, pub next_big: Option<usize>, pub short_by: f64,
 }
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct RowText { pub title: String, pub detail: String }
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct HeroRow { pub title: String, pub detail: String, pub amt: f64, pub tone: String, pub total: bool, pub up_to: bool }
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct PayRow { pub title: String, pub detail: String, pub amt: f64, pub d: Ms, pub overdue: i32 }
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Tile { pub total: f64, pub per_day: f64, pub days: i32 }
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Tiles { pub rest: Tile, pub next: Tile, pub usual: Option<Tile> }
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Chart { pub pts: Vec<(Ms, f64)>, pub from: Ms, pub to: Ms, pub buffer: f64, pub low: (Ms, f64), pub paydays: Vec<Ms> }
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Hero { pub state: &'static str, pub f: Option<Forecast>, pub pace: f64, pub line: String, pub tone: String, pub explain: String, pub rows: Vec<HeroRow>,
     pub fixes: Vec<HeroRow>, pub left_to_find: f64, pub next_pay: Option<PayRow>, pub next_big: Option<PayRow>, pub tiles: Tiles, pub chart: Chart }
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct NextMonth { pub mp: MonthPlan, pub status: String, pub basis: String, pub then: f64 }
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Net { pub b: BankBalance, pub billed: f64, pub unbilled: f64, pub back: f64, pub owe: Vec<SetAside>, pub owe_total: f64, pub owe_next: Vec<SetAside>, pub owe_next_total: f64,
     pub nxt_credited: Option<Ms>, pub now: f64, pub next: Option<NextMonth>, pub age: Option<i64> }
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct TimelineEv { pub d: Ms, pub stmt: bool, pub what: String, pub amt: f64, pub card: Option<String>, pub kind: String, pub desc: String }
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct CalEv { pub d: Ms, pub dot: String, pub title: String, pub detail: String, pub amt: Option<f64>, pub card: Option<String>, pub soft: bool, pub n: i32, pub overdue: bool }
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct DayGroup { pub d: Ms, pub n: i32, pub items: Vec<CalEv> }
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Attn { pub tone: String, pub icon: String, pub title: String, pub detail: String, pub amt: Option<f64>, pub go: String }
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct EmiItem { pub k: i32, pub amt: f64, pub d: Ms, pub done: bool }
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Emi { pub name: String, pub r#where: String, pub on: String, pub tenure: i32, pub done: i32, pub per: f64, pub next: Option<EmiItem>, pub left: f64, pub total: f64, pub last: Ms }
 
 fn re(s: &str) -> Regex { Regex::new(s).unwrap() }

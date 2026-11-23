@@ -5,7 +5,7 @@ name: Android app
 on:
   push:
     branches-ignore: [ci-artifacts, ci-phone]
-    paths: ["android/**", "app/**", "rn/**", "tools/**", "collector/**", "supabase/functions/_shared/ist-date.js", ".github/workflows/android.yml"]
+    paths: ["android/**", "app/**", "rn/**", "tools/**", "!tools/rust/**", "collector/**", "supabase/functions/_shared/ist-date.js", ".github/workflows/android.yml"]
   workflow_dispatch: {}
 permissions:
   contents: write
