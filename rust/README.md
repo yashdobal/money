@@ -33,9 +33,12 @@ there).
 | Stage | What | State |
 |---|---|---|
 | 1 | Workspace, GitHub check, the website build and deploy | done |
-| 2 | Engine: cards, payments, balances, planner, forecast, hero, where you stand, spending | done, matches engine.js |
-| 2 | Engine: Coming up, Needs attention, EMIs, balance history, Today's words | done, matches engine.js |
-| 2 | Engine: actions (edit, notes, settings), Rewards, Trips, the Cards screen | to do |
-| 3 | Sign-in, loading data, bottom bar, Today (with the explain sheets) | done |
-| 4 | Activity, Cards, Plan, Spending, Rewards, Trips, Settings | to do |
+| 2 | Engine: every figure, Today's words, Plan, Cards, the CSV export, Trips, Rewards | done, matches engine.js at 42 moments |
+| 2 | Engine: every change you can make, and what it saves | done, 102 changes match engine.js |
+| 3 | Sign-in, loading data, saving, bottom bar, Today | done |
+| 4 | Activity, Cards, Plan, Spending, Trips, Rewards, Settings, and their sheets | done |
+| 4 | Not yet: the app lock code, colour choices, SMS (phone only), the widget (phone only) | to do |
 | 5 | Android APK alongside the current one, then the switch | to do |
+
+The card rulebooks (`core/data/cards.json`) are written out of `app/trips.js` and `app/rewards.js` by
+`node tools/rust/data.mjs`; GitHub checks they're the same.

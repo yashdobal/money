@@ -5,12 +5,14 @@ mod api;
 mod cards;
 mod kit;
 mod plan;
+mod rewards;
 mod settings;
 mod sheets;
 mod shell;
 mod spend;
 mod state;
 mod today;
+mod trips;
 mod txsheets;
 
 use dioxus::prelude::*;

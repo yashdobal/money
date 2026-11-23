@@ -72,7 +72,7 @@ pub struct Country { pub id: String, pub name: String, pub city: String, #[serde
     #[serde(default)] pub hsrc: String, #[serde(default)] pub rough: bool }
 impl Country { pub fn award(&self, p: &str) -> Option<&Award> { if p == "ai" { self.ai.as_ref() } else { self.kf.as_ref() } } }
 #[derive(Deserialize, Clone, Debug, PartialEq)]
-pub struct Airline { pub name: String, pub short: String, pub unit: String, #[serde(default)] pub via: Option<String> }
+pub struct Airline { pub name: String, pub short: String, pub unit: String, #[serde(default)] pub via: Option<String>, #[serde(default)] pub src: Vec<String> }
 #[derive(Deserialize, Clone, Debug, PartialEq)]
 pub struct Source { pub name: String, #[serde(default)] pub url: String, #[serde(default)] pub at: String }
 #[derive(Deserialize, Clone, Debug, PartialEq)]
@@ -85,11 +85,12 @@ pub struct Rulebook {
     pub trips_checked: String, pub usd: f64, pub eur: f64, pub accor_per: f64, pub accor_eur: f64,
     pub air: Map<String, Value>, pub countries: Vec<Country>, pub trip_cards: Vec<TripCard>, pub trip_out: Vec<LeftOut>, pub trip_sources: Map<String, Value>,
     pub trip_re: Vec<(String, JsRe)>, pub trip_left_out: Vec<String>,
+    pub hotel_tier: Vec<String>, pub cabins: Vec<(String, String)>, pub accor_src: Vec<String>, pub fx_src: Vec<String>,
     pub rew_checked: String, pub value_ai: f64, pub value_kf: f64, pub rew_cards: Vec<RewCard>, pub rew_sources: Map<String, Value>,
     pub kinds: Vec<Kind>, pub shops: Vec<Shop>, pub online: Vec<String>, pub left_out: Vec<String>,
 }
 impl Rulebook {
-    pub fn airline(&self, p: &str) -> Airline { serde_json::from_value(self.air.get(p).cloned().unwrap_or(Value::Null)).unwrap_or(Airline { name: p.into(), short: p.into(), unit: "points".into(), via: None }) }
+    pub fn airline(&self, p: &str) -> Airline { serde_json::from_value(self.air.get(p).cloned().unwrap_or(Value::Null)).unwrap_or(Airline { name: p.into(), short: p.into(), unit: "points".into(), via: None, src: vec![] }) }
     pub fn country(&self, id: &str) -> &Country { self.countries.iter().find(|c| c.id == id).unwrap_or(&self.countries[0]) }
     pub fn trip_card(&self, id: &str) -> Option<&TripCard> { self.trip_cards.iter().find(|c| c.id == id) }
     pub fn rew_card(&self, id: &str) -> Option<&RewCard> { self.rew_cards.iter().find(|c| c.id == id) }
@@ -154,6 +155,8 @@ pub fn rulebook() -> &'static Rulebook {
             trip_cards, trip_out: serde_json::from_value(t["out"].clone()).unwrap_or_default(), trip_sources: t["sources"].as_object().cloned().unwrap_or_default(),
             trip_re: d["tripRe"].as_object().unwrap().iter().map(|(k, v)| (k.clone(), JsRe::new(v.as_str().unwrap()))).collect(),
             trip_left_out: strs(&d["tripLeftOut"]),
+            hotel_tier: strs(&t["hotelTier"]), cabins: t["cabins"].as_array().map(|a| a.iter().map(|c| (s(&c["id"]), s(&c["name"]))).collect()).unwrap_or_default(),
+            accor_src: strs(&t["accor"]["src"]), fx_src: strs(&t["fx"]["src"]),
             rew_checked: s(&d["rewards"]["checked"]), value_ai: d["rewards"]["value"]["ai"].as_f64().unwrap_or(1.0), value_kf: d["rewards"]["value"]["kf"].as_f64().unwrap_or(1.0),
             rew_cards, rew_sources: d["rewards"]["sources"].as_object().cloned().unwrap_or_default(),
             kinds: d["kinds"].as_array().unwrap().iter().map(|k| Kind { id: s(&k["id"]), name: s(&k["name"]), re: k["re"].as_str().map(JsRe::new) }).collect(),
