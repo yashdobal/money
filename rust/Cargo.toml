@@ -1,0 +1,15 @@
+# The Money app in Rust, built alongside the current one (rn/ and app/). See rust/README.md.
+[workspace]
+resolver = "2"
+members = ["core", "app"]
+
+[workspace.package]
+edition = "2021"
+version = "0.1.0"
+license = "MIT"
+
+[profile.release]
+opt-level = "z"     # small WebAssembly for phones
+lto = true
+codegen-units = 1
+panic = "abort"

@@ -1,0 +1,15 @@
+[package]
+name = "money-core"
+description = "Money's engine: card bills, Safe to spend, Plan, spending, Rewards and Trips (a port of app/engine.js, rewards.js, trips.js)"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+regex = { version = "1", default-features = false, features = ["std", "unicode-case", "unicode-perl"] }
+chrono = { version = "0.4", default-features = false, features = ["std", "clock"] }
+
+[dev-dependencies]
+chrono = { version = "0.4", default-features = false, features = ["std"] }

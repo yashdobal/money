@@ -1,0 +1,22 @@
+# The Rust app (rust/): its engine must give the same figures as app/engine.js on the demo data.
+name: Rust
+on:
+  push:
+    branches: [main]
+    paths: ["rust/**", "app/**", "tools/rust/**", "tools/demo/**", "collector/money-collector.gs", ".github/workflows/rust.yml"]
+  workflow_dispatch:
+jobs:
+  engine:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with: { workspaces: rust }
+      - name: The current engine's copy is up to date
+        run: node tools/rn_engine.mjs --check
+      - name: "Same figures as the current app (42 moments on the demo data)"
+        working-directory: rust
+        run: cargo test -p money-core -- --nocapture
