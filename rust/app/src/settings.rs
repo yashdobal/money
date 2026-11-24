@@ -63,6 +63,7 @@ fn export_csv(name: &str, text: &str) -> bool {
 pub fn Settings() -> Element {
     let _ = VER();
     let mut theme = use_signal(theme_now);
+    let mut buzz = use_signal(crate::haptics::enabled);
     let (rules, banks, groups, bb, bank_names, last_run, notes_ok, n_tx, ago) = eng(|e| (
         e.cat_rules.len(), e.banks.len(), e.groups.len(), e.bank_balance(), e.bank_names(), e.last_run, e.notes_ok, e.tx.len() + e.manual.len(),
         e.last_run.map(|t| e.ago(t)).unwrap_or_default()));
@@ -78,6 +79,11 @@ pub fn Settings() -> Element {
                 SetRow { icon: "palette", title: "Theme", right: rsx! { Seg { value: theme(), onchange: move |v: String| { set_theme(&v); theme.set(v); }, options: vec![opt("auto", "Auto"), opt("light", "Light"), opt("dark", "Dark")] } } }
                 SetRow { icon: "eyeOff", title: "Hide amounts", detail: "shows dots in place of every amount until you tap the eye",
                     right: rsx! { Switch { on: hidden, label: "Hide amounts", onchange: move |v| set_hidden(v) } } }
+                // a laptop's browser can't vibrate: the switch shows only where it can
+                if crate::haptics::available() {
+                    SetRow { icon: "phone", title: "Vibration", detail: "a light buzz as you pick, drag and save",
+                        right: rsx! { Switch { on: buzz(), label: "Vibration", onchange: move |v: bool| { crate::haptics::set_enabled(v); buzz.set(v); } } } }
+                }
             }
             Security {}
             Group { title: "Your data", i: 1,
@@ -85,7 +91,7 @@ pub fn Settings() -> Element {
                     let (name, text) = eng(|e| (format!("money-{}.csv", time::iso(e.today())), e.csv_text()));
                     if export_csv(&name, &text) { toast("Saved to your downloads", ""); } else { toast("Couldn't save the file", "warn"); }
                 } }
-                SetRow { icon: "mail", title: "Read emails now", detail: "ask the collector to check Gmail", onclick: move |_| { toast("Asking the collector to check Gmail…", ""); dioxus::core::spawn_forever(async { refresh().await; }); } }
+                SetRow { icon: "mail", title: "Read emails now", detail: "ask the collector to check Gmail", onclick: move |_| { toast("Asking the collector to check Gmail…", "info"); dioxus::core::spawn_forever(async { refresh().await; }); } }
                 SetRow { icon: "rule", title: "Saved payee rules", detail: if rules > 0 { plural(rules as i64, "rule") } else { "none yet".to_string() }, onclick: move |_| *SHEET.write() = Some("rules".into()) }
                 SetRow { icon: "card", title: "Your banks and cards", detail: if banks > 0 || groups > 0 { format!("{} · {}", plural(banks as i64, "bank"), plural(groups as i64, "card account")) } else { "not set yet".to_string() },
                     onclick: move |_| *SHEET.write() = Some("setup".into()) }
@@ -99,8 +105,8 @@ pub fn Settings() -> Element {
             }
             Group { title: "Account", i: 3,
                 SetRow { icon: "user", title: if demo { "The demo (made-up data)".to_string() } else { s.as_ref().map(|s| s.email.clone()).unwrap_or("Signed in".into()) },
-                    detail: format!("Money in Rust · engine {} · website", money_core::version()) }
-                if !demo { SetRow { icon: "out", title: "Sign out", danger: true, onclick: move |_| { toast("Signing out…", ""); sign_out(); } } }
+                    detail: format!("Money in Rust · engine {} · {}", money_core::version(), if crate::lock::in_app() { "Android app" } else { "website" }) }
+                if !demo { SetRow { icon: "out", title: "Sign out", danger: true, onclick: move |_| { toast("Signing out…", "info"); sign_out(); } } }
                 SetRow { icon: "spark", title: "Open the current app", detail: "yash-money.pages.dev, while this one is being finished", onclick: move |_| {
                     if let Some(w) = web_sys::window() { let _ = w.location().set_href("https://yash-money.pages.dev"); }
                 } }

@@ -26,10 +26,21 @@ pub fn Spend() -> Element {
     let big = s.biggest.clone();
     let max_cat = s.cats.first().map(|c| c.amt).unwrap_or(1.0);
     let ym2 = ym.clone();
+    // the six months: the latest six, with the month you picked lit; only a month older than those moves the window
+    // (tapping a bar used to slide every bar along under your finger)
+    let (win, win_avg) = {
+        let latest = months.first().cloned().unwrap_or_else(|| ym.clone());
+        let base = if latest != ym { eng(|e| e.spend_model(&latest)) } else { s.clone() };
+        if base.six.iter().any(|x| x.ym == ym) {
+            (base.six.iter().cloned().map(|mut x| { x.cur = x.ym == ym; x }).collect::<Vec<_>>(), base.avg)
+        } else { (s.six.clone(), s.avg) }
+    };
     rsx! {
         div { class: "page",
             div { class: "rise span", style: "--i:0;margin-bottom:10px", Chips { scroll: true, small: true, value: ym.clone(), options: opts, onchange: move |k| *MONTH.write() = k } }
-            section { key: "t{ym}", class: "panel k-d rise", style: "--i:1",
+            // the blocks stay put when the month changes (they used to be rebuilt and fade in from nothing): the figures
+            // roll to the new month and the lists cross-fade
+            section { class: "panel k-d rise", style: "--i:1",
                 div { class: "d-l", "Spent in {name}" }
                 Odo { value: s.spend, class: "odo d-fig" }
                 if let Some(v) = vs { div { class: "d-vs {tone_class(vs_tone)}", "{v}" } }
@@ -42,10 +53,10 @@ pub fn Spend() -> Element {
                 }
             }
             if !s.cats.is_empty() {
-                section { key: "c{ym}", class: "panel k-tray rise", style: "--i:2",
+                section { class: "panel k-tray rise", style: "--i:2",
                     div { class: "panel-head", h2 { "Categories" } }
-                    Donut { cats: s.cats.clone(), total: s.spend }
-                    div { class: "rows",
+                    Donut { key: "{ym}", cats: s.cats.clone(), total: s.spend }
+                    div { key: "{ym}", class: "rows swap",
                         for (k, c) in s.cats.iter().cloned().enumerate() {
                             button { key: "{c.name}", class: "row press", onclick: { let (n, m) = (c.name.clone(), ym2.clone()); move |_| show_activity(ActParams { cat: n.clone(), m: m.clone(), ..Default::default() }) },
                                 CatIc { cat: c.name.clone() }
@@ -64,9 +75,9 @@ pub fn Spend() -> Element {
                 Panel { title: "Categories", i: 2, Note { "Nothing spent in {name} yet." } }
             }
             if !s.payees.is_empty() {
-                section { key: "p{ym}", class: "panel k-tray rise", style: "--i:3",
+                section { class: "panel k-tray rise", style: "--i:3",
                     div { class: "panel-head", h2 { "Where it went" } }
-                    div { class: "rows",
+                    div { key: "{ym}", class: "rows swap",
                         for (k, p) in s.payees.iter().cloned().enumerate() {
                             Row { key: "{k}", icon: rsx! { CatIc { cat: p.cat.clone() } }, title: nice(&p.name).0, detail: format!("{} · {}", plural(p.n as i64, "payment"), p.cat), value: amt(p.amt),
                                 onclick: { let (n, m) = (p.name.clone(), ym.clone()); move |_| show_activity(ActParams { q: n.clone(), m: m.clone(), ..Default::default() }) } }
@@ -74,8 +85,8 @@ pub fn Spend() -> Element {
                     }
                 }
             }
-            Panel { title: "Six months", kind: "w", i: 4, right: s.avg.map(|a| rsx! { span { class: "avg", "average ", {shown(&amt(a))} } }),
-                Trend { six: s.six.clone(), avg: s.avg }
+            Panel { title: "Six months", kind: "w", i: 4, right: win_avg.map(|a| rsx! { span { class: "avg", "average ", {shown(&amt(a))} } }),
+                Trend { six: win, avg: win_avg }
             }
         }
     }
@@ -119,7 +130,7 @@ fn Trend(six: Vec<MonthBar>, avg: Option<f64>) -> Element {
         div { class: "trend",
             div { class: "tr-bars",
                 for (i, x) in six.iter().cloned().enumerate() {
-                    button { key: "{x.ym}", class: "tr-col", aria_label: "{time::ym_name(&x.ym)}", onclick: { let ym = x.ym.clone(); move |_| *MONTH.write() = ym.clone() },
+                    button { key: "{x.ym}", class: "tr-col", aria_label: "{time::ym_name(&x.ym)}", onclick: { let (ym, cur) = (x.ym.clone(), x.cur); move |_| { if cur { return; } haptic("tick"); *MONTH.write() = ym.clone() } },
                         div { class: "tr-box", style: "height:{(x.amt / max * h).max(2.0)}px",
                             i { class: if x.cur { "tr-bar cur" } else { "tr-bar" }, style: "animation-delay:{60 + i * 45}ms" }
                             span { class: if x.cur { "tr-v cur" } else { "tr-v" }, if x.amt == 0.0 { "—" } else if hidden { "••" } else { {compact(x.amt)} } }

@@ -13,6 +13,21 @@ thread_local! { static ENGINE: RefCell<Engine> = RefCell::new(Engine::new()); }
 pub fn eng<R>(f: impl FnOnce(&Engine) -> R) -> R { ENGINE.with(|e| f(&e.borrow())) }
 pub fn eng_mut<R>(f: impl FnOnce(&mut Engine) -> R) -> R { ENGINE.with(|e| f(&mut e.borrow_mut())) }
 
+/// An engine figure worked out once per change (VER) and shared by every screen and redraw until the next change: a
+/// slider's redraws and coming back to a tab don't redo the sums.
+pub fn memo<T: Clone + 'static>(key: &str, f: impl FnOnce(&Engine) -> T) -> T {
+    thread_local! { static MEMO: RefCell<std::collections::HashMap<String, (u64, std::rc::Rc<dyn std::any::Any>)>> = RefCell::new(Default::default()); }
+    let v = *VER.peek();
+    if let Some(x) = MEMO.with(|m| m.borrow().get(key).filter(|(ver, _)| *ver == v).and_then(|(_, a)| a.downcast_ref::<T>().cloned())) { return x; }
+    let x = eng(f);
+    MEMO.with(|m| m.borrow_mut().insert(key.to_string(), (v, std::rc::Rc::new(x.clone()))));
+    x
+}
+/// True while a slider is held: the parts of the screen that don't follow it live wait for the let-go to redraw.
+pub static HOLD: GlobalSignal<bool> = Signal::global(|| false);
+/// VER for those parts: read normally, but not followed while a slider is held.
+pub fn ver_quiet() -> u64 { if HOLD() { *VER.peek() } else { VER() } }
+
 /// Bumped whenever your data or settings change: every screen redraws.
 pub static VER: GlobalSignal<u64> = Signal::global(|| 0);
 pub static SESSION: GlobalSignal<Option<Session>> = Signal::global(|| None);
@@ -25,6 +40,8 @@ pub fn current_step() -> String { STEP.with(|x| x.borrow().clone()) }
 pub static PHASE: GlobalSignal<Phase> = Signal::global(|| Phase::Starting);
 #[derive(Clone, PartialEq, Debug)]
 pub struct Feed { pub tone: &'static str, pub text: String }
+/// When the collector last read your emails: the line under the title says how long ago, and keeps it current.
+pub static CHECKED_AT: GlobalSignal<Option<i64>> = Signal::global(|| None);
 pub static FEED: GlobalSignal<Feed> = Signal::global(|| Feed { tone: "idle", text: "Starting up".into() });
 pub static BUSY: GlobalSignal<bool> = Signal::global(|| false);
 /// Amounts hidden (the eye button).
@@ -44,6 +61,8 @@ pub fn toast(text: impl Into<String>, tone: &'static str) { toast_undo(text, ton
 /// A toast with an Undo button: `undo` is the id to unreverse (the only undo there is so far).
 pub fn toast_undo(text: impl Into<String>, tone: &'static str, undo: Option<String>) {
     let n = TOAST.read().as_ref().map(|t| t.n + 1).unwrap_or(1);
+    // a toast reports something done, or refused
+    if tone != "info" { crate::haptics::haptic(if tone == "alert" { "error" } else { "confirm" }); }
     *TOAST.write() = Some(Toast { text: text.into(), tone, n, undo: undo.clone() });
     // tied to the whole app, not the screen that showed it (a sheet closing would cancel the timer and leave it up)
     dioxus::core::spawn_forever(async move {
@@ -194,6 +213,7 @@ pub async fn load() {
             let view = eng(|e| e.plan_view.clone());
             eng_mut(|e| { *e = Engine::new(); e.plan_view = view; e.ingest(&data); });
             let (n, ago) = eng(|e| (e.tx.len(), e.last_run.map(|t| e.ago(t)).unwrap_or_else(|| "never".into())));
+            *CHECKED_AT.write() = if n > 0 { eng(|e| e.last_run) } else { None };
             *FEED.write() = Feed { tone: "ok", text: if n > 0 { format!("Emails checked {}", ago) } else { "Connected. No transactions yet.".into() } };
             step("drawing the screen");
             *PHASE.write() = Phase::Ready;
@@ -215,7 +235,10 @@ pub async fn refresh() {
     *BUSY.write() = true;
     *FEED.write() = Feed { tone: "warn", text: "Asking the collector to check Gmail…".into() };
     let before = api::last_sync(&s).await.unwrap_or(0);
-    if let Ok((200, _)) = api::call_app(&s, serde_json::json!({ "action": "refresh" })).await {
+    let had = eng(|e| e.tx.len());
+    let asked = api::call_app(&s, serde_json::json!({ "action": "refresh" })).await;
+    if !matches!(asked, Ok((200, _))) { crate::haptics::haptic("error"); }
+    if let Ok((200, _)) = asked {
         for i in 0..38 {
             gloo_timers::future::TimeoutFuture::new(4000).await;
             *FEED.write() = Feed { tone: "warn", text: format!("Checking Gmail… ({} s)", (i + 1) * 4) };
@@ -224,6 +247,9 @@ pub async fn refresh() {
     }
     *BUSY.write() = false;
     load().await;
+    // something new came in: a confirming buzz; nothing new: a soft one, so you know it finished
+    if FEED.read().tone == "ok" { crate::haptics::haptic(if eng(|e| e.tx.len()) > had { "confirm" } else { "drop" }); }
+    else { crate::haptics::haptic("error"); }
 }
 
 pub fn set_hidden(h: bool) { *HIDDEN.write() = h; ls_set("money-rs-hidden", if h { "1" } else { "0" }); }

@@ -670,3 +670,41 @@ html, body { overflow-x: hidden; }
   .round:hover { filter: brightness(0.97); }
   .chip:not(.on):hover { color: var(--ink); }
 }
+
+/* ---------- the slider (kit.rs Slider): a sideways drag moves it, a vertical one scrolls the page ---------- */
+.sld { position: relative; height: 36px; margin-top: 4px; touch-action: pan-y; cursor: pointer; outline: none; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
+.sld-track { position: absolute; left: 0; right: 0; top: 14px; height: 8px; border-radius: 4px; background: var(--inset2); overflow: hidden; pointer-events: none; }
+.sld-fill { position: absolute; left: 0; top: 0; bottom: 0; width: calc(14px + var(--p) * (100% - 28px)); background: var(--c); }
+.sld-knob { position: absolute; top: 4px; left: calc(var(--p) * (100% - 28px)); width: 28px; height: 28px; box-sizing: border-box; border-radius: 14px; background: var(--surface);
+  border: 2.5px solid var(--c); box-shadow: 0 2px 6px rgba(0,0,0,0.22); pointer-events: none; transition: transform 200ms var(--spring), box-shadow 200ms; }
+.sld:not(.held) .sld-knob { transition: transform 200ms var(--spring), box-shadow 200ms, left 260ms var(--spring); }
+.sld:not(.held) .sld-fill { transition: width 260ms var(--spring); }
+.sld.held .sld-knob { transform: scale(1.22); box-shadow: 0 2px 6px rgba(0,0,0,0.22), 0 0 0 10px color-mix(in srgb, var(--c) 18%, transparent); }
+.sld:focus-visible .sld-knob { outline: 2px solid var(--accent); outline-offset: 3px; }
+.sld-mark { position: absolute; top: 10px; width: 2px; height: 16px; border-radius: 1px; left: calc(14px + var(--m) * (100% - 28px) - 1px); background: var(--ink3); opacity: 0.5; pointer-events: none; }
+
+/* the title and its line share the row with the buttons: the line stays on one line ("Emails checked 3 min ago") */
+.top-l { flex: 1; min-width: 0; }
+.top-r { flex: none; }
+.feed span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.feed i { flex: none; }
+.round.on { background: var(--ink); color: var(--surface); }
+/* coming back to a screen: no rising in again */
+.screen.seen .rise { animation: none; }
+/* an empty date box: the words in place of the blank */
+.fld { position: relative; }
+.fld.empty input[type="date"] { color: transparent; }
+.fld.empty:focus-within input[type="date"] { color: var(--ink); }
+.fld.empty:focus-within .f-ph { display: none; }
+.f-ph { position: absolute; left: 14px; right: 44px; top: 50%; transform: translateY(-50%); color: var(--ink3); font-size: 15px; pointer-events: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Spending, changing month: the lists cross-fade, the bars slide to their new lengths */
+.swap { animation: swap 280ms ease-out both; }
+@keyframes swap { from { opacity: 0.35; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+.bar i { transition: width 420ms var(--spring); }
+.tr-box { transition: height 420ms var(--spring); }
+.tr-v { z-index: 1; }
+
+.tr-col .tr-v { text-shadow: 0 0 3px var(--surface), 0 0 6px var(--surface); }
+/* dark blocks (the hero figures) slide in without fading: a dark card half-faded over a light page reads as grey */
+.hero.rise, .panel.k-d.rise { animation-name: rise-solid; }
+@keyframes rise-solid { from { transform: translateY(14px); } to { transform: none; } }

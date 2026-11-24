@@ -276,11 +276,23 @@ class MainActivity : AppCompatActivity() {
         return Color.rgb(r.toInt(), g.toInt(), b.toInt())
     }
 
+    /** The phone's own haptics, one kind per gesture; newer Androids get the finer ones, older the nearest they have.
+     *  tick: a choice changed (tab, chip, segment) · fine: a slider notch · tap: a key or button · on / off: a switch ·
+     *  grab / drop: a drag starts and ends · edge: a limit or a mark reached · confirm · error · heavy. */
     fun haptic(kind: String) {
+        val v = Build.VERSION.SDK_INT
         val c = when (kind) {
-            "confirm" -> if (Build.VERSION.SDK_INT >= 30) HapticFeedbackConstants.CONFIRM else HapticFeedbackConstants.VIRTUAL_KEY
-            "error" -> if (Build.VERSION.SDK_INT >= 30) HapticFeedbackConstants.REJECT else HapticFeedbackConstants.LONG_PRESS
-            else -> HapticFeedbackConstants.CLOCK_TICK
+            "confirm" -> if (v >= 30) HapticFeedbackConstants.CONFIRM else HapticFeedbackConstants.VIRTUAL_KEY
+            "error", "warn" -> if (v >= 30) HapticFeedbackConstants.REJECT else HapticFeedbackConstants.LONG_PRESS
+            "heavy" -> HapticFeedbackConstants.LONG_PRESS
+            "tap" -> HapticFeedbackConstants.KEYBOARD_TAP
+            "fine" -> if (v >= 34) HapticFeedbackConstants.SEGMENT_FREQUENT_TICK else if (v >= 27) HapticFeedbackConstants.TEXT_HANDLE_MOVE else HapticFeedbackConstants.CLOCK_TICK
+            "on" -> if (v >= 34) HapticFeedbackConstants.TOGGLE_ON else HapticFeedbackConstants.CONTEXT_CLICK
+            "off" -> if (v >= 34) HapticFeedbackConstants.TOGGLE_OFF else HapticFeedbackConstants.CLOCK_TICK
+            "grab" -> if (v >= 34) HapticFeedbackConstants.DRAG_START else if (v >= 30) HapticFeedbackConstants.GESTURE_START else HapticFeedbackConstants.CONTEXT_CLICK
+            "drop" -> if (v >= 30) HapticFeedbackConstants.GESTURE_END else HapticFeedbackConstants.CLOCK_TICK
+            "edge" -> if (v >= 34) HapticFeedbackConstants.GESTURE_THRESHOLD_ACTIVATE else HapticFeedbackConstants.CONTEXT_CLICK
+            else -> if (v >= 34) HapticFeedbackConstants.SEGMENT_TICK else HapticFeedbackConstants.CLOCK_TICK   // "tick"
         }
         web.performHapticFeedback(c)
     }

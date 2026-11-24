@@ -40,7 +40,7 @@ pub fn way_text(w: Option<&Way>) -> String {
 #[component]
 pub fn Rewards() -> Element {
     let _ = VER();
-    let m = eng(|e| e.rewards_model());
+    let m = memo("rewards_model", |e| e.rewards_model());
     rsx! { div { class: "page", ThisMonth { m: m.clone() } SearchBox {} Missed { m: m.clone() } NextCard { m: m.clone() } Goals { m: m.clone() } Prefs { m } } }
 }
 

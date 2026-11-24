@@ -116,16 +116,18 @@ pub fn PinPad(on_code: Callback<String, String>, #[props(default)] hint: String,
     let mut shake = use_signal(|| 0u32);
     let mut press = move |k: &str| {
         if off { return; }
-        if k == "del" { code.write().pop(); return; }
+        if k == "del" { if !code().is_empty() { crate::haptics::haptic("tick"); } code.write().pop(); return; }
         if code().len() >= 4 { return; }
+        crate::haptics::haptic("tap");
         let next = format!("{}{}", code(), k);
         code.set(next.clone()); msg.set(String::new());
         if next.len() < 4 { return; }
         let wrong = on_code.call(next);
         if !wrong.is_empty() {
+            crate::haptics::haptic("error");
             msg.set(wrong); shake.set(shake() + 1);
             spawn(async move { gloo_timers::future::TimeoutFuture::new(260).await; code.set(String::new()); });
-        } else { code.set(String::new()); }
+        } else { crate::haptics::haptic("confirm"); code.set(String::new()); }
     };
     let rows = [["1", "2", "3"], ["4", "5", "6"], ["7", "8", "9"], ["", "0", "del"]];
     let n = code().len();

@@ -19,4 +19,4 @@ js-sys = "0.3"
 pbkdf2 = { version = "0.12", default-features = false, features = ["hmac"] }
 sha2 = { version = "0.10", default-features = false }
 base64 = { version = "0.22", default-features = false, features = ["alloc"] }
-web-sys = { version = "0.3", features = ["Window", "Storage", "Document", "Element", "HtmlElement", "Location", "Request", "RequestInit", "RequestMode", "Response", "Headers", "console", "ScrollIntoViewOptions", "ScrollBehavior", "ScrollLogicalPosition", "Blob", "BlobPropertyBag", "Url", "HtmlAnchorElement", "Crypto", "EventTarget", "Event", "CustomEvent"] }
+web-sys = { version = "0.3", features = ["Window", "Storage", "Document", "Element", "HtmlElement", "Location", "Request", "RequestInit", "RequestMode", "Response", "Headers", "console", "ScrollIntoViewOptions", "ScrollBehavior", "ScrollLogicalPosition", "Blob", "BlobPropertyBag", "Url", "HtmlAnchorElement", "Crypto", "EventTarget", "Event", "CustomEvent", "PointerEvent", "MouseEvent", "DomRect", "KeyboardEvent", "ScrollToOptions"] }

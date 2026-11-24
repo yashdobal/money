@@ -37,8 +37,17 @@ there).
 | 2 | Engine: every change you can make, and what it saves | done, 102 changes match engine.js |
 | 3 | Sign-in, loading data, saving, bottom bar, Today | done |
 | 4 | Activity, Cards, Plan, Spending, Trips, Rewards, Settings, and their sheets | done |
-| 4 | Not yet: the app lock code, colour choices, SMS (phone only), the widget (phone only) | to do |
-| 5 | Android APK alongside the current one, then the switch | to do |
+| 4 | The lock (a code on the web, the fingerprint in the app), laptop layout, haptics | done |
+| 4 | Not yet: colour choices, SMS (phone only), the widget (phone only) | to do |
+| 5 | Android APK alongside the current one (`rust-NN` releases) | done |
+| 5 | The switch | when you say |
+
+## Haptics
+
+`app/src/haptics.rs`: one buzz per kind of moment (a choice changed, a slider notch, a switch, a drag taking hold and
+letting go, a limit, saved, refused), the phone's own haptics in the app (`MainActivity.haptic`) and
+`navigator.vibrate` in a phone's browser. A stronger buzz wins over a weaker one fired at the same moment, so one tap
+that saves gives one buzz. Settings → Vibration turns them off.
 
 The card rulebooks (`core/data/cards.json`) are written out of `app/trips.js` and `app/rewards.js` by
 `node tools/rust/data.mjs`; GitHub checks they're the same.

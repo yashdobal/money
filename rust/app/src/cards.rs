@@ -11,13 +11,38 @@ use money_core::fmt::round;
 use money_core::time::{self, Ms, DAY};
 use serde_json::Value;
 
-/// Card faces: graphite with a hint of colour (steel, teal, gold, rose), in turn or as the profile picks (face 0–3).
-const FACES: [([&str; 3], &str); 4] = [
-    (["#43464C", "#27292D", "#151618"], "#F5F5F3"),
-    (["#3E4442", "#242827", "#131515"], "#F5F5F3"),
-    (["#47433B", "#272420", "#141311"], "#EFE9DC"),
-    (["#494041", "#282223", "#151213"], "#EFE6E4"),
+/// Card faces: eight deep colours, so no two of your cards look alike. Each card gets the one its bank or name suggests
+/// (Regalia Gold gold, a metal card graphite, Axis burgundy, HDFC ocean …), and if another card already has it, the
+/// next free one. A face picked in the card's profile (0–3: steel, teal, gold, rose) still wins.
+const FACES: [([&str; 3], &str); 8] = [
+    (["#2E3F70", "#1C284B", "#0E152B"], "#F2F5FC"),   // 0 sapphire
+    (["#1E5A4F", "#143C35", "#0A1F1B"], "#EEF7F4"),   // 1 emerald
+    (["#8C6B32", "#5E471F", "#2F230E"], "#FBF3E1"),   // 2 gold
+    (["#6E2438", "#4A1725", "#260B13"], "#FCEEF1"),   // 3 burgundy
+    (["#46494F", "#292B2F", "#151618"], "#F5F5F3"),   // 4 graphite
+    (["#4A3580", "#302254", "#180F2B"], "#F3EFFC"),   // 5 violet
+    (["#83421F", "#582C14", "#2C150A"], "#FCEFE7"),   // 6 copper
+    (["#1D5675", "#13394E", "#0A1D28"], "#EAF5FB"),   // 7 ocean
 ];
+/// The face each card account gets (see FACES).
+fn face_map(e: &Engine) -> std::collections::HashMap<String, usize> {
+    let mut out = std::collections::HashMap::new();
+    let mut used = [false; 8];
+    for k in &e.group_order {
+        let p = e.profile.get("groups").and_then(|g| g.get(k));
+        let picked = p.and_then(|p| p.get("face")).and_then(|v| v.as_f64()).filter(|f| *f >= 0.0 && *f < 4.0).map(|f| [4, 1, 2, 3][f as usize]);
+        let g = e.groups.get(k);
+        let text = format!("{} {} {} {}", k, g.map(|g| g.short.as_str()).unwrap_or(""), g.map(|g| g.sub.as_str()).unwrap_or(""), g.map(|g| g.issuer.as_str()).unwrap_or("")).to_lowercase();
+        let has = |w: &[&str]| w.iter().any(|x| text.contains(x));
+        let brand = if has(&["gold"]) { 2 } else if has(&["aurum", "metal", "black", "infinia", "reserve", "magnus", "onecard"]) { 4 }
+            else if has(&["amazon"]) { 0 } else if has(&["axis", "kotak", "idfc", "indusind"]) { 3 } else if has(&["hsbc", "icici"]) { 6 }
+            else if has(&["hdfc", "yes"]) { 7 } else if has(&["sbi"]) { 0 } else if has(&["tata", "neu", "flipkart", "au "]) { 5 } else { 0 };
+        let f = picked.unwrap_or_else(|| if !used[brand] { brand } else { [0, 1, 2, 3, 5, 6, 7, 4].into_iter().find(|i| !used[*i]).unwrap_or(brand) });
+        used[f] = true;
+        out.insert(k.clone(), f);
+    }
+    out
+}
 /// Which card to bring into view when Cards opens (from elsewhere).
 pub static FOCUS: GlobalSignal<Option<String>> = Signal::global(|| None);
 
@@ -329,7 +354,7 @@ fn Face(c: CardState, badge: String, btone: &'static str) -> Element {
     let (i, face, net, nums) = eng(|e| {
         let p = e.profile.get("groups").and_then(|g| g.get(&c.key));
         let i = e.group_order.iter().position(|k| *k == c.key).unwrap_or(0);
-        let f = p.and_then(|p| p.get("face")).and_then(|v| v.as_f64()).filter(|f| *f >= 0.0 && *f < 4.0).map(|f| f as usize).unwrap_or(i) % 4;
+        let f = face_map(e).get(&c.key).copied().unwrap_or(i % 8);
         let net = p.and_then(|p| p.get("net")).map(|v| match v { Value::String(s) => s.to_uppercase(), Value::Null => String::new(), x => x.to_string() }).unwrap_or_default();
         let nums = c.members.iter().filter_map(|m| e.card_cfg.get(m).map(|x| x.last4.clone())).collect::<Vec<_>>().join(" · ");
         (i, f, net, nums)

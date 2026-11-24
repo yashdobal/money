@@ -30,7 +30,8 @@ fn Planner() -> Element {
             }
         };
     }
-    let (base, view, mp, fam, next_p0) = eng(|e| { let b = e.plan_cycle(); let v = e.plan_cycle_view(); (b, v, e.month_plan(&v), e.family_title(), e.next_cycle(&b).p0) });
+    let (base, view, fam, next_p0) = eng(|e| { let b = e.plan_cycle(); let v = e.plan_cycle_view(); (b, v, e.family_title(), e.next_cycle(&b).p0) });
+    let mp = memo("month_plan", |e| e.month_plan(&e.plan_cycle_view()));
     let sal = &mp.sal; let ex = &sal.exp; let a = mp.amt;
     let title = format!("Your {} salary", time::fmt(if sal.in_balance { mp.cyc.p0 } else { sal.credited.unwrap_or(mp.cyc.p0) }));
     let (chip, ctone) = if sal.credited.is_some() { ("Credited", "pos") } else if ex.partial && ex.assumed { ("Not confirmed", "warn") } else { ("Estimate", "") };
@@ -48,6 +49,7 @@ fn Planner() -> Element {
         let big = k == "sal";
         let max = if big { sal_max } else { 1000.0_f64.max((a.max(v) / 1000.0).ceil() * 1000.0) };
         let moved = (v0 - def).abs() >= 1.0;
+        let was_over = mp.spend < 0.0;
         let why = match (&mp.split, moved) {
             (Some(sp), false) => if k == "ef" && sp.ef_take >= 0.5 { if v0 < 0.5 { "paused for the EMI" } else { "less the EMI" } } else if k == "ef" && sp.ef_full { "fund is full" } else if k == "sip" && sp.sav_take >= 0.5 { "after the EMI" } else { "" },
             _ => "",
@@ -62,11 +64,17 @@ fn Planner() -> Element {
                     AmountField { value: v, big, label: label.clone(), ondone: move |n: f64| { act(|e| e.set_plan(k, n)); } }
                     if !big { span { class: "sl-p", "{pct_of(v, a)}" } }
                 }
-                Slider { value: v, max, color: col, label: label.clone(),
+                Slider { value: v, max, color: col, label: label.clone(), marks: if def >= 1.0 { vec![def] } else { vec![] },
                     oninput: move |n: f64| {
                         drag.set(Some((k.to_string(), n)));
                         let t = js_sys::Date::now();
-                        if t - last() > 70.0 { last.set(t); act(|e| e.set_plan(k, n)); }
+                        if t - last() > 70.0 {
+                            last.set(t);
+                            act(|e| e.set_plan(k, n));
+                            // a buzz of warning the moment the split goes past what's left of the salary
+                            let over = memo("month_plan", |e| e.month_plan(&e.plan_cycle_view())).spend < 0.0;
+                            if over && !was_over { haptic("warn"); }
+                        }
                     },
                     ondone: move |n: f64| { drag.set(None); act(|e| e.set_plan(k, n)); } }
             }
@@ -147,16 +155,6 @@ fn AmountField(value: f64, big: bool, label: String, ondone: EventHandler<f64>) 
     }
 }
 
-/// An 8 px track filled in the part's colour with a white knob ringed in it: oninput while dragging, ondone on letting go.
-#[component]
-fn Slider(value: f64, max: f64, color: String, label: String, oninput: EventHandler<f64>, ondone: EventHandler<f64>, #[props(default = 100.0)] step: f64) -> Element {
-    let p = if max > 0.0 { (value / max).clamp(0.0, 1.0) * 100.0 } else { 0.0 };
-    rsx! {
-        input { class: "slider", r#type: "range", min: "0", max: "{max}", step: "{step}", value: "{value}", aria_label: "{label}", style: "--p:{p}%;--c:{color}",
-            oninput: move |e| oninput.call(e.value().parse().unwrap_or(0.0)), onchange: move |e| ondone.call(e.value().parse().unwrap_or(0.0)) }
-    }
-}
-
 /// "Where it goes": the salary as one bar on the left, flowing out in ribbons to what it pays for.
 #[component]
 fn Flow() -> Element {
@@ -164,7 +162,7 @@ fn Flow() -> Element {
     let mut sel = use_signal(|| -1_i32);
     let inc = eng(|e| e.settings.inc.filter(|i| *i != 0.0));
     if inc.is_none() { return rsx! {} }
-    let (mp, fam) = eng(|e| { let v = e.plan_cycle_view(); (e.month_plan(&v), e.family_title()) });
+    let (mp, fam) = (memo("month_plan", |e| e.month_plan(&e.plan_cycle_view())), eng(|e| e.family_title()));
     let a = mp.amt;
     let parts: Vec<(String, f64, &str)> = vec![("EMI".to_string(), mp.fixed_total, "var(--n-emi)"), (fam, mp.family, "var(--n-family)"), ("SIP".into(), mp.sip, "var(--n-sip)"),
         ("Emergency fund".into(), mp.ef, "var(--n-ef)"), ("Card bills".into(), mp.cards_total, "var(--n-card)"), ("Yours to spend".into(), mp.spend.max(0.0), "var(--n-yours)")]
@@ -213,7 +211,7 @@ fn Flow() -> Element {
                 }
                 for (i, p) in parts.iter().enumerate() {
                     button { key: "l{i}", class: "fl-lab", aria_label: "{p.0}, {pct(p.1)}", style: format!("top:{}px;left:{}%;animation-delay:{}ms;opacity:{}", lab[i].max(ROW / 2.0) - ROW / 2.0, (nx + 18.0) / W * 100.0, (0.2 + i as f64 * 0.09) * 900.0, if sel() >= 0 && sel() != i as i32 { 0.4 } else { 1.0 }),
-                        onclick: move |_| sel.set(if sel() == i as i32 { -1 } else { i as i32 }),
+                        onclick: move |_| { haptic("tick"); sel.set(if sel() == i as i32 { -1 } else { i as i32 }) },
                         div { class: "fl-n", span { class: "fl-name", "{p.0}" } span { class: "fl-p", "{pct(p.1)}" } }
                         div { class: "fl-v", {shown(&amt(p.1))} }
                     }
@@ -226,7 +224,7 @@ fn Flow() -> Element {
 /// The next five weeks, Monday first; the chosen day's highlight glides to where you tap.
 #[component]
 fn Calendar() -> Element {
-    let _ = VER();
+    let _ = ver_quiet();
     let today = eng(|e| e.today());
     let start = time::add_days(today, -((time::dow(today) + 6) % 7));
     let mut sel = use_signal(move || time::iso(today));
@@ -254,7 +252,7 @@ fn Calendar() -> Element {
                                 let lbl = format!("{}{}", time::fmt_d(d), if list.is_empty() { String::new() } else { format!(", {}", plural(list.len() as i64, "item")) });
                                 let kk = k.clone();
                                 rsx! {
-                                    button { key: "{k}", class: "cal-d", aria_label: "{lbl}", onclick: move |_| sel.set(kk.clone()),
+                                    button { key: "{k}", class: "cal-d", aria_label: "{lbl}", onclick: move |_| { if sel() != kk { haptic("tick"); } sel.set(kk.clone()) },
                                         if d1 { span { class: "cal-m", "{ym_short(&time::ym_of(d))}" } }
                                         if is_t { i { class: "cal-today" } }
                                         span { class: if is_t { "cal-n t" } else if past { "cal-n past" } else { "cal-n" }, "{time::date(d)}" }
@@ -283,7 +281,7 @@ fn Calendar() -> Element {
 
 #[component]
 fn Goals() -> Element {
-    let _ = VER();
+    let _ = ver_quiet();
     let mut del = use_signal(|| None::<String>);
     let (list, contribs, ef) = eng(|e| (e.goal_plan(&e.pay_cycle()), e.contribs.clone(), e.rule.ef));
     let hidden = HIDDEN();
@@ -365,7 +363,7 @@ fn Ring(pct: f64, color: String) -> Element {
 
 #[component]
 fn Emis() -> Element {
-    let _ = VER();
+    let _ = ver_quiet();
     let list = eng(|e| e.emi_model());
     rsx! {
         Panel { title: "EMIs", i: 4,
@@ -407,10 +405,10 @@ pub fn GoalSheet() -> Element {
         h2 { class: "sheet-t", "Add a goal" }
         Field { label: "What for", value: name(), placeholder: "Laptop", oninput: move |v| name.set(v) }
         div { class: "row2",
-            Field { label: "Target (₹)", value: target(), numeric: true, oninput: move |v| target.set(v) }
+            Field { label: "Target (₹)", value: target(), numeric: true, placeholder: "1,20,000", oninput: move |v| target.set(v) }
             Field { label: "Already saved (₹)", value: start(), numeric: true, placeholder: "0", oninput: move |v| start.set(v) }
         }
-        Field { label: "By", kind: "date", value: date(), oninput: move |v| date.set(v) }
+        Field { label: "By", kind: "date", value: date(), placeholder: "When you want it by", oninput: move |v| date.set(v) }
         SubHead { text: "Priority" }
         Seg { value: prio(), onchange: move |v| prio.set(v), options: vec![opt("1", "High"), opt("2", "Medium"), opt("3", "Low")] }
         div { class: "actions", button { class: "btn b-solid big", onclick: move |_| {

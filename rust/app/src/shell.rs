@@ -18,7 +18,15 @@ pub fn Shell() -> Element {
     let dir = if tab >= prev() { "r" } else { "l" };
     use_effect(move || { let t = TAB(); if t != shown_tab() { prev.set(shown_tab()); shown_tab.set(t); } });
     let title = if tab == 7 { "Settings" } else { TABS[tab].0 };
-    let feed = FEED();
+    // the "… min ago" under the title stays true as time passes
+    let mut tick = use_signal(|| 0u32);
+    use_future(move || async move { loop { gloo_timers::future::TimeoutFuture::new(30_000).await; tick += 1; } });
+    let _ = tick();
+    let mut feed = FEED();
+    if feed.tone == "ok" && !*DEMO.read() { if let Some(t) = CHECKED_AT() { feed.text = format!("Emails checked {}", eng(|e| e.ago(t))); } }
+    // a screen's blocks rise in on its first visit only; coming back, it's simply there
+    let seen = VISITED.read().contains(&tab);
+    use_effect(move || { let t = TAB(); if !VISITED.peek().contains(&t) { VISITED.write().insert(t); } });
     let busy = BUSY();
     let hidden = HIDDEN();
     rsx! {
@@ -29,14 +37,14 @@ pub fn Shell() -> Element {
                     div { class: "feed f-{feed.tone}", i {} span { "{feed.text}" } }
                 }
                 div { class: "top-r",
-                    button { class: "round", aria_label: if hidden { "Show amounts" } else { "Hide amounts" }, onclick: move |_| set_hidden(!hidden),
+                    button { class: "round", aria_label: if hidden { "Show amounts" } else { "Hide amounts" }, onclick: move |_| { haptic("tick"); set_hidden(!hidden) },
                         Icon { name: if hidden { "eyeOff".to_string() } else { "eye".to_string() }, size: 22.0 } }
-                    button { class: if busy { "round spin" } else { "round" }, aria_label: "Refresh", onclick: move |_| { dioxus::core::spawn_forever(async { refresh().await; }); },
+                    button { class: if busy { "round spin" } else { "round" }, aria_label: "Refresh", onclick: move |_| { if !busy { haptic("tap"); } dioxus::core::spawn_forever(async { refresh().await; }); },
                         Icon { name: "refresh".to_string(), size: 22.0 } }
-                    button { class: "round set-btn", aria_label: "Settings", onclick: move |_| *TAB.write() = 7, Icon { name: "settings".to_string(), size: 22.0 } }
+                    button { class: if tab == 7 { "round set-btn on" } else { "round set-btn" }, aria_label: "Settings", onclick: move |_| go_tab(7), Icon { name: "settings".to_string(), size: 22.0 } }
                 }
             }
-            main { key: "{tab}", class: "screen push-{dir}",
+            main { key: "{tab}", class: if seen { "screen push-{dir} seen" } else { "screen push-{dir}" },
                 match tab { 0 => rsx! { Today {} }, 1 => rsx! { crate::plan::Plan {} }, 2 => rsx! { crate::cards::Cards {} }, 3 => rsx! { crate::spend::Spend {} }, 4 => rsx! { crate::activity::Activity {} }, 5 => rsx! { crate::trips::Trips {} }, 6 => rsx! { crate::rewards::Rewards {} }, 7 => rsx! { crate::settings::Settings {} }, t => rsx! { Soon { name: TABS[t].0.to_string() } } }
             }
             if tab == 4 { crate::activity::Fab {} }
@@ -70,16 +78,29 @@ fn Dock(tab: usize, from: usize) -> Element {
             div { class: "side-brand", i { "₹" } b { "Money" } }
             div { class: if tab < TABS.len() { "pill" } else { "pill gone" }, style: "{style}" }
             for (i, (name, icon)) in TABS.iter().enumerate() {
-                button { key: "{i}", class: if i == tab { "tab on" } else { "tab" }, aria_label: "{name}", onclick: move |_| *TAB.write() = i,
+                button { key: "{i}", class: if i == tab { "tab on" } else { "tab" }, aria_label: "{name}", onclick: move |_| go_tab(i),
                     Icon { name: icon.to_string(), size: 23.0 } span { "{name}" }
                 }
             }
             div { class: "side-gap" }
-            button { class: if tab == 7 { "tab side-set on" } else { "tab side-set" }, aria_label: "Settings", onclick: move |_| *TAB.write() = 7,
+            button { class: if tab == 7 { "tab side-set on" } else { "tab side-set" }, aria_label: "Settings", onclick: move |_| go_tab(7),
                 Icon { name: "settings".to_string(), size: 22.0 } span { "Settings" }
             }
         }
     }
+}
+
+/// The screens opened since the app started (their blocks don't rise in again).
+static VISITED: GlobalSignal<std::collections::HashSet<usize>> = Signal::global(Default::default);
+
+/// Go to a tab: a tick as it changes; tapping the tab you're on takes you back to its top instead.
+fn go_tab(i: usize) {
+    if *TAB.peek() == i {
+        if let Some(w) = web_sys::window() { if w.scroll_y().unwrap_or(0.0) > 4.0 { haptic("tap"); let o = web_sys::ScrollToOptions::new(); o.set_top(0.0); o.set_behavior(web_sys::ScrollBehavior::Smooth); w.scroll_to_with_scroll_to_options(&o); } }
+        return;
+    }
+    haptic("tick");
+    *TAB.write() = i;
 }
 
 /// A sheet over the screen: slides up, closes on the backdrop or ✕.

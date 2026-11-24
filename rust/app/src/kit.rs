@@ -6,6 +6,7 @@ use crate::state::{HIDDEN, SHEET};
 use dioxus::prelude::*;
 use money_core::fmt::{group_in, round};
 use money_core::time::{self, Ms};
+pub use crate::haptics::haptic;
 use regex::Regex;
 use std::collections::HashMap;
 use std::sync::OnceLock;
@@ -123,13 +124,131 @@ pub fn Btn(label: String, #[props(default = "solid".to_string())] kind: String, 
     rsx! { button { class: "{cls}", onclick: move |e| onclick.call(e), "{label}" } }
 }
 
+/* ---------------- the slider ---------------- */
+/// Where a slider's drag stands. Kept outside the signals: a pointer move shouldn't redraw anything by itself.
+#[derive(Clone, Copy, Default)]
+struct Grip { state: u8, id: i32, x0: f64, y0: f64, left: f64, width: f64, last: f64, notch: i64, at_edge: bool }
+const PENDING: u8 = 1;
+const DRAGGING: u8 = 2;
+
+/// A track filled in its colour with a knob ringed in it. It only moves on a sideways drag: a finger that starts on it
+/// and goes up or down scrolls the page, and a tap leaves it alone, so scrolling past it can't change your plan. With
+/// a mouse it follows the pointer straight away. The haptics: a hold when the drag takes, a light notch at each round
+/// figure, a firmer one at either end and at `marks` (your plan's figure, which the knob also snaps to when close),
+/// and a soft one on letting go. oninput while dragging, ondone once on letting go; arrow keys work when focused.
+#[component]
+pub fn Slider(value: f64, max: f64, color: String, label: String, oninput: EventHandler<f64>, ondone: EventHandler<f64>,
+    #[props(default = 100.0)] step: f64, #[props(default)] marks: Vec<f64>) -> Element {
+    use dioxus::web::WebEventExt;
+    use wasm_bindgen::JsCast;
+    let grip = use_hook(|| std::rc::Rc::new(std::cell::Cell::new(Grip::default())));
+    let mut held = use_signal(|| false);
+    let p = if max > 0.0 { (value / max).clamp(0.0, 1.0) } else { 0.0 };
+    let notch = crate::haptics::notch(max);
+    let (m1, m2) = (marks.clone(), marks.clone());
+    let (g1, g2, g3, g4) = (grip.clone(), grip.clone(), grip.clone(), grip.clone());
+    let style = format!("--p:{:.4};--c:{}", p, color);
+    let vnow = money_core::fmt::round(value) as i64;
+    rsx! {
+        div { class: if held() { "sld held" } else { "sld" }, style: "{style}", role: "slider", tabindex: "0", aria_label: "{label}",
+            aria_valuemin: "0", aria_valuemax: "{max}", aria_valuenow: "{vnow}",
+            onpointerdown: move |e| {
+                let ev = e.as_web_event();
+                let Some(el) = sld_el(&ev) else { return };
+                let r = el.get_bounding_client_rect();
+                let mut g = Grip { state: PENDING, id: ev.pointer_id(), x0: ev.client_x() as f64, y0: ev.client_y() as f64, left: r.left(), width: r.width(),
+                    last: value, notch: (value / notch).floor() as i64, at_edge: value <= 0.0 || value >= max };
+                if ev.pointer_type() == "mouse" {
+                    g.state = DRAGGING;
+                    let _ = el.set_pointer_capture(g.id);
+                    held.set(true); *crate::state::HOLD.write() = true;
+                    let v = slide_value(&g, g.x0, max, step, &m1);
+                    slide_feel(g.last, v, &mut g, max, notch, &m1); g.last = v;
+                    oninput.call(v);
+                }
+                g1.set(g);
+            },
+            onpointermove: move |e| {
+                let ev = e.as_web_event();
+                let mut g = g2.get();
+                if g.state == 0 || ev.pointer_id() != g.id { return; }
+                let (x, y) = (ev.client_x() as f64, ev.client_y() as f64);
+                if g.state == PENDING {
+                    let (dx, dy) = ((x - g.x0).abs(), (y - g.y0).abs());
+                    if dy >= 8.0 && dy > dx { g.state = 0; g2.set(g); return; }       // a scroll: leave it to the page
+                    if dx < 8.0 || dx < dy * 1.3 { return; }                          // not sure yet
+                    g.state = DRAGGING;
+                    if let Some(el) = sld_el(&ev) { let _ = el.set_pointer_capture(g.id); }
+                    held.set(true); *crate::state::HOLD.write() = true;
+                    haptic("grab");
+                }
+                let v = slide_value(&g, x, max, step, &m2);
+                if v != g.last { slide_feel(g.last, v, &mut g, max, notch, &m2); g.last = v; g2.set(g); oninput.call(v); } else { g2.set(g); }
+            },
+            onpointerup: move |e| {
+                let ev = e.as_web_event();
+                let g = g3.get();
+                if ev.pointer_id() != g.id { return; }
+                g3.set(Grip::default());
+                if g.state == DRAGGING { held.set(false); *crate::state::HOLD.write() = false; haptic("drop"); ondone.call(g.last); }
+            },
+            onpointercancel: move |_| {
+                let g = g4.get();
+                g4.set(Grip::default());
+                if g.state == DRAGGING { held.set(false); *crate::state::HOLD.write() = false; ondone.call(g.last); }
+            },
+            onkeydown: move |e| {
+                let d = match e.key() { Key::ArrowRight | Key::ArrowUp => 1.0, Key::ArrowLeft | Key::ArrowDown => -1.0, _ => return };
+                e.prevent_default();
+                let v = (value + d * notch).clamp(0.0, max);
+                let v = (v / notch).round() * notch;
+                haptic("fine");
+                oninput.call(v); ondone.call(v);
+            },
+            div { class: "sld-track", i { class: "sld-fill" } }
+            for m in marks.iter().filter(|m| **m > 0.0 && **m < max) { i { class: "sld-mark", style: "--m:{(m / max).clamp(0.0, 1.0):.4}" } }
+            div { class: "sld-knob" }
+        }
+    }
+}
+
+/// The slider element an event happened in (events reach us through the page's root, so currentTarget is the root).
+fn sld_el(ev: &web_sys::PointerEvent) -> Option<web_sys::Element> {
+    use wasm_bindgen::JsCast;
+    ev.target()?.dyn_into::<web_sys::Element>().ok()?.closest(".sld").ok().flatten()
+}
+/// The value under x (the knob's centre runs 14 px in from either end), snapped to a mark within 1.2 % of the range.
+fn slide_value(g: &Grip, x: f64, max: f64, step: f64, marks: &[f64]) -> f64 {
+    let k = ((x - g.left - 14.0) / (g.width - 28.0).max(1.0)).clamp(0.0, 1.0);
+    let v = (k * max / step).round() * step;
+    let snap = max * 0.012;
+    marks.iter().copied().filter(|m| *m > 0.0 && *m < max).find(|m| (v - m).abs() <= snap).unwrap_or(v)
+}
+/// The feel of moving from a to b: either end and the marks are firmer than the round-figure notches.
+fn slide_feel(a: f64, b: f64, g: &mut Grip, max: f64, notch: f64, marks: &[f64]) {
+    if a == b { return; }
+    let edge = b <= 0.0 || b >= max;
+    if edge && !g.at_edge { g.at_edge = true; haptic("edge"); return; }
+    if !edge { g.at_edge = false; }
+    let n = (b / notch).floor() as i64;
+    let crossed_mark = marks.iter().any(|m| *m > 0.0 && ((a < *m && b >= *m) || (a > *m && b <= *m)));
+    if n != g.notch { g.notch = n; if !crossed_mark { haptic("fine"); } }
+    if crossed_mark { haptic("edge"); }
+}
+
 /* ---------------- the rolling figure ---------------- */
+thread_local! { static ODO_LAST: std::cell::RefCell<HashMap<String, String>> = std::cell::RefCell::new(HashMap::new()); }
 /// "₹14,080" where each digit rolls up to its place: a CSS transition on each column, so it always lands on the right
 /// digit, and each column is as wide as its digit (the current app's Odo on the web).
 #[component]
 pub fn Odo(value: f64, #[props(default = "odo".to_string())] class: String) -> Element {
     let text = rup(value);
     let hidden = *HIDDEN.read();
+    // each figure rolls from what it showed last (only the very first time from zero): coming back to a screen, it's
+    // already right; when it changes, only the digits that differ move
+    let before = ODO_LAST.with(|m| m.borrow().get(&class).cloned());
+    ODO_LAST.with(|m| { m.borrow_mut().insert(class.clone(), text.clone()); });
+    let from: Vec<i32> = match &before { Some(b) if b.chars().count() == text.chars().count() => b.chars().filter(|c| c.is_ascii_digit()).map(|c| c.to_digit(10).unwrap() as i32).collect(), _ => vec![] };
     let mut k = 0usize;
     let cols: Vec<(usize, char)> = text.chars().map(|c| { let i = if c.is_ascii_digit() { k += 1; k - 1 } else { usize::MAX }; (i, c) }).collect();
     let n = cols.len();
@@ -138,7 +257,7 @@ pub fn Odo(value: f64, #[props(default = "odo".to_string())] class: String) -> E
             if hidden { span { class: "odo-ch", "₹••••" } } else {
                 for (j, (i, c)) in cols.into_iter().enumerate() {
                     if i == usize::MAX { span { key: "{j}-{n}", class: "odo-ch", "{c}" } } else {
-                        OdoDigit { key: "{j}-{n}", d: c.to_digit(10).unwrap() as i32, k: i }
+                        OdoDigit { key: "{j}-{n}", d: c.to_digit(10).unwrap() as i32, k: i, from: from.get(i).copied().unwrap_or(0) }
                     }
                 }
             }
@@ -146,8 +265,8 @@ pub fn Odo(value: f64, #[props(default = "odo".to_string())] class: String) -> E
     }
 }
 #[component]
-fn OdoDigit(d: i32, k: usize) -> Element {
-    let mut at = use_signal(|| 0);
+fn OdoDigit(d: i32, k: usize, #[props(default)] from: i32) -> Element {
+    let mut at = use_signal(|| from);
     use_effect(move || {
         let target = d;
         spawn(async move { gloo_timers::future::TimeoutFuture::new(40).await; at.set(target); });
@@ -180,7 +299,22 @@ pub fn nice(desc: &str) -> (String, String) {
         for ch in t.to_lowercase().chars() { if start && ch.is_ascii_lowercase() { out.extend(ch.to_uppercase()); } else { out.push(ch); } start = !ch.is_alphanumeric() && ch != '_'; }
         t = out;
     }
+    // banks cut long names off mid-way: "LILAVATI HOSPITAL AND \\" reads "Lilavati Hospital"
+    let t = tidy_end(&t);
     (if t.is_empty() { desc.to_string() } else { t }, extra)
+}
+/// The end of a cut-off name: stray \\ / - * , . : ; | and a dangling "and", "&", "of", "the", "for".
+fn tidy_end(t: &str) -> String {
+    let mut t = t.split_whitespace().collect::<Vec<_>>().join(" ");
+    loop {
+        let before = t.clone();
+        t = t.trim_end_matches(|c: char| c.is_whitespace() || "\\/-*,:;|".contains(c)).to_string();
+        for w in [" and", " &", " of", " the", " for"] {
+            if t.len() > w.len() + 3 && t.to_lowercase().ends_with(w) { t.truncate(t.len() - w.len()); }
+        }
+        if t == before { break; }
+    }
+    t
 }
 pub fn cap(t: &str) -> String { let mut c = t.chars(); match c.next() { Some(f) => f.to_uppercase().collect::<String>() + c.as_str(), None => String::new() } }
 /// Category colours (muted), as kit.js CAT_C.
@@ -210,7 +344,7 @@ pub fn Chip(label: String, #[props(default)] on: bool, #[props(default)] icon: S
     let cls = format!("chip{}{}{}", if on { " on" } else { "" }, if small { " small" } else { "" }, if dashed { " dashed" } else { "" });
     let style = if !hue.is_empty() && !on { format!("--hue:{}", hue) } else { String::new() };
     rsx! {
-        button { class: "{cls}", style: "{style}", role: "radio", aria_checked: "{on}", onclick: move |e| onclick.call(e),
+        button { class: "{cls}", style: "{style}", role: "radio", aria_checked: "{on}", onclick: move |e| { if !on { haptic("tick"); } onclick.call(e) },
             if !icon.is_empty() { span { class: "chip-ic", Icon { name: icon.clone(), size: 16.0 } } }
             span { "{label}" }
             if removable { Icon { name: "close".to_string(), size: 14.0 } }
@@ -241,14 +375,14 @@ pub fn Seg(options: Vec<Opt>, value: String, onchange: EventHandler<String>, #[p
         div { class: if full { "seg full" } else { "seg" }, role: "radiogroup", style: "--n:{n};--at:{at}",
             div { class: "seg-hl" }
             for o in options.into_iter() {
-                button { key: "{o.v}", class: if o.v == value { "seg-o on" } else { "seg-o" }, onclick: move |_| onchange.call(o.v.clone()), "{o.label}" }
+                button { key: "{o.v}", class: if o.v == value { "seg-o on" } else { "seg-o" }, onclick: { let same = o.v == value; move |_| { if same { return; } haptic("tick"); onchange.call(o.v.clone()) } }, "{o.label}" }
             }
         }
     }
 }
 #[component]
 pub fn Switch(on: bool, onchange: EventHandler<bool>, #[props(default)] label: String) -> Element {
-    rsx! { button { class: if on { "switch on" } else { "switch" }, role: "switch", aria_checked: "{on}", aria_label: "{label}", onclick: move |_| onchange.call(!on), i {} } }
+    rsx! { button { class: if on { "switch on" } else { "switch" }, role: "switch", aria_checked: "{on}", aria_label: "{label}", onclick: move |_| { haptic(if on { "off" } else { "on" }); onchange.call(!on) }, i {} } }
 }
 /// A setting row in a sheet: a title, a line of detail, a switch.
 #[component]
@@ -269,13 +403,16 @@ pub fn Field(#[props(default)] label: String, value: String, oninput: EventHandl
         let mut seen = false;
         v.chars().filter(|c| c.is_ascii_digit() || (*c == '.' && !std::mem::replace(&mut seen, true))).collect()
     } else { v };
-    let cls = format!("fld{}{}", if big { " big" } else { "" }, if error.is_empty() { "" } else { " err" });
+    // an empty date box shows nothing at all in Android's web view: say what goes there
+    let empty_date = kind == "date" && value.is_empty();
+    let cls = format!("fld{}{}{}", if big { " big" } else { "" }, if error.is_empty() { "" } else { " err" }, if empty_date { " empty" } else { "" });
     let ty = if kind.is_empty() { "text".to_string() } else { kind.clone() };
     rsx! {
         label { class: "fwrap",
             if !label.is_empty() { span { class: "f-label", "{label}" } }
             div { class: "{cls}",
                 if !prefix.is_empty() { span { class: "f-pre", "{prefix}" } }
+                if empty_date { span { class: "f-ph", if placeholder.is_empty() { "Pick a date" } else { "{placeholder}" } } }
                 if multiline {
                     textarea { value: "{value}", placeholder: "{placeholder}", maxlength: "500", oninput: move |e| oninput.call(clean(e.value())) }
                 } else {
@@ -295,7 +432,7 @@ pub fn ToastHost() -> Element {
         div { key: "{t.n}", class: "toast t-{t.tone}", role: "status",
             span { class: "grow", "{t.text}" }
             if let Some(id) = t.undo.clone() {
-                button { class: "toast-undo", onclick: move |_| { crate::state::act(|e| e.unreverse(&id)); *crate::state::TOAST.write() = None; }, "Undo" }
+                button { class: "toast-undo", onclick: move |_| { haptic("tick"); crate::state::act(|e| e.unreverse(&id)); *crate::state::TOAST.write() = None; }, "Undo" }
             }
         }
     }

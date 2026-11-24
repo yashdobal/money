@@ -3,6 +3,7 @@
 mod activity;
 mod api;
 mod cards;
+mod haptics;
 mod kit;
 mod lock;
 mod plan;
