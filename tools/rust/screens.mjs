@@ -1,7 +1,8 @@
 // What the screens show, in words and figures, for the Rust checks (snapshot.mjs, actions.mjs): Today, Plan, Cards,
 // the CSV export, Trips, Rewards and a few Rewards searches. rust/core/src/engine/models.rs screens() is the other side.
 export const SEARCHES = ["a new iPhone for 80k", "dinner at a restaurant ₹2,500", "flights to Japan", "swiggy order 600", "groceries on bigbasket", "hotel in Bangkok 12000",
-  "netflix", "shoes in store 3000", "petrol 2000", "USD 120 on amazon.com", "uber", "1.5 lakh laptop on flipkart", "coffee in Singapore"];
+  "netflix", "shoes in store 3000", "petrol 2000", "USD 120 on amazon.com", "uber", "1.5 lakh laptop on flipkart", "coffee in Singapore",
+  "12.5k on non smartbuy hotel", "hotel 8000 booked direct", "flight 20k not on makemytrip", "amazon shopping 5000 without amazon pay", "12.5k hotel on smartbuy"];
 export function screensOf(e) {
   // what Today shows, in words: the hero, how it's worked out, Needs attention, Coming up, EMIs
   const r2 = (v) => (typeof v === "number" ? Math.round(v * 100) / 100 : v), iso = (d) => (d ? e.iso(d) : null);
@@ -64,6 +65,6 @@ function rewardsOf(e, r2) {
 }
 function searchOf(e, r2, q) {
   const sp = e.rewParse(q), r = e.rewSearch(sp), way = wayOf(r2);
-  return [[sp.text, sp.amt, sp.kind, sp.shop, sp.online, sp.intl], r.sp.amt, r.typedAmt, r.yours.map((y) => [y.g, y.card.id, y.ways.map(way)]),
+  return [[sp.text, sp.amt, sp.kind, sp.shop, sp.online, sp.intl, sp.not], r.sp.amt, r.typedAmt, r.yours.map((y) => [y.g, y.card.id, y.ways.map(way)]),
     r.could.map((c) => [c.card.id, c.ways.slice(0, 4).map(way)]), r.top ? r.top.g : null, r.runner ? r.runner.g : null, r.better ? r.better.card.id : null, r.unknown.map((u) => u.g), r.income.amt];
 }

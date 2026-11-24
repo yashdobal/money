@@ -115,6 +115,17 @@ impl JsRe {
             }
         }
     }
+    /// re.exec(text).index: where the first match starts (a byte offset)
+    pub fn find_start(&self, text: &str) -> Option<usize> {
+        match self {
+            JsRe::Plain(r) => r.find(text).map(|m| m.start()),
+            JsRe::Ahead { prefix, not, rest } => prefix.find_iter(text).find(|m| {
+                let p = m.end();
+                let at = |r: &Regex| r.find_at(text, p).map(|x| x.start() == p).unwrap_or(false);
+                !at(not) && at(rest)
+            }).map(|m| m.start()),
+        }
+    }
     /// re.test(text)
     pub fn test(&self, text: &str) -> bool {
         match self {

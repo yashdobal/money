@@ -25,6 +25,19 @@ fn worth_sub(card: &RewCard, w: &Worth) -> String {
     if card.unit == "cashback" { return String::new(); }
     format!("≈ {}{}", rs(w.best), match &w.partner { Some(p) if w.miles > w.cash => format!(" as {} points", partner_name(p)), _ => String::new() })
 }
+/// The booking portals that aren't shops (rewNot's REW_ROUTE_NAMES and smartbuy), by name.
+const PORTALS: [(&str, &str); 4] = [("smartbuy", "HDFC SmartBuy"), ("traveledge", "Axis Travel EDGE"), ("hsbcapp", "HSBC Travel with Points"), ("amazonpay", "Amazon Pay")];
+/// A shop's or portal's name from its id.
+fn place_name(id: &str) -> String {
+    PORTALS.iter().find(|p| p.0 == id).map(|p| p.1.to_string()).or_else(|| rulebook().shop(id).map(|s| s.name.clone())).unwrap_or_else(|| id.to_string())
+}
+/// "not on HDFC SmartBuy", or "booked direct" when every portal and travel site is ruled out.
+fn not_text(not: &[String]) -> Option<String> {
+    if not.is_empty() { return None; }
+    let all = ["smartbuy", "traveledge", "hsbcapp", "makemytrip", "cleartrip", "goibibo"].iter().all(|id| not.iter().any(|x| x == id));
+    if all { return Some("booked direct (no portal or travel site)".into()); }
+    Some(format!("not on {}", not.iter().map(|x| place_name(x)).collect::<Vec<_>>().join(" or ")))
+}
 fn shop_name(id: &Option<String>) -> String { id.as_deref().and_then(|i| rulebook().shop(i)).map(|s| s.name.clone()).unwrap_or_default() }
 fn unit_of(card: &RewCard) -> String { if card.unit == "points" { "points".into() } else { card.unit.clone() } }
 /// How to pay, in words.
@@ -60,7 +73,8 @@ async fn ask_ai(q: &str) -> Option<serde_json::Map<String, Value>> {
     let s = fresh().await?;
     let body = serde_json::json!({ "action": "rew-parse", "text": q.chars().take(300).collect::<String>(),
         "kinds": rb.kinds.iter().map(|k| vec![k.id.clone(), k.name.clone()]).collect::<Vec<_>>(),
-        "shops": rb.shops.iter().filter(|s| s.id != "smartbuy").map(|s| vec![s.id.clone(), s.name.clone()]).collect::<Vec<_>>() });
+        "shops": rb.shops.iter().filter(|s| s.id != "smartbuy").map(|s| vec![s.id.clone(), s.name.clone()]).collect::<Vec<_>>(),
+        "portals": PORTALS.iter().map(|p| vec![p.0, p.1]).collect::<Vec<_>>() });
     let out = match crate::api::call_app(&s, body).await { Ok((200, o)) if o.get("ok") == Some(&Value::Bool(true)) => o.get("spend").cloned(), _ => None };
     let clean = out.and_then(|sp| {
         let mut o = serde_json::Map::new();
@@ -69,6 +83,10 @@ async fn ask_ai(q: &str) -> Option<serde_json::Map<String, Value>> {
         if let Some(a) = sp.get("amt").and_then(|a| a.as_f64()).filter(|a| a.is_finite() && *a > 0.0 && *a < 1e9) { o.insert("amt".into(), Value::from(round(a) as i64)); }
         if let Some(b) = sp.get("online").and_then(|b| b.as_bool()) { o.insert("online".into(), Value::Bool(b)); }
         if let Some(b) = sp.get("intl").and_then(|b| b.as_bool()) { o.insert("intl".into(), Value::Bool(b)); }
+        if let Some(n) = sp.get("not").and_then(|n| n.as_array()) {
+            let known: Vec<Value> = n.iter().filter_map(|x| x.as_str()).filter(|x| rb.shop(x).is_some() || PORTALS.iter().any(|p| p.0 == *x)).map(Value::from).collect();
+            o.insert("not".into(), Value::Array(known));
+        }
         if o.is_empty() { None } else { Some(o) }
     });
     AI.with(|a| a.borrow_mut().insert(key, clean.clone()));
@@ -80,6 +98,9 @@ fn apply(sp: &mut Spend, o: &serde_json::Map<String, Value>) {
     if let Some(a) = o.get("amt") { sp.amt = a.as_f64(); }
     if let Some(b) = o.get("online").and_then(|v| v.as_bool()) { sp.online = b; }
     if let Some(b) = o.get("intl").and_then(|v| v.as_bool()) { sp.intl = b; }
+    // the AI's "not" adds to the app's own (it reads "non SmartBuy" as well, but may also catch what the rules miss)
+    if let Some(n) = o.get("not").and_then(|v| v.as_array()) { for x in n.iter().filter_map(|x| x.as_str()) { if !sp.not.iter().any(|y| y == x) { sp.not.push(x.to_string()); } } }
+    if sp.shop.as_ref().map(|s| sp.not.contains(s)).unwrap_or(false) { sp.shop = None; }
 }
 
 #[component]
@@ -126,7 +147,11 @@ fn SearchBox() -> Element {
             }
             if let (Some(sp), Some(_t)) = (sp.clone(), typed) { Understood { sp, asking: asking(), ai: from_ai, onedit: move |(k, v): (String, Value)| { edit.write().insert(k, v); } } }
         }
-        if let Some(r) = res { Answer { res: r.clone() } Yours { res: r.clone() } Could { res: r } }
+        if let Some(r) = res {
+            Answer { res: r.clone() }
+            WebCheck { key: "{web_key(&q, &r.sp)}", q: q.clone(), res: r.clone() }
+            Yours { res: r.clone() } Could { res: r }
+        }
     }
 }
 
@@ -137,7 +162,7 @@ fn Understood(sp: Spend, asking: bool, ai: bool, onedit: EventHandler<(String, V
     let mut open = use_signal(|| false);
     let parts: Vec<String> = [Some(rb.kind(&sp.kind).name.clone()), sp.shop.as_ref().map(|_| format!("at {}", shop_name(&sp.shop))),
         Some(match sp.amt { Some(a) if a > 0.0 => rs(a), _ => format!("{} (no amount given)", rs(1000.0)) }),
-        Some(if sp.intl { "in a foreign currency".into() } else if sp.online { "online".into() } else { "in a shop".into() })].into_iter().flatten().collect();
+        Some(if sp.intl { "in a foreign currency".into() } else if sp.online { "online".into() } else { "in a shop".into() }), not_text(&sp.not)].into_iter().flatten().collect();
     let shop = sp.shop.clone().unwrap_or_default();
     rsx! {
         div { class: "understood",
@@ -471,5 +496,117 @@ fn Prefs(m: RewardsModel) -> Element {
             button { class: "more", onclick: move |_| open.set(!open()), span { if open() { "Show less" } else { "Where the numbers come from" } } Icon { name: "down".to_string(), size: 14.0, sw: 2.4 } }
             if open() { for (i, (n, a)) in srcs.into_iter().enumerate() { p { key: "{i}", class: "src-line", "{n} ({a})" } } }
         }
+    }
+}
+
+/* ---------------- the web check ---------------- */
+/// One answer per question as read (a correction under "Not what you meant?" asks again).
+fn web_key(q: &str, sp: &Spend) -> String { format!("{}|{}|{:?}|{:?}|{}|{}|{:?}", q.trim().to_lowercase(), sp.kind, sp.shop, sp.amt, sp.online, sp.intl, sp.not) }
+thread_local! { static WEB: RefCell<HashMap<String, Value>> = RefCell::new(HashMap::new()); }
+
+/// "Check on the web": the app function searches the web for today's terms of your cards on this spend and an AI reads
+/// them (Tavily + Gemini, both on free plans), then this shows its pick next to the app's own sum, with the pages it
+/// read. Only when you tap it (each check uses a little of the free allowance); the answer is kept for the session.
+#[component]
+fn WebCheck(q: String, res: Search) -> Element {
+    let rb = rulebook();
+    let sp = res.sp.clone();
+    let key = web_key(&q, &sp);
+    let k0 = key.clone();
+    let mut state = use_signal(move || WEB.with(|w| w.borrow().get(&k0).cloned()).map(|v| ("done".to_string(), v)).unwrap_or_else(|| ("idle".to_string(), Value::Null)));
+    let understood = [Some(rb.kind(&sp.kind).name.clone()), sp.shop.as_ref().map(|_| format!("at {}", shop_name(&sp.shop))),
+        Some(match sp.amt { Some(a) if a > 0.0 => format!("₹{}", locale_in(round(a))), _ => "₹1,000 (no amount given)".into() }),
+        Some(if sp.intl { "in a foreign currency".into() } else if sp.online { "online".into() } else { "in a shop".into() }), not_text(&sp.not)]
+        .into_iter().flatten().collect::<Vec<_>>().join(" · ");
+    let mut cards: Vec<Value> = res.yours.iter().map(|y| serde_json::json!({ "name": y.card.name(), "short": y.short, "addOn": y.add_on })).collect();
+    cards.extend(res.unknown.iter().map(|u| serde_json::json!({ "name": u.short, "short": u.short, "addOn": u.add_on })));
+    let app = res.top.as_ref().and_then(|t| t.best.as_ref().map(|b| serde_json::json!({ "card": t.card.name(), "how": way_text(Some(b)), "earn": earn_text(t.card, b.pts),
+        "value": round(b.net), "rate": b.rate, "notes": b.notes })));
+    let go = move |_| {
+        if *DEMO.read() { state.set(("err".into(), Value::from("The demo doesn't search the web."))); return; }
+        let (key, body) = (key.clone(), serde_json::json!({ "action": "rew-web", "text": q.chars().take(300).collect::<String>(), "understood": understood, "cards": cards, "app": app }));
+        state.set(("busy".into(), Value::Null));
+        haptic("tap");
+        dioxus::core::spawn_forever(async move {
+            let Some(s) = fresh().await else { state.set(("err".into(), Value::from("Sign in again to check the web."))); return; };
+            match crate::api::call_app(&s, body).await {
+                Ok((200, o)) if o.get("ok") == Some(&Value::Bool(true)) => { WEB.with(|w| w.borrow_mut().insert(key, o.clone())); haptic("confirm"); state.set(("done".into(), o)); }
+                Ok((200, o)) => {
+                    let why = match o.get("reason").and_then(|r| r.as_str()).unwrap_or("") {
+                        "no-key" => "The web check isn't switched on yet: it needs two free keys added to the app's server.",
+                        "busy" => "Gemini's free plan is busy for a moment. Try again in a minute.",
+                        "no-results" => "The web search found nothing on this. Try naming the card or the shop.",
+                        "no-cards" => "Add your cards first (Settings → Your banks and cards).",
+                        _ => "The web check didn't work this time. Try again.",
+                    };
+                    haptic("error"); state.set(("err".into(), Value::from(why)));
+                }
+                _ => { haptic("error"); state.set(("err".into(), Value::from("Couldn't reach the app's server. Check your connection."))); }
+            }
+        });
+    };
+    let (st, v) = state();
+    let err = v.as_str().unwrap_or("").to_string();
+    let agree = v["agree"].as_bool() == Some(true);
+    rsx! {
+        section { class: "panel k-w rise web", style: "--i:3",
+            div { class: "panel-head", h2 { class: "grow", "From the web" } if st == "done" { span { class: if agree { "badge b-pos" } else { "badge b-warn" },
+                if agree { "Agrees with the app" } else { "Differs from the app" } } } }
+            match st.as_str() {
+                "idle" => rsx! {
+                    Note { "Card terms change often. Check today's terms on the web: an AI reads the banks' pages and reviews for your cards and this spend, and says which card it would use." }
+                    div { style: "margin-top:10px", button { class: "btn small b-solid", onclick: go, Icon { name: "search".to_string(), size: 16.0 } span { "Check on the web" } } }
+                },
+                "busy" => rsx! { div { class: "web-busy", i { class: "boot-dot" } span { "Searching the web and reading your cards' terms… about 10 seconds" } } },
+                "err" => rsx! {
+                    Note { tone: "warn", "{err}" }
+                    div { style: "margin-top:10px", button { class: "btn small b-ghost", onclick: go, "Try again" } }
+                },
+                _ => rsx! { WebAnswer { v: v.clone() } },
+            }
+        }
+    }
+}
+
+#[component]
+fn WebAnswer(v: Value) -> Element {
+    let s = |x: &Value| x.as_str().unwrap_or("").to_string();
+    let b = &v["best"];
+    let (card, how, earn) = (s(&b["card"]), s(&b["how"]), s(&b["earn"]));
+    let value = b["value"].as_f64().filter(|x| *x > 0.0 && !earn.contains('₹')).map(|x| format!(" ≈ {}", rs(x))).unwrap_or_default();
+    let rate = b["rate"].as_f64().filter(|x| *x > 0.0).map(|x| format!(" ({}%)", (x * 10.0).round() / 10.0)).unwrap_or_default();
+    let why = s(&v["why"]);
+    let others: Vec<(String, String, String)> = v["others"].as_array().cloned().unwrap_or_default().iter()
+        .map(|o| { let e = s(&o["earn"]); (s(&o["card"]), s(&o["note"]), format!("{}{}", e, o["value"].as_f64().filter(|x| *x > 0.0 && !e.contains('₹')).map(|x| format!(" · {}", rs(x))).unwrap_or_default())) })
+        .filter(|o| !o.0.is_empty()).collect();
+    let watch: Vec<String> = v["watch"].as_array().map(|a| a.iter().filter_map(|x| x.as_str().map(String::from)).filter(|x| !x.is_empty()).collect()).unwrap_or_default();
+    let host = |u: &str| u.split("//").nth(1).unwrap_or(u).split('/').next().unwrap_or("").trim_start_matches("www.").to_string();
+    let sources: Vec<(String, String, String)> = v["sources"].as_array().cloned().unwrap_or_default().iter().map(|x| {
+        let url = s(&x["url"]);
+        let meta = format!("{}{}", host(&url), x["date"].as_str().map(|d| format!(" · {}", d.chars().take(10).collect::<String>())).unwrap_or_default());
+        (url, s(&x["title"]), meta)
+    }).filter(|x| x.0.starts_with("http")).collect();
+    rsx! {
+        div { class: "web-best",
+            div { class: "web-card", "{card}" }
+            if !how.is_empty() { div { class: "web-how", "{how}" } }
+            div { class: "web-earn", b { "{earn}" } span { "{value}{rate}" } }
+        }
+        if !why.is_empty() { p { class: "web-why", "{why}" } }
+        if !others.is_empty() {
+            div { class: "rows", style: "margin-top:8px",
+                for (i, (c, note, val)) in others.into_iter().enumerate() { Row { key: "{i}", title: c, detail: note, value: val, soft: true } }
+            }
+        }
+        for (i, w) in watch.into_iter().enumerate() { Note { key: "w{i}", tone: "warn", "{w}" } }
+        if !sources.is_empty() {
+            div { class: "web-src",
+                div { class: "u-l", "From these pages" }
+                for (i, (url, title, meta)) in sources.into_iter().enumerate() {
+                    a { key: "{i}", href: "{url}", target: "_blank", rel: "noopener", class: "web-link", span { class: "web-t", "{title}" } span { class: "web-h", "{meta}" } }
+                }
+            }
+        }
+        p { class: "web-foot", "Read from the web by an AI just now. It can be wrong: check the bank's own page before a big spend." }
     }
 }

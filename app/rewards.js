@@ -234,7 +234,22 @@ const rewShop = id => REW_SHOPS.find(s => s.id === id) || null;
 const REW_ONLINE = ["shopping", "electronics", "fashion", "food", "flights", "hotels", "travel", "trains", "buses", "ott", "movies", "cabs", "telecom", "utilities", "insurance", "wallets"];
 const REW_DEFAULT_AMT = 1000;
 
-/** What you typed, as a spend: {text, amt (null: not said), kind, shop (an id or null), online, intl}. */
+/* Where you're NOT paying: "non SmartBuy", "not on Amazon", "without MakeMyTrip" leave that shop (or portal) out, and
+   "booked direct" / "on the hotel's website" leaves out every portal and travel site. A "not" word just before the
+   name counts. The portals that aren't shops are named here. */
+const REW_NOT_RE = /(?:^|\b)(?:non|not|no|without|outside(?: of)?|except|excluding|other than|apart from|avoid(?:ing)?|instead of|skip(?:ping)?)(?:[\s-]+(?:on|via|through|using|from|at|the|a|an|by|with))*[\s-]*$/i;
+const REW_ROUTE_NAMES = [{id:"traveledge", re:/\b(axis\s+)?travel\s?edge\b/i}, {id:"hsbcapp", re:/\bhsbc\s+(travel\s+with\s+points|app)\b/i}, {id:"amazonpay", re:/\bamazon\s?pay\b/i}];
+const REW_DIRECT_RE = /\b(book(ed|ing)?\s+(it\s+)?direct(ly)?|direct(ly)?\s+(with|on|from|at|through)\s+(the\s+)?(hotel|airline|property|brand)|(hotel|airline|brand)('s)?\s+(own\s+)?(website|site|app)|direct\s+booking)\b/i;
+const REW_PORTALS = ["smartbuy", "traveledge", "hsbcapp", "makemytrip", "cleartrip", "goibibo"];
+/** The shops and portals your words rule out (ids), in REW_SHOPS order, then the portals' routes. */
+function rewNot(t){
+  const not = [];
+  REW_SHOPS.concat(REW_ROUTE_NAMES).forEach(s => { const m = s.re.exec(t); if(m && REW_NOT_RE.test(t.slice(0, m.index))) not.push(s.id); });
+  if(REW_DIRECT_RE.test(t)) REW_PORTALS.forEach(id => { if(!not.includes(id)) not.push(id); });
+  return not;
+}
+
+/** What you typed, as a spend: {text, amt (null: not said), kind, shop (an id or null), online, intl, not (ids ruled out)}. */
 function rewParse(text){
   const t = String(text || "").trim(), low = t.toLowerCase();
   // the amount: "₹40k", "40,000", "1.5 lakh", "rs 999"; a lone small number ("iPhone 16") isn't an amount
@@ -247,7 +262,8 @@ function rewParse(text){
     const v = n * mult;
     if(m[1] || unit || v >= 100){ amt = Math.round(v); break; }
   }
-  const shop = REW_SHOPS.find(s => s.re.test(t)) || null;
+  const not = rewNot(t);
+  const shop = REW_SHOPS.find(s => !not.includes(s.id) && s.re.test(t)) || null;
   let kind = null;
   for(const k of REW_KINDS) if(k.re && k.re.test(t)){ kind = k.id; break; }
   // a shop that sells what you named keeps your kind ("a phone on Amazon" is electronics); otherwise the shop's own
@@ -262,7 +278,7 @@ function rewParse(text){
   if(/\b(online|website|app|order(ed|ing)?)\b/i.test(t)) online = true;
   if(/\b(in[- ]store|offline|in person|at the (shop|store|mall)|showroom|outlet|walk[- ]in)\b/i.test(t)) online = false;
   if(online === null) online = shop ? shop.online !== false : REW_ONLINE.includes(kind);
-  return {text:t, amt, kind, shop:shop ? shop.id : null, online, intl};
+  return {text:t, amt, kind, shop:shop ? shop.id : null, online, intl, not};
 }
 
 /* ---------------- your cards ---------------- */
@@ -371,6 +387,7 @@ function rewWays(card, sp, used, at){
   };
   direct();
   if(!sp.intl) (card.routes || []).forEach(r => {
+    if((sp.not || []).includes(r.id)) return;       // a portal you said you're not using
     const notes = r.note ? [r.note] : [];
     if(r.kinds && r.kinds[kind] !== undefined) add(r.id, r.label + " · " + rewKind(kind).name.toLowerCase(), r.how, r.kinds[kind], [r.cap], notes, r.day, true);
     if(shop && r.merchants && r.merchants[shop.id] !== undefined) add(r.id, r.label + " · " + shop.name, r.how, r.merchants[shop.id], [r.cap], notes, r.day);
@@ -473,7 +490,8 @@ function rewSearch(sp){
   const month = rewMonth(), income = rewIncome();
   // a kind you can buy in many places ("a new phone") also looks at the shops that sell it
   // (a chain you walk into, like Starbucks, isn't offered for "a restaurant": only apps and sites you'd use instead)
-  const shops = s.shop ? [s.shop] : [null].concat(REW_SHOPS.filter(x => x.id !== "smartbuy" && ((x.sells || []).includes(s.kind) || (x.kind === s.kind && x.online !== false))).map(x => x.id));
+  const not = s.not || [];
+  const shops = s.shop ? [s.shop] : [null].concat(REW_SHOPS.filter(x => x.id !== "smartbuy" && !not.includes(x.id) && ((x.sells || []).includes(s.kind) || (x.kind === s.kind && x.online !== false))).map(x => x.id));
   const bestOf = (card, used) => {
     const all = [], seen = {};
     shops.forEach(id => {

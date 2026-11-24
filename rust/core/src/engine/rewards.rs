@@ -12,13 +12,16 @@ use std::sync::OnceLock;
 
 pub const REW_DEFAULT_AMT: f64 = 1000.0;
 /// The searches the parity check makes (tools/rust/screens.mjs SEARCHES).
-pub const CHECK_SEARCHES: [&str; 13] = ["a new iPhone for 80k", "dinner at a restaurant ₹2,500", "flights to Japan", "swiggy order 600", "groceries on bigbasket", "hotel in Bangkok 12000",
-    "netflix", "shoes in store 3000", "petrol 2000", "USD 120 on amazon.com", "uber", "1.5 lakh laptop on flipkart", "coffee in Singapore"];
+pub const CHECK_SEARCHES: [&str; 18] = ["a new iPhone for 80k", "dinner at a restaurant ₹2,500", "flights to Japan", "swiggy order 600", "groceries on bigbasket", "hotel in Bangkok 12000",
+    "netflix", "shoes in store 3000", "petrol 2000", "USD 120 on amazon.com", "uber", "1.5 lakh laptop on flipkart", "coffee in Singapore",
+    "12.5k on non smartbuy hotel", "hotel 8000 booked direct", "flight 20k not on makemytrip", "amazon shopping 5000 without amazon pay", "12.5k hotel on smartbuy"];
 const REW_SKIP: [&str; 2] = ["Transfers to people", "UPI — payee unknown"];
 
 /// A spend: what you typed (or a transaction), as the rulebook reads it.
 #[derive(Clone, Debug, PartialEq)]
-pub struct Spend { pub text: String, pub amt: Option<f64>, pub kind: String, pub shop: Option<String>, pub online: bool, pub intl: bool, pub route: String }
+pub struct Spend { pub text: String, pub amt: Option<f64>, pub kind: String, pub shop: Option<String>, pub online: bool, pub intl: bool, pub route: String,
+    /// shops and portals your words rule out ("non SmartBuy", "booked direct"), as rewNot
+    pub not: Vec<String> }
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Worth { pub cash: f64, pub miles: f64, pub partner: Option<String>, pub best: f64 }
 /// One way to pay with one card.
@@ -84,6 +87,23 @@ fn spends(list: Vec<Row>) -> Vec<Row> {
     v
 }
 
+/// The shops and portals your words rule out (ids): rewNot. A "not" word just before a shop's or portal's name leaves it
+/// out; "booked direct" / "on the hotel's website" leaves out every portal and travel site.
+pub fn rew_not(t: &str) -> Vec<String> {
+    let rb = rulebook();
+    static R: OnceLock<(Regex, Vec<(&'static str, Regex)>, Regex)> = OnceLock::new();
+    let (not_re, routes, direct_re) = R.get_or_init(|| (
+        re(r"(?:^|\b)(?:non|not|no|without|outside(?: of)?|except|excluding|other than|apart from|avoid(?:ing)?|instead of|skip(?:ping)?)(?:[\s-]+(?:on|via|through|using|from|at|the|a|an|by|with))*[\s-]*$"),
+        vec![("traveledge", re(r"\b(axis\s+)?travel\s?edge\b")), ("hsbcapp", re(r"\bhsbc\s+(travel\s+with\s+points|app)\b")), ("amazonpay", re(r"\bamazon\s?pay\b"))],
+        re(r"\b(book(ed|ing)?\s+(it\s+)?direct(ly)?|direct(ly)?\s+(with|on|from|at|through)\s+(the\s+)?(hotel|airline|property|brand)|(hotel|airline|brand)('s)?\s+(own\s+)?(website|site|app)|direct\s+booking)\b"),
+    ));
+    let mut not: Vec<String> = vec![];
+    for s in &rb.shops { if let Some(i) = s.re.find_start(t) { if not_re.is_match(&t[..i]) { not.push(s.id.clone()); } } }
+    for (id, r) in routes { if let Some(m) = r.find(t) { if not_re.is_match(&t[..m.start()]) { not.push(id.to_string()); } } }
+    if direct_re.is_match(t) { for id in ["smartbuy", "traveledge", "hsbcapp", "makemytrip", "cleartrip", "goibibo"] { if !not.iter().any(|x| x == id) { not.push(id.into()); } } }
+    not
+}
+
 /// What you typed, as a spend.
 pub fn rew_parse(text: &str) -> Spend {
     let rb = rulebook();
@@ -99,7 +119,8 @@ pub fn rew_parse(text: &str) -> Spend {
         let v = n * mult;
         if m.get(1).is_some() || !unit.is_empty() || v >= 100.0 { amt = Some(round(v)); break; }
     }
-    let shop = rb.shops.iter().find(|s| s.re.test(&t));
+    let not = rew_not(&t);
+    let shop = rb.shops.iter().find(|s| !not.contains(&s.id) && s.re.test(&t));
     let mut kind: Option<String> = rb.kinds.iter().find(|k| k.re.as_ref().map(|r| r.test(&t)).unwrap_or(false)).map(|k| k.id.clone());
     if let Some(s) = shop {
         let keeps = kind.as_ref().map(|k| s.sells.contains(k)).unwrap_or(false);
@@ -119,7 +140,7 @@ pub fn rew_parse(text: &str) -> Spend {
     if on_re.is_match(&t) { online = Some(true); }
     if off_re.is_match(&t) { online = Some(false); }
     let online = online.unwrap_or_else(|| match shop { Some(s) => s.online != Some(false), None => rb.online.contains(&kind) });
-    Spend { text: t, amt, kind, shop: shop.map(|s| s.id.clone()), online, intl, route: "card".into() }
+    Spend { text: t, amt, kind, shop: shop.map(|s| s.id.clone()), online, intl, route: "card".into(), not }
 }
 
 impl Engine {
@@ -222,6 +243,7 @@ impl Engine {
         }
         if !sp.intl {
             for r in &card.routes {
+                if sp.not.contains(&r.id) { continue; }          // a portal you said you're not using
                 let notes: Vec<String> = r.note.clone().map(|n| vec![n]).unwrap_or_default();
                 if let Some(v) = r.kinds.as_ref().and_then(|k| k.get(kind)).and_then(|v| v.as_f64()) {
                     add(&r.id, format!("{} · {}", r.label, rb.kind(kind).name.to_lowercase()), &r.how, v, vec![r.cap.clone()], notes.clone(), r.day, true);
@@ -262,7 +284,7 @@ impl Engine {
         static V: OnceLock<(Regex, Regex)> = OnceLock::new();
         let (vre, sre) = V.get_or_init(|| (re(r"gyftr|woohoo"), re(r"smart ?buy")));
         let route = if vre.is_match(d) { "voucher" } else if sre.is_match(d) { "smartbuy" } else { "card" };
-        Spend { text: String::new(), amt: Some(x.t.amt), kind, shop: shop.map(|s| s.id.clone()), online: shop.is_some(), intl: false, route: route.into() }
+        Spend { text: String::new(), amt: Some(x.t.amt), kind, shop: shop.map(|s| s.id.clone()), online: shop.is_some(), intl: false, route: route.into(), not: vec![] }
     }
     /// The points a card payment earned, the way it was paid.
     pub fn rew_tx_earn(&self, card: &RewCard, sp: &Spend, used: &HashMap<String, f64>, at: Ms) -> Option<Way> {
@@ -347,7 +369,7 @@ impl Engine {
         let month = self.rew_month(); let income = self.rew_income();
         let shops: Vec<Option<String>> = match &s.shop {
             Some(x) => vec![Some(x.clone())],
-            None => std::iter::once(None).chain(rb.shops.iter().filter(|x| x.id != "smartbuy" && (x.sells.contains(&s.kind) || (x.kind == s.kind && x.online != Some(false)))).map(|x| Some(x.id.clone()))).collect(),
+            None => std::iter::once(None).chain(rb.shops.iter().filter(|x| x.id != "smartbuy" && !s.not.contains(&x.id) && (x.sells.contains(&s.kind) || (x.kind == s.kind && x.online != Some(false)))).map(|x| Some(x.id.clone()))).collect(),
         };
         let best_of = |card: &RewCard, used: &HashMap<String, f64>| -> Vec<Way> {
             let mut all: Vec<Way> = vec![]; let mut seen: HashSet<String> = HashSet::new();

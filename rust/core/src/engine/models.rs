@@ -636,7 +636,7 @@ impl Engine {
     }
     fn search_check(&self, q: &str) -> Value {
         let sp = rew_parse(q); let r = self.rew_search(&sp);
-        json!([[sp.text, sp.amt, sp.kind, sp.shop, sp.online, sp.intl], r.sp.amt, r.typed_amt,
+        json!([[json!(sp.text), json!(sp.amt), json!(sp.kind), json!(sp.shop), json!(sp.online), json!(sp.intl), json!(sp.not)], r.sp.amt, r.typed_amt,
             r.yours.iter().map(|y| json!([y.g, y.card.id, y.ways.iter().map(Self::way_check).collect::<Vec<_>>()])).collect::<Vec<_>>(),
             r.could.iter().map(|c| json!([c.card.id, c.ways.iter().take(4).map(Self::way_check).collect::<Vec<_>>()])).collect::<Vec<_>>(),
             r.top.as_ref().and_then(|t| t.g.clone()), r.runner.as_ref().and_then(|t| t.g.clone()), r.better.as_ref().map(|b| b.card.id.clone()),

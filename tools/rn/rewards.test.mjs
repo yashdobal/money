@@ -151,4 +151,18 @@ ok("cards you asked to drop aren't offered (HSBC); their rules still work", () =
   assert.ok(e.rewWays(card("hsbc-travelone"), { amt: 1000, kind: "flights", shop: null }, {}, Date.now())[0].pts > 0);
 });
 
+ok("what you rule out stays out: \"non SmartBuy\", \"not on MakeMyTrip\", \"booked direct\"", () => {
+  const p = e.rewParse("12.5k on non smartbuy hotel");
+  assert.deepStrictEqual([p.kind, p.shop, p.amt, p.not], ["hotels", null, 12500, ["smartbuy"]]);
+  const rg = card("hdfc-regalia-gold");
+  assert.ok(e.rewWays(rg, e.rewParse("12.5k hotel"), {}, Date.now()).some((w) => w.route === "smartbuy"), "no channel named: SmartBuy is still a way");
+  assert.ok(!e.rewWays(rg, p, {}, Date.now()).some((w) => w.route.startsWith("smartbuy")), "non SmartBuy: no SmartBuy way");
+  assert.strictEqual(e.rewParse("12.5k hotel on smartbuy").shop, "smartbuy");
+  assert.deepStrictEqual(e.rewParse("flight 20k not on makemytrip").not, ["makemytrip"]);
+  assert.ok(!e.rewSearch(e.rewParse("flight 20k not on makemytrip")).yours.some((y) => y.ways.some((w) => w.at === "makemytrip")), "MakeMyTrip isn't offered");
+  const d = e.rewParse("hotel 8000 booked direct").not;
+  ["smartbuy", "traveledge", "hsbcapp", "makemytrip", "cleartrip", "goibibo"].forEach((id) => assert.ok(d.includes(id), id));
+  assert.deepStrictEqual(e.rewParse("not swiggy, zomato 500").shop, "zomato");
+});
+
 console.log("\nall " + n + " passed");

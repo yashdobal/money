@@ -708,3 +708,19 @@ html, body { overflow-x: hidden; }
 /* dark blocks (the hero figures) slide in without fading: a dark card half-faded over a light page reads as grey */
 .hero.rise, .panel.k-d.rise { animation-name: rise-solid; }
 @keyframes rise-solid { from { transform: translateY(14px); } to { transform: none; } }
+
+/* ---------- Rewards: the web check ---------- */
+.web .panel-head .badge { flex: none; }
+.web-busy { display: flex; align-items: center; gap: 10px; color: var(--ink2); font-size: 14px; padding: 6px 0; }
+.web-busy .boot-dot { width: 10px; height: 10px; flex: none; }
+.web-best { margin-top: 2px; }
+.web-card { font-weight: 620; font-stretch: 112%; font-size: 20px; line-height: 26px; }
+.web-how { color: var(--ink2); font-size: 14px; margin-top: 2px; }
+.web-earn { margin-top: 6px; font-size: 15px; } .web-earn b { font-weight: 640; } .web-earn span { color: var(--ink2); }
+.web-why { margin: 10px 0 0; font-size: 14.5px; line-height: 21px; color: var(--ink); }
+.web .note { margin-top: 8px; }
+.web-src { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); display: grid; gap: 8px; }
+.web-link { display: grid; gap: 1px; text-decoration: none; color: var(--accent); }
+.web-t { font-size: 14px; line-height: 19px; }
+.web-h { font-size: 12px; color: var(--ink3); }
+.web-foot { margin: 12px 0 0; font-size: 12.5px; color: var(--ink3); }

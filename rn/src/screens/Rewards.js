@@ -13,7 +13,8 @@ import { T, M, Panel, Rows, Row, Ic, Note, Badge, Chip, Seg, Switch, Btn, Press,
 import { SelectField } from "../form";
 import { Icon } from "../icons";
 import { Amount, Line } from "./Trips";
-import { askAI } from "../ask";
+import { askAI, askWeb, notText } from "../ask";
+import { openLink } from "../nav";
 
 /* ---------------- how things are written ---------------- */
 /** A rupee value: one decimal under ₹10 ("₹2.5"), whole rupees above. */
@@ -77,6 +78,8 @@ function Search({ m, first }) {
   const go = (t) => { const v = String(t || "").trim(); buzz("tick"); setParams((p) => { p.q = v || undefined; }); };
   const parsed = useMemo(() => (q ? E.rewParse(q) : null), [q]);
   const sp = parsed ? Object.assign({}, parsed, ai && ai.q === q ? ai.sp : {}, edit) : null;
+  // the AI's "not" adds to the app's own; a shop that's ruled out isn't where you pay
+  if (sp) { sp.not = Array.from(new Set((parsed.not || []).concat(ai && ai.q === q && ai.sp.not ? ai.sp.not : []))); if (sp.shop && sp.not.includes(sp.shop)) sp.shop = null; }
   const res = sp ? E.rewSearch(sp) : null;
   return (
     <>
@@ -98,6 +101,7 @@ function Search({ m, first }) {
         {sp ? <Understood sp={sp} typed={parsed} edit={edit} setEdit={setEdit} asking={asking} ai={!!(ai && ai.q === q)} /> : null}
       </Panel>
       {res ? <Answer res={res} first={first} /> : null}
+      {res ? <WebCheck key={webKey(q, res.sp)} q={q} res={res} first={first} /> : null}
       {res ? <Yours res={res} first={first} /> : null}
       {res ? <Could res={res} first={first} /> : null}
     </>
@@ -107,7 +111,7 @@ function Search({ m, first }) {
 function Understood({ sp, typed, edit, setEdit, asking, ai }) {
   const C = useC();
   const set = (k, v) => setEdit(Object.assign({}, edit, { [k]: v }));
-  const parts = [E.rewKind(sp.kind).name, sp.shop ? "at " + shopName(sp.shop) : null, sp.amt ? rs(sp.amt) : rs(1000) + " (no amount given)", sp.intl ? "in a foreign currency" : sp.online ? "online" : "in a shop"].filter(Boolean);
+  const parts = understoodParts(sp);
   return (
     <View style={{ marginTop: 14, paddingTop: 12, borderTopWidth: 1, borderTopColor: C.line }}>
       <T s={13} lh={18} c={C.ink3}>{(ai ? "Understood as" : asking ? "Understood as (checking…)" : "Understood as") + ":"}</T>
@@ -120,6 +124,61 @@ function Understood({ sp, typed, edit, setEdit, asking, ai }) {
         <Line label="In a foreign currency"><Switch value={!!sp.intl} onChange={(v) => set("intl", v)} label="In a foreign currency" /></Line>
       </More>
     </View>
+  );
+}
+
+const understoodParts = (sp) => [E.rewKind(sp.kind).name, sp.shop ? "at " + shopName(sp.shop) : null, sp.amt ? rs(sp.amt) : rs(1000) + " (no amount given)",
+  sp.intl ? "in a foreign currency" : sp.online ? "online" : "in a shop", notText(sp.not)].filter(Boolean);
+const webKey = (q, sp) => [String(q).trim().toLowerCase(), sp.kind, sp.shop, sp.amt, sp.online, sp.intl, (sp.not || []).join(",")].join("|");
+
+/** "From the web": today's terms of your cards for this spend, read from the web by an AI, next to the app's own
+    sum, with the pages it read. Only when you tap it (each check uses a little of the free allowance). */
+function WebCheck({ q, res, first }) {
+  const C = useC();
+  const [st, setSt] = useState({ s: "idle" });
+  const go = () => {
+    buzz("tick"); setSt({ s: "busy" });
+    const cards = res.yours.map((y) => ({ name: y.card.name, short: y.short, addOn: y.addOn })).concat(res.unknown.map((u) => ({ name: u.short, short: u.short, addOn: u.addOn })));
+    const t = res.top && res.top.best;
+    const app = t ? { card: res.top.card.name, how: t.how, earn: Math.round(t.pts) + " " + (res.top.card.unit || ""), value: Math.round(t.net), rate: t.rate, notes: t.notes } : null;
+    askWeb(webKey(q, res.sp), { text: String(q).slice(0, 300), understood: understoodParts(res.sp).join(" · "), cards, app })
+      .then((o) => { buzz(o.ok ? "confirm" : "error"); setSt(o.ok ? { s: "done", v: o } : { s: "err", why: o.why }); });
+  };
+  const v = st.v || {}, b = v.best || {};
+  const host = (u) => String(u).replace(/^https?:\/\//, "").split("/")[0].replace(/^www\./, "");
+  return (
+    <Panel title="From the web" kind="w" i={3} first={first} right={st.s === "done" ? <Badge text={v.agree ? "Agrees with the app" : "Differs from the app"} tone={v.agree ? "pos" : "warn"} /> : null}>
+      {st.s === "idle" ? <>
+        <Note>Card terms change often. Check today's terms on the web: an AI reads the banks' pages and reviews for your cards and this spend, and says which card it would use.</Note>
+        <View style={{ flexDirection: "row", marginTop: 10 }}><Btn small label="Check on the web" onPress={go} /></View>
+      </> : null}
+      {st.s === "busy" ? <T s={14} c={C.ink2} style={{ paddingVertical: 6 }}>Searching the web and reading your cards' terms… about 10 seconds</T> : null}
+      {st.s === "err" ? <>
+        <Note tone="warn">{st.why}</Note>
+        <View style={{ flexDirection: "row", marginTop: 10 }}><Btn small kind="link" label="Try again" onPress={go} /></View>
+      </> : null}
+      {st.s === "done" ? <>
+        <T f={F.title} s={20} lh={26}>{b.card}</T>
+        {b.how ? <T s={14} c={C.ink2} style={{ marginTop: 2 }}>{b.how}</T> : null}
+        <T s={15} style={{ marginTop: 6 }}><T f={F.semi} s={15}>{b.earn}</T>{b.value > 0 && !/₹/.test(b.earn || "") ? " ≈ " + rs(b.value) : ""}{b.rate > 0 ? " (" + Math.round(b.rate * 10) / 10 + "%)" : ""}</T>
+        {v.why ? <T s={14.5} lh={21} style={{ marginTop: 10 }}>{v.why}</T> : null}
+        {(v.others || []).length ? <Rows style={{ marginTop: 8 }}>{v.others.filter((o) => o.card).map((o, i) => <Row key={i} soft title={o.card} detail={o.note}
+          value={(o.earn || "") + (o.value > 0 && !/₹/.test(o.earn || "") ? " · " + rs(o.value) : "")} />)}</Rows> : null}
+        {(v.watch || []).filter(Boolean).map((w, i) => <Note key={"w" + i} tone="warn" style={{ marginTop: 8 }}>{w}</Note>)}
+        {(v.sources || []).length ? (
+          <View style={{ marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: C.line, gap: 8 }}>
+            <T s={13} c={C.ink3}>From these pages</T>
+            {v.sources.filter((x) => /^https?:/.test(x.url)).map((x, i) => (
+              <Press key={i} haptic={false} onPress={() => openLink(x.url)} accessibilityRole="link" accessibilityLabel={x.title}>
+                <T s={14} lh={19} c={C.accent}>{x.title}</T>
+                <T s={12} c={C.ink3}>{host(x.url) + (x.date ? " · " + String(x.date).slice(0, 10) : "")}</T>
+              </Press>
+            ))}
+          </View>
+        ) : null}
+        <T s={12.5} c={C.ink3} style={{ marginTop: 12 }}>Read from the web by an AI just now. It can be wrong: check the bank's own page before a big spend.</T>
+      </> : null}
+    </Panel>
   );
 }
 
