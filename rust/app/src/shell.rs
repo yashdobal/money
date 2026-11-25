@@ -61,8 +61,8 @@ fn Soon(name: String) -> Element {
     rsx! { div { class: "page", Panel { title: name.clone(), kind: "w", Note { "Nothing here." } } } }
 }
 
-/// The bottom bar: a capsule with a pill behind the chosen tab. The pill's leading edge springs ahead and its trailing
-/// edge follows, so it stretches as it travels (App.js Dock).
+/// The bottom bar: a capsule with a soft tile behind the chosen tab. The tile glides to the tab you pick, its leading
+/// edge a touch ahead of the trailing one, so it moves calmly rather than snapping.
 #[component]
 fn Dock(tab: usize, from: usize) -> Element {
     let n = TABS.len() as f64;
@@ -70,8 +70,8 @@ fn Dock(tab: usize, from: usize) -> Element {
     let right_moves = at >= from;
     let (l, r) = (at as f64 / n * 100.0, (n - at as f64 - 1.0) / n * 100.0);
     // the edge in front moves fast, the one behind slowly
-    let style = format!("left:calc({l}% + 4px);right:calc({r}% + 4px);transition:left {}ms cubic-bezier(.3,1.3,.5,1),right {}ms cubic-bezier(.3,1.3,.5,1);",
-        if right_moves { 420 } else { 240 }, if right_moves { 240 } else { 420 });
+    let style = format!("left:calc({l}% + 5px);right:calc({r}% + 5px);transition:left {}ms cubic-bezier(.25,.8,.3,1),right {}ms cubic-bezier(.25,.8,.3,1),opacity 200ms ease;",
+        if right_moves { 380 } else { 300 }, if right_moves { 300 } else { 380 });
     rsx! {
         nav { class: "dock",
             // on a laptop the bar is a sidebar: the app's name on top, the screens, and Settings at the foot
