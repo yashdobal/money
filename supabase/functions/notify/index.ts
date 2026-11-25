@@ -43,7 +43,7 @@ async function prune() {
   return error ? "prune failed: " + error.message : `pruned ${count ?? 0} sync records older than 30 days`;
 }
 
-/** The same reads the app makes (rn/src/store.js), with the service role, for your rows only. */
+/** The same reads the app makes (rust/app/src/api.rs), with the service role, for your rows only. */
 async function fixture() {
   const reads: [string, string, string?][] = [
     ["transactions", "source_ref,occurred_at,amount,direction,description,counted,snippet,sheet_row,deleted_at,accounts(kind,aliases),categories(name)", "sheet_row"],

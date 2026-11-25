@@ -61,6 +61,11 @@ class Bridge(private val act: MainActivity) {
     @JavascriptInterface fun testNotification(): String = if (!trusted) "" else onUi("") { Notifier.test(act) }
     @JavascriptInterface fun openNotificationSettings() { ui { Notifier.openAppSettings(act) } }
 
+    /* bank SMS (Sms.kt): "granted" | "ask" | "blocked"; asking; the bank messages since a moment */
+    @JavascriptInterface fun smsState(): String = onUi("ask") { Sms.state(act) }
+    @JavascriptInterface fun askSms(): String = if (!trusted) "" else onUi("") { act.askSmsPermission() }
+    @JavascriptInterface fun readSms(since: Double, limit: Int): String = if (trusted) Sms.read(ctx, since.toLong(), limit) else "[]"
+
     /* sign-in links */
     @JavascriptInterface fun openLinkSettings() { ui { act.openLinkSettings() } }
     @JavascriptInterface fun linksVerified(): String = act.linksState()

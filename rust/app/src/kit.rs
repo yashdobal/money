@@ -1,5 +1,5 @@
-//! The pieces every screen is built from, as in rn/src/kit.js: amounts, a panel (tray), rows as white cards, tiles,
-//! the icon square, day headings, notes, buttons and the rolling figure. Sizes and colours are the current app's;
+//! The pieces every screen is built from, amounts, a panel (tray), rows as white cards, tiles,
+//! the icon square, day headings, notes, buttons and the rolling figure. Sizes and colours are the app's;
 //! the look itself is web/style.css.
 
 use crate::state::{HIDDEN, SHEET};
@@ -32,13 +32,13 @@ pub fn in_days(n: i32) -> String { match n { 0 => "today".into(), 1 => "tomorrow
 pub fn day_name(today: Ms, d: Ms) -> String { match time::days(today, d) { 0 => "Today".into(), 1 => "Tomorrow".into(), -1 => "Yesterday".into(), _ => time::fmt_d(d) } }
 pub fn tone_class(t: &str) -> &'static str { match t { "pos" => "t-pos", "alert" => "t-alert", "warn" => "t-warn", "info" => "t-info", "soft" => "t-soft", _ => "" } }
 
-/* ---------------- icons (rn/src/icon-paths.js, the same drawings) ---------------- */
+/* ---------------- icons (icon-paths.js: the drawings) ---------------- */
 fn icons() -> &'static HashMap<String, String> {
     static I: OnceLock<HashMap<String, String>> = OnceLock::new();
     I.get_or_init(|| {
         // keys are bare words or "quoted" (the category names)
         let re = Regex::new(r#"^\s+(?:"([^"]+)"|(\w+)):\s*'(.*)',?\s*$"#).unwrap();
-        include_str!("../../../rn/src/icon-paths.js").lines().filter_map(|l| re.captures(l).map(|c| (c.get(1).or(c.get(2)).unwrap().as_str().to_string(), c[3].to_string()))).collect()
+        include_str!("icon-paths.js").lines().filter_map(|l| re.captures(l).map(|c| (c.get(1).or(c.get(2)).unwrap().as_str().to_string(), c[3].to_string()))).collect()
     })
 }
 #[component]
@@ -239,7 +239,7 @@ fn slide_feel(a: f64, b: f64, g: &mut Grip, max: f64, notch: f64, marks: &[f64])
 /* ---------------- the rolling figure ---------------- */
 thread_local! { static ODO_LAST: std::cell::RefCell<HashMap<String, String>> = std::cell::RefCell::new(HashMap::new()); }
 /// "₹14,080" where each digit rolls up to its place: a CSS transition on each column, so it always lands on the right
-/// digit, and each column is as wide as its digit (the current app's Odo on the web).
+/// digit, and each column is as wide as its digit (the app's Odo on the web).
 #[component]
 pub fn Odo(value: f64, #[props(default = "odo".to_string())] class: String) -> Element {
     let text = rup(value);

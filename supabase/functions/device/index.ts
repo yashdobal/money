@@ -7,7 +7,7 @@
  *
  *   POST, header x-device-token: <key>
  *     {}                → {at, widget, alerts}
- *                          widget: the app's own Today numbers (app/engine.js widgetModel), worked out now
+ *                          widget: the app's own Today numbers (the engine's widget model, rust/core), worked out now
  *                          alerts: what's due now (bills, EMI, salary, quiet collector) and what was sent in the last
  *                                  26 hours (including the 9 PM summary), each with a key the phone shows once
  *     {want: "widget"}  → {at, widget}

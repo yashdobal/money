@@ -1,4 +1,4 @@
-//! Rewards (rn/src/screens/Rewards.js): which card to pay with. What each card earned this month (tap one for every
+//! Rewards: which card to pay with. What each card earned this month (tap one for every
 //! spend), the search ("Which card for…?") and its answer, what you left on the table, your next card, milestones and
 //! fee waivers, and how it counts. Points are shown as points; ₹ only to compare cards (and for a cashback card).
 

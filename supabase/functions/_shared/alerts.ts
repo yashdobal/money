@@ -39,7 +39,7 @@ export async function planAlerts(db: SupabaseClient, OWNER: string, nowMs: numbe
   const groupOfAccount = new Map((accounts ?? []).map((a) => [a.id, a.card_group_id]));
   const groupOfLabel = new Map<string, string>();
   for (const a of accounts ?? []) for (const al of a.aliases ?? []) groupOfLabel.set(String(al).toLowerCase(), a.card_group_id);
-  // your saved settings: the profile (banks and cards) and the plan (fixed payments); see app/engine.js
+  // your saved settings: the profile (banks and cards) and the plan (fixed payments); see rust/core/src/engine
   type Saved = { payments?: { card: string; date: string; amt: number }[];
     profile?: { groups?: Record<string, { short?: string; closed?: string }>; salaryText?: string; family?: string };
     cfg?: { planned?: { name: string; amt: number; due: string }[] } };

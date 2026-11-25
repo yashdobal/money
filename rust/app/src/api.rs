@@ -1,6 +1,6 @@
-//! Your account: email-code sign-in (Supabase Auth) and the same tables the current app reads (rn/src/store.js
-//! getData), plus the app function (supabase/functions/app) for saving settings and asking the collector to check Gmail.
-//! The keys here are the public ones every visitor's browser gets (app/public-config.json); row-level security keeps
+//! Your account: email-code sign-in (Supabase Auth) and the tables the app reads (the server reads the same, in
+//! supabase/functions/_shared/engine.ts), plus the app function (supabase/functions/app) for saving settings and asking the collector to check Gmail.
+//! The keys here are the public ones every visitor's browser gets (rust/public-config.json); row-level security keeps
 //! each row to your login.
 
 use gloo_net::http::{Request, Response};
@@ -8,7 +8,7 @@ use money_core::shape::{self, Rows};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
-const CONFIG: &str = include_str!("../../../app/public-config.json");
+const CONFIG: &str = include_str!("../../public-config.json");
 
 fn config(k: &str) -> String {
     let v: Value = serde_json::from_str(CONFIG).unwrap_or(Value::Null);
@@ -16,6 +16,13 @@ fn config(k: &str) -> String {
 }
 pub fn url() -> String { config("SUPABASE_URL") }
 fn key() -> String { config("SUPABASE_PUBLISHABLE_KEY") }
+/// The public half of the web push key (its private half stays in Supabase).
+pub fn vapid_key() -> String { config("VAPID_PUBLIC_KEY") }
+/// The project's sign-in storage name in the old app ("sb-<project>-auth-token"), to bring its sign-in over.
+pub fn old_session_key() -> String {
+    let host = url().trim_start_matches("https://").split('.').next().unwrap_or("").to_string();
+    format!("sb-{}-auth-token", host)
+}
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct Session { pub access_token: String, pub refresh_token: String, pub expires_at: i64, pub email: String }
@@ -54,16 +61,29 @@ pub async fn verify(email: &str, code: &str) -> Result<Session, String> {
     if s >= 400 { return Err(if s == 403 || s == 401 { "That code didn't work. Check it, or ask for a new one.".into() } else { err_of(&v, s) }); }
     session_of(&v, email)
 }
+/// Why a sign-in couldn't be renewed: offline (keep it, try later) or refused (it's over: sign in again).
+pub enum Renew { Offline(String), Refused(#[allow(dead_code)] String) }
 /// A fresh sign-in from the long-lived one (an hour before it runs out).
-pub async fn refresh(s: &Session) -> Result<Session, String> {
+pub async fn refresh(s: &Session) -> Result<Session, Renew> {
     let r = Request::post(&format!("{}/auth/v1/token?grant_type=refresh_token", url())).header("apikey", &key()).header("content-type", "application/json")
-        .body(json!({ "refresh_token": s.refresh_token }).to_string()).map_err(|e| e.to_string())?.send().await;
-    let (st, v) = read(r).await?;
-    if st >= 400 { return Err(err_of(&v, st)); }
-    session_of(&v, &s.email)
+        .body(json!({ "refresh_token": s.refresh_token }).to_string()).map_err(|e| Renew::Offline(e.to_string()))?.send().await;
+    let (st, v) = read(r).await.map_err(Renew::Offline)?;
+    // a server hiccup isn't a refusal: only the sign-in service saying no ends the sign-in
+    if st >= 500 || st == 429 { return Err(Renew::Offline(err_of(&v, st))); }
+    if st >= 400 { return Err(Renew::Refused(err_of(&v, st))); }
+    session_of(&v, &s.email).map_err(Renew::Refused)
+}
+/// The old app's saved sign-in (supabase-js's JSON), as a Session.
+pub fn session_from_old(raw: &str) -> Option<Session> {
+    let v: Value = serde_json::from_str(raw).ok()?;
+    let v = if v.get("currentSession").is_some() { v["currentSession"].clone() } else { v };
+    let email = v.get("user").and_then(|u| u.get("email")).and_then(|x| x.as_str()).unwrap_or("").to_string();
+    let s = session_of(&v, &email).ok()?;
+    if s.refresh_token.is_empty() { return None; }
+    Some(s)
 }
 
-/// Every row of a table (1,000 at a time), as the current app reads it.
+/// Every row of a table (1,000 at a time), as the app reads it.
 async fn table(s: &Session, name: &str, select: &str, order: Option<&str>) -> Result<Vec<Value>, String> {
     let mut out = vec![];
     let mut from = 0;
@@ -112,6 +132,16 @@ pub async fn call_app(s: &Session, body: Value) -> Result<(u16, Value), String> 
 pub async fn last_sync(s: &Session) -> Option<i64> {
     let (_, v) = get(s, "ingest_log?select=received_at&kind=eq.sync&result=eq.saved&order=received_at.desc&limit=1").await.ok()?;
     v.get(0).and_then(|r| r.get("received_at")).and_then(|x| x.as_str()).and_then(money_core::time::parse_ts)
+}
+
+/// One row into a table, or over the row with the same `conflict` column (yours, by row-level security).
+pub async fn upsert(s: &Session, table: &str, conflict: &str, row: &Value) -> Result<(), String> {
+    let r = Request::post(&format!("{}/rest/v1/{}?on_conflict={}", url(), table, conflict)).header("apikey", &key()).header("authorization", &format!("Bearer {}", s.access_token))
+        .header("content-type", "application/json").header("prefer", "resolution=merge-duplicates,return=minimal")
+        .body(row.to_string()).map_err(|e| e.to_string())?.send().await;
+    let (st, v) = read(r).await?;
+    if st >= 400 { return Err(err_of(&v, st)); }
+    Ok(())
 }
 
 /// A note or payee rule, written to its table (store.js writeNow).

@@ -1,7 +1,0 @@
-{
-  "name": "money-native",
-  "version": "1.0.0",
-  "private": true,
-  "description": "Small Android bits for Money RN: the phone's Material You colours.",
-  "main": "src/index.js"
-}

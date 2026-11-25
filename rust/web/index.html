@@ -4,20 +4,62 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#F7F7F5">
-  <title>Money · Rust</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <meta name="color-scheme" content="light dark">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Money">
+  <title>Money</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icons/mark.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
   <link rel="preload" href="fonts/anek-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="style.css?v=__BUILD__">
   <script>
-    /* light or dark before anything draws: Settings → Theme (Auto follows the phone, and changes with it) */
+    /* light or dark, and the colours, before anything draws: Settings → Theme (Auto follows the phone, and changes with
+       it) and Settings → Colours (one seed colour tints the page; Minimal swaps the blue for ink;
+       System takes the phone's Material You colours inside the Android app) */
     (function () {
       var mq = matchMedia("(prefers-color-scheme: dark)");
+      var SEEDS = { indigo: ["#4B44C8", "#A9A4FF"], forest: ["#2E6B4E", "#8CCFAE"], ocean: ["#1F5F8B", "#8EC3E8"], rose: ["#A23E62", "#EDA0BC"],
+        sand: ["#8A5A2B", "#E0B98C"], system: ["#5B5BD6", "#B9B8FF"] };
+      var NAMES = ["--accent", "--accent2", "--accent-ink", "--accent-soft", "--ground", "--tray", "--surface", "--inset", "--inset2", "--line", "--line2",
+        "--hero", "--n-yours", "--n-emi", "--n-family", "--n-sip", "--n-ef", "--n-card", "--dock"];
+      function rgb(h) { return [1, 3, 5].map(function (i) { return parseInt(h.slice(i, i + 2), 16); }); }
+      function mix(a, p, b) { var A = rgb(a), B = rgb(b); return "#" + A.map(function (v, i) { var x = Math.round(Math.max(0, Math.min(255, v * p + B[i] * (1 - p)))); return (x < 16 ? "0" : "") + x.toString(16); }).join("").toUpperCase(); }
+      function get(k, d) { try { return localStorage.getItem(k) || d; } catch (e) { return d; } }
+      function sys() {
+        try { var b = window.AndroidBridge; var s = b && b.systemColors ? JSON.parse(b.systemColors()) : null; return s && s.light && s.dark ? s : null; } catch (e) { return null; }
+      }
+      window.moneySystemColors = sys;
+      function tokens(pal, dark) {
+        if (pal === "minimal") return dark ? { "--accent": "#F2F2F0", "--accent2": "#FFFFFF", "--accent-ink": "#121212", "--accent-soft": "#2A2A2E" }
+          : { "--accent": "#141414", "--accent2": "#000000", "--accent-ink": "#FFFFFF", "--accent-soft": "#E9E9E5" };
+        var sd = SEEDS[pal]; if (!sd) return {};
+        var seed = sd[0], dk = sd[1];
+        if (pal === "system") { var s = sys(); if (s) { seed = s.light; dk = s.dark; } }
+        if (!dark) return { "--accent": seed, "--accent2": mix(seed, 0.82, "#000000"), "--accent-ink": "#FFFFFF", "--accent-soft": mix(seed, 0.12, "#FFFFFF"),
+          "--ground": mix(seed, 0.04, "#F7F7F5"), "--tray": mix(seed, 0.08, "#EEEEEA"), "--inset": mix(seed, 0.06, "#F1F1EE"), "--inset2": mix(seed, 0.11, "#E6E6E2"),
+          "--line": mix(seed, 0.09, "#E8E8E4"), "--line2": mix(seed, 0.14, "#D5D5D0"), "--hero": mix(seed, 0.64, "#0A0A0A"),
+          "--n-yours": seed, "--n-emi": mix(seed, 0.55, "#000000"), "--n-family": mix(seed, 0.72, "#FFFFFF"), "--n-sip": mix(seed, 0.5, "#FFFFFF"), "--n-ef": mix(seed, 0.32, "#FFFFFF"), "--n-card": mix(seed, 0.18, "#C8C8C4") };
+        return { "--accent": dk, "--accent2": mix(dk, 0.8, "#FFFFFF"), "--accent-ink": "#121212", "--accent-soft": mix(dk, 0.18, "#161616"),
+          "--ground": mix(seed, 0.08, "#0A0A0C"), "--tray": mix(seed, 0.09, "#131316"), "--surface": mix(seed, 0.08, "#1C1C20"), "--inset": mix(seed, 0.09, "#1D1D1D"), "--inset2": mix(seed, 0.12, "#262626"),
+          "--line": mix(seed, 0.12, "#232323"), "--line2": mix(seed, 0.16, "#333333"), "--hero": mix(seed, 0.46, "#0E0E0E"),
+          "--n-yours": dk, "--n-emi": mix(dk, 0.92, "#FFFFFF"), "--n-family": mix(dk, 0.72, "#000000"), "--n-sip": mix(dk, 0.52, "#000000"), "--n-ef": mix(dk, 0.36, "#000000"), "--n-card": mix(dk, 0.22, "#3A3A3A"),
+          "--dock": mix(dk, 0.05, "#1E1F24") };
+      }
       function apply() {
-        var t = "auto"; try { t = localStorage.getItem("money-rs-theme") || "auto"; } catch (e) {}
-        var dark = t === "dark" || (t === "auto" && mq.matches);
-        document.documentElement.classList.toggle("dk", dark);
-        var m = document.querySelector("meta[name=theme-color]"); if (m) m.content = dark ? "#0A0A0C" : "#F7F7F5";
+        var t = get("money-rs-theme", "auto"), pal = get("money-rs-palette", "signal");
+        var dark = t === "dark" || (t === "auto" && mq.matches), root = document.documentElement, tk = tokens(pal, dark);
+        root.classList.toggle("dk", dark);
+        NAMES.forEach(function (n) { if (tk[n]) root.style.setProperty(n, tk[n]); else root.style.removeProperty(n); });
+        var ground = tk["--ground"] || (dark ? "#0A0A0C" : "#F7F7F5");
+        var m = document.querySelector("meta[name=theme-color]"); if (m) m.content = ground;
+        try { var b = window.AndroidBridge; if (b && b.setBars) { b.setBars(dark); b.setBarColors(ground, ground); } } catch (e) {}
       }
       window.moneyTheme = function (t) { try { localStorage.setItem("money-rs-theme", t); } catch (e) {} apply(); };
+      window.moneyPalette = function (p) { try { if (p === "signal") localStorage.removeItem("money-rs-palette"); else localStorage.setItem("money-rs-palette", p); } catch (e) {} apply(); };
       mq.addEventListener("change", apply);
       apply();
     })();
@@ -25,6 +67,7 @@
 </head>
 <body>
   <div id="main"></div>
+  <script src="host.js?v=__BUILD__"></script>
   <script type="module">
     import init from "./money_app.js?v=__BUILD__";
     init({ module_or_path: "./money_app_bg.wasm?v=__BUILD__" });

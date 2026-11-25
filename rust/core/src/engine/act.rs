@@ -1,5 +1,5 @@
 //! Every change you can make (engine.js `act`): each one updates the figures and marks the settings unsaved, and the
-//! app then saves them with `save_blob()`, the same object the current app sends (pushSettings), so either app can
+//! app then saves them with `save_blob()`, the same object the app sends (pushSettings), so either app can
 //! read what the other saved. Notes and payee rules also go to their own tables: those writes wait in `outbox` for
 //! the app to send. The lists (manual, payments, goals, contribs) are kept as saved, so anything this version doesn't
 //! know about an item is saved back untouched.

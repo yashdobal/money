@@ -12,11 +12,10 @@ node_modules/
 dist/
 __pycache__/
 /build/
-rn/dist-web/
-tools/ui/.tmp/
 
 # Rust build output
 rust/target/
 rust/dist/
 # the server's engine, built from rust/server by rust/server/build.sh
 supabase/functions/_shared/money/
+tools/ui/shots/

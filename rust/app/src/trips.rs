@@ -1,4 +1,4 @@
-//! Trips (rn/src/screens/Trips.js): a trip paid for with card points. Where and how → the airline → the points it
+//! Trips: a trip paid for with card points. Where and how → the airline → the points it
 //! takes → the best cards for that airline → the cards you can get; and the sheets for one card, the income used, the
 //! monthly spending and where the numbers come from.
 

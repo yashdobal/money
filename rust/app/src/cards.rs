@@ -1,4 +1,4 @@
-//! Cards (rn/src/screens/Cards.js): payments that need their card, all cards at a glance, the best card to use today,
+//! Cards: payments that need their card, all cards at a glance, the best card to use today,
 //! then each card: its face, the one line that matters, the billing cycle as a timeline with today on it, the limit
 //! in use, and what's been spent since the statement by category. And the card sheets: record a payment, payments,
 //! the limit, the statement total.

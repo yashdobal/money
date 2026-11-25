@@ -1,4 +1,4 @@
-//! Spending (rn/src/screens/Spend.js): a month's total against the month before, categories (with the ring), where
+//! Spending: a month's total against the month before, categories (with the ring), where
 //! it went, and six months as bars.
 
 use crate::kit::*;

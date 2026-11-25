@@ -1,7 +1,7 @@
-//! Changes, made by both engines one after another on the demo data (tools/rust/actions.json): after each one, what
-//! it returned, the settings it saves, the writes to the notes and rules tables and every figure must be the same as
-//! the current app's (tools/rust/actions.mjs). This is what keeps the Rust app from saving anything the current app
-//! wouldn't.
+//! Changes, made one after another on the demo data (tests/actions.json): after each one, what it returned, the
+//! settings it saves, the writes to the notes and rules tables and every figure must be the recorded ones
+//! (tests/golden/actions.json.gz, first recorded from the original JavaScript engine). This is what keeps the app from
+//! saving anything different from before.
 
 use money_core::engine::Edit;
 use money_core::{shape, Engine};
@@ -82,10 +82,10 @@ fn run(e: &mut Engine, name: &str, a: &[Value]) -> Option<String> {
 }
 
 #[test]
-fn same_changes_as_the_current_app() {
+fn same_changes_as_recorded() {
     let expected = golden("actions");
     let mut fresh: Vec<Value> = vec![];
-    let script: Value = serde_json::from_str(&std::fs::read_to_string(root().join("tools/rust/actions.json")).unwrap()).unwrap();
+    let script: Value = serde_json::from_str(&std::fs::read_to_string(root().join("rust/core/tests/actions.json")).unwrap()).unwrap();
     let at = chrono::DateTime::parse_from_rfc3339(script["at"].as_str().unwrap()).unwrap().timestamp_millis();
     let fixture: Value = serde_json::from_str(&std::fs::read_to_string(root().join("tools/demo/demo-fixture.json")).unwrap()).unwrap();
     let mut e = Engine::new();
@@ -110,7 +110,7 @@ fn same_changes_as_the_current_app() {
         diff("writes", &js["writes"], &writes, &mut out);
         diff("figures", &js["snap"], &snap, &mut out);
         diff("screens", &js["screens"], &screens, &mut out);
-        assert!(out.is_empty(), "step {} ({} {}) differs from engine.js:\n  {}", i, name, serde_json::to_string(&st[1..]).unwrap(), out.join("\n  "));
+        assert!(out.is_empty(), "step {} ({} {}) differs from the recorded answer:\n  {}", i, name, serde_json::to_string(&st[1..]).unwrap(), out.join("\n  "));
     }
     if updating() { write_golden("actions", &fresh); return; }
     println!("{} changes, each saved and worked out the same", steps.len());

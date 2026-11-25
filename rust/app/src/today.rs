@@ -1,5 +1,5 @@
 //! Today: Safe to spend until payday, what needs attention, where you stand, coming up, the bank balance, a usual
-//! month (rn/src/screens/Today.js).
+//! month.
 
 use crate::kit::*;
 use crate::state::{eng, SHEET, TAB, VER};

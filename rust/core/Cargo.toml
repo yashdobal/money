@@ -1,6 +1,6 @@
 [package]
 name = "money-core"
-description = "Money's engine: card bills, Safe to spend, Plan, spending, Rewards and Trips (a port of app/engine.js, rewards.js, trips.js)"
+description = "Money's engine: card bills, Safe to spend, Plan, spending, Rewards and Trips"
 edition.workspace = true
 version.workspace = true
 license.workspace = true

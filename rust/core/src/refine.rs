@@ -1,6 +1,6 @@
 //! The collector's category rules (collector/money-collector.gs: RULES, refine_ and its helpers), which rebuild each
-//! transaction's description, category and "counted" flag from the bank's raw text. Kept word for word, so the Rust app
-//! names and sorts a payment exactly as the current app does.
+//! transaction's description, category and "counted" flag from the bank's raw text. Kept word for word, so Money
+//! names and sorts a payment exactly as the app does.
 
 use regex::Regex;
 use std::sync::OnceLock;

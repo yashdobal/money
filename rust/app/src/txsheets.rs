@@ -1,5 +1,5 @@
 //! The sheets for one transaction: edit it (category, a payee rule, spent for someone else, paid back, a note), mark a
-//! card payment reversed or refunded (and undo it), and add a payment the alerts missed (rn/src/sheets.js).
+//! card payment reversed or refunded (and undo it), and add a payment the alerts missed.
 
 use crate::kit::*;
 use crate::state::*;
@@ -190,28 +190,71 @@ fn RevSheet(id: String) -> Element {
     }
 }
 
-/// Add money the alerts missed: out (a payment) or in (salary, from someone, paid back, a refund).
+/// A payment from an SMS, before the bank's email (sms.rs).
 #[component]
-pub fn AddSheet() -> Element {
+pub fn SmsSheet(id: String) -> Element {
     let _ = VER();
+    let Some(x) = crate::sms::find(&id) else {
+        return rsx! { h2 { class: "sheet-t", "From an SMS" } Note { "The bank's email has come in for this one, so it's in Activity now." } };
+    };
+    let counting = crate::sms::counting();
+    let inn = x.dir == "in";
+    let when = format!("{} · {}", time::fmt_d(x.ts), Engine::clock_of(x.ts));
+    let (title, _) = nice(&x.desc);
+    let (d1, d2) = (id.clone(), id.clone());
+    rsx! {
+        div { class: "tx-head",
+            CatIc { cat: if inn { "Money in".to_string() } else { "Other".to_string() }, big: true }
+            div { class: "grow",
+                div { class: if inn { "tx-amt t-pos" } else { "tx-amt" }, {shown(&exact_s(x.amt, if inn { "in" } else { "out" }))} }
+                div { class: "tx-when", "{when} · {x.account}" }
+            }
+        }
+        div { class: "tx-payee", "{title}" }
+        div { class: "tx-src", "From a bank SMS" }
+        Note { {if counting { "It already counts in your figures (\"Count them straight away\" is on). When the bank's email for it comes in, the email takes its place, so it never counts twice." }
+            else { "It shows here straight away; the bank's email usually follows within the hour, and then it counts in your figures. If no email ever comes for it (some banks don't send one), add it yourself." }} }
+        p { class: "sms-body", "{x.body}" }
+        div { class: "actions",
+            button { class: "btn b-ghost big", onclick: move |_| { crate::sms::dismiss(&d1); close(); toast("Hidden", ""); }, "Not mine" }
+            if !counting { button { class: "btn b-solid big", onclick: move |_| *SHEET.write() = Some(format!("add:{}", d2)), "Add it now" } }
+        }
+    }
+}
+
+/// Add money the alerts missed: out (a payment) or in (salary, from someone, paid back, a refund). `sms`: filled in
+/// from that SMS payment (which then drops away).
+#[component]
+pub fn AddSheet(#[props(default)] sms: String) -> Element {
+    let _ = VER();
+    let pre = if sms.is_empty() { None } else { crate::sms::find(&sms) };
     let (today, yest, banks, groups) = eng(|e| {
         let t = e.today();
         (time::iso(t), time::iso(time::add_days(t, -1)), e.banks.iter().map(|b| (b.key.clone(), b.name.clone(), b.full.clone())).collect::<Vec<_>>(),
          e.open_groups(None).into_iter().map(|k| (k.clone(), e.card_short(&k))).collect::<Vec<_>>())
     });
     let first_bank = banks.first().map(|b| b.0.clone()).unwrap_or("cash".into());
-    let second = if banks.len() > 1 { banks[1].0.clone() } else { first_bank.clone() };
-    let mut dir = use_signal(|| "out".to_string());
-    let mut value = use_signal(String::new);
-    let mut desc = use_signal(String::new);
+    let pre_acct = pre.as_ref().and_then(|p| p.acct_key.clone());
+    let pre_bank = pre_acct.clone().filter(|k| banks.iter().any(|b| &b.0 == k));
+    let second = pre_bank.unwrap_or_else(|| if banks.len() > 1 { banks[1].0.clone() } else { first_bank.clone() });
+    let p0 = pre.clone();
+    let mut dir = use_signal(move || p0.as_ref().map(|p| p.dir.clone()).unwrap_or_else(|| "out".to_string()));
+    let p1 = pre.clone();
+    let mut value = use_signal(move || p1.as_ref().map(|p| format!("{}", p.amt)).unwrap_or_default());
+    let p2 = pre.clone();
+    let mut desc = use_signal(move || p2.as_ref().map(|p| p.desc.clone()).unwrap_or_default());
     let mut cat = use_signal(|| "Food & dining".to_string());
-    let fb = first_bank.clone();
+    let fb = pre_acct.unwrap_or_else(|| first_bank.clone());
     let mut acct = use_signal(move || fb.clone());
     let mut kind = use_signal(|| "Salary".to_string());
     let mut into = use_signal(move || second.clone());
-    let mut when = use_signal(|| "today".to_string());
-    let y0 = yest.clone();
+    let pre_day = pre.as_ref().map(|p| time::iso(p.ts));
+    let pd = pre_day.clone();
+    let (t0, y1) = (today.clone(), yest.clone());
+    let mut when = use_signal(move || match &pd { Some(d) if *d != t0 => if *d == y1 { "yest".to_string() } else { "pick".to_string() }, _ => "today".to_string() });
+    let y0 = pre_day.unwrap_or_else(|| yest.clone());
     let mut date = use_signal(move || y0.clone());
+    let from_sms = sms.clone();
     let mut err = use_signal(|| (String::new(), String::new()));
     let ph = |k: &str| match k { "Salary" => "Salary from work", "Money in" => "Who sent it", "Paid back" => "A friend, for dinner", "Refunds" => "A shop's refund", _ => "What it's for" };
     let accts: Vec<Opt> = banks.iter().map(|b| opt(&b.0, &format!("{} (UPI)", b.1))).chain(groups.iter().map(|g| opt(&g.0, &g.1))).chain(std::iter::once(opt("cash", "Cash"))).collect();
@@ -226,6 +269,7 @@ pub fn AddSheet() -> Element {
         let d = match when().as_str() { "today" => td.clone(), "yest" => yd.clone(), _ => date() };
         let msg = if inn { act(|e| e.add_manual(&words, &value(), &kind(), &d, &into(), "in")) } else { act(|e| e.add_manual(&words, &value(), &cat(), &d, &acct(), "")) };
         if !msg.is_empty() { return fail(msg); }
+        if !from_sms.is_empty() { crate::sms::dismiss(&from_sms); }
         close();
         toast(if inn { format!("Added {} in", rup(v)) } else { format!("Added {}", rup(v)) }, "");
     };

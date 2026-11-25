@@ -86,6 +86,12 @@ object Notifier {
         start(c, i, Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + c.packageName)))
     }
 
+    /** The app's own page in Android's settings (Permissions → SMS). */
+    fun openAppDetails(c: Context) {
+        val i = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + c.packageName))
+        start(c, i, Intent(Settings.ACTION_SETTINGS))
+    }
+
     private fun openChannelSettings(c: Context, channel: String) {
         val i = Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS)
             .putExtra(Settings.EXTRA_APP_PACKAGE, c.packageName).putExtra(Settings.EXTRA_CHANNEL_ID, channel)

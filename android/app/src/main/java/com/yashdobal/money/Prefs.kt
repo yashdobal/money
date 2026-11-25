@@ -27,6 +27,10 @@ object Prefs {
     fun askedNotif(c: Context): Boolean = p(c).getBoolean("askedNotif", false)
     fun setAskedNotif(c: Context) = p(c).edit().putBoolean("askedNotif", true).apply()
 
+    /* bank SMS: whether Android has already asked once */
+    fun askedSms(c: Context): Boolean = p(c).getBoolean("askedSms", false)
+    fun setAskedSms(c: Context) = p(c).edit().putBoolean("askedSms", true).apply()
+
     /* the widget's numbers (JSON from the engine's widgetModel) */
     fun widget(c: Context): String? = p(c).getString("widget", null)
     fun setWidget(c: Context, json: String?) = p(c).edit().apply { if (json == null) remove("widget") else putString("widget", json) }.apply()

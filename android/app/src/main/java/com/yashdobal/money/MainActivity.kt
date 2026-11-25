@@ -65,6 +65,22 @@ class MainActivity : AppCompatActivity() {
         emit(JSONObject().put("type", "notif").put("status", if (granted) Notifier.showTest(this) else "denied"))
     }
 
+    private val askSms = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        emit(JSONObject().put("type", "sms").put("granted", granted))
+    }
+    /** Settings → Read bank SMS: Android's question, or its settings when it won't ask again. Returns "granted",
+     *  "asking" (the answer arrives as a "native" event {type: "sms", granted}) or "settings". */
+    fun askSmsPermission(): String {
+        when (Sms.state(this)) {
+            "granted" -> return "granted"
+            "blocked" -> { Notifier.openAppDetails(this); return "settings" }
+            "unsupported" -> return "unsupported"
+        }
+        Prefs.setAskedSms(this)
+        askSms.launch(Manifest.permission.READ_SMS)
+        return "asking"
+    }
+
     fun askNotificationPermission() {
         if (Build.VERSION.SDK_INT >= 33) askNotif.launch(Manifest.permission.POST_NOTIFICATIONS)
     }

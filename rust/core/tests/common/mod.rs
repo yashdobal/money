@@ -9,22 +9,22 @@ pub fn root() -> PathBuf { PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..
 pub fn diff(path: &str, a: &Value, b: &Value, out: &mut Vec<String>) {
     if out.len() > 40 { return; }
     match (a, b) {
-        (Value::Number(x), Value::Number(y)) => { if (x.as_f64().unwrap() - y.as_f64().unwrap()).abs() > 0.011 { out.push(format!("{}: js {} rust {}", path, x, y)); } }
+        (Value::Number(x), Value::Number(y)) => { if (x.as_f64().unwrap() - y.as_f64().unwrap()).abs() > 0.011 { out.push(format!("{}: recorded {} now {}", path, x, y)); } }
         (Value::Array(x), Value::Array(y)) => {
-            if x.len() != y.len() { out.push(format!("{}: js has {} items, rust {}\n   js   {}\n   rust {}", path, x.len(), y.len(), short(a), short(b))); return; }
+            if x.len() != y.len() { out.push(format!("{}: recorded {} items, now {}\n   recorded {}\n   now      {}", path, x.len(), y.len(), short(a), short(b))); return; }
             for (i, (p, q)) in x.iter().zip(y).enumerate() { diff(&format!("{}[{}]", path, i), p, q, out); }
         }
         (Value::Object(x), Value::Object(y)) => {
             for (k, v) in x { match y.get(k) { Some(w) => diff(&format!("{}.{}", path, k), v, w, out), None => out.push(format!("{}.{}: missing in rust", path, k)) } }
             for k in y.keys() { if !x.contains_key(k) { out.push(format!("{}.{}: only in rust", path, k)); } }
         }
-        _ => { if a != b { out.push(format!("{}: js {} rust {}", path, short(a), short(b))); } }
+        _ => { if a != b { out.push(format!("{}: recorded {} now {}", path, short(a), short(b))); } }
     }
 }
 pub fn short(v: &Value) -> String { let s = v.to_string(); if s.len() > 300 { format!("{}…", &s[..300]) } else { s } }
 
-/// The reference answers (tests/golden/NAME.json.gz): recorded from the original JavaScript engine (app/engine.js)
-/// before it was retired, on the demo data. A change that means to alter a figure rewrites them on purpose:
+/// The reference answers (tests/golden/NAME.json.gz): recorded from the original JavaScript engine before it was
+/// retired, on the demo data. A change that means to alter a figure rewrites them on purpose:
 /// `UPDATE_GOLDEN=1 cargo test -p money-core`, then review the change in what the app shows.
 pub fn golden(name: &str) -> Vec<Value> {
     use std::io::Read;

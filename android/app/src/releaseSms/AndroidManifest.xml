@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The releaseSms build: Money with bank SMS reading (Settings → Alerts → Read bank SMS). Only your banks' messages
+     are read (Sms.kt), only after you allow it. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.READ_SMS" />
+</manifest>

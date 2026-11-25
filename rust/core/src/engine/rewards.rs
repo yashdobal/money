@@ -18,7 +18,7 @@ pub const CHECK_SEARCHES: [&str; 18] = ["a new iPhone for 80k", "dinner at a res
 const REW_SKIP: [&str; 2] = ["Transfers to people", "UPI — payee unknown"];
 
 /// A spend: what you typed (or a transaction), as the rulebook reads it.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Spend { pub text: String, pub amt: Option<f64>, pub kind: String, pub shop: Option<String>, pub online: bool, pub intl: bool, pub route: String,
     /// shops and portals your words rule out ("non SmartBuy", "booked direct"), as rewNot
     pub not: Vec<String> }
@@ -78,6 +78,10 @@ pub fn rew_period(per: &str, ts: Ms) -> String { let p = parts(ts); if per == "q
 pub fn rew_key(cap: &Cap, ts: Ms) -> String { format!("{}@{}", cap.id, rew_period(&cap.per, ts)) }
 /// Count `w` toward its caps.
 pub fn rew_use(used: &mut HashMap<String, f64>, w: &Way, at: Ms) { for cp in &w.caps { *used.entry(rew_key(cp, at)).or_insert(0.0) += if cp.on == "extra" { w.extra } else { w.pts }; } }
+/// Whether you could get this card: open to applications, not one you asked to drop, and your income clears its bar.
+pub fn rew_can_get(c: &RewCard, inc: &Income) -> bool { can_get(c, inc) }
+/// The spends that can earn: money out, counted, not refunded, not the kinds no card pays on (rewSpends).
+pub fn rew_spends(list: Vec<Row>) -> Vec<Row> { spends(list) }
 fn can_get(c: &RewCard, inc: &Income) -> bool {
     c.status == "open" && !rulebook().left_out.contains(&c.id) && !(inc.amt.is_some() && c.income.map(|i| i != 0.0).unwrap_or(false) && inc.amt.unwrap() < c.income.unwrap())
 }

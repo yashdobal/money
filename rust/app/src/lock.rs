@@ -1,4 +1,4 @@
-//! The lock (rn/src/pin.js, native/lock.web.js). In a browser: a 4-digit code, like a phone PIN, asked when you come
+//! The lock. In a browser: a 4-digit code, like a phone PIN, asked when you come
 //! back after being away; kept only in this browser and only as a salted PBKDF2-SHA-256 hash. Five wrong tries turn
 //! it off and sign you out. Inside the Android app the app's own fingerprint lock stands in front of the page, and
 //! Settings switches it through the app (window.AndroidBridge).

@@ -1,5 +1,5 @@
 //! The frame around the screens: the title and the line under it ("Emails checked just now"), the eye / refresh /
-//! settings buttons, the bottom bar with its sliding pill, the sideways page push, and sheets (rn/src/App.js).
+//! settings buttons, the bottom bar with its sliding pill, the sideways page push, and sheets.
 
 use crate::kit::*;
 use crate::sheets::SheetBody;
@@ -55,10 +55,10 @@ pub fn Shell() -> Element {
     }
 }
 
-/// A screen not rebuilt in Rust yet.
+/// A tab that doesn't exist (never reached: every tab has its screen).
 #[component]
 fn Soon(name: String) -> Element {
-    rsx! { div { class: "page", Panel { title: name.clone(), kind: "w", Note { "{name} is next on the list for the Rust app. Until then, your current app has it." } } } }
+    rsx! { div { class: "page", Panel { title: name.clone(), kind: "w", Note { "Nothing here." } } } }
 }
 
 /// The bottom bar: a capsule with a pill behind the chosen tab. The pill's leading edge springs ahead and its trailing
@@ -120,7 +120,7 @@ fn SheetHost() -> Element {
     }
 }
 
-/// Sign in with a code sent to your email (the same accounts as the current app).
+/// Sign in with a code sent to your email.
 #[component]
 pub fn SignIn() -> Element {
     let mut email = use_signal(|| ls_get("money-rs-email").unwrap_or_default());
@@ -150,7 +150,7 @@ pub fn SignIn() -> Element {
         div { class: "signin",
             div { class: "si-card",
                 h1 { "Money" }
-                p { class: "si-sub", "The Rust app · sign in with the email you use for Money" }
+                p { class: "si-sub", "Sign in with the email you use for Money" }
                 if !sent() {
                     input { class: "field", r#type: "email", placeholder: "you@example.com", autocomplete: "email", value: "{email}", oninput: move |e| email.set(e.value()) }
                     button { class: "btn b-solid big", disabled: working(), onclick: send, if working() { "Sending…" } else { "Email me a code" } }
@@ -160,7 +160,7 @@ pub fn SignIn() -> Element {
                     button { class: "btn b-link", onclick: move |_| { sent.set(false); code.set(String::new()); }, "Use a different email" }
                 }
                 if !msg().is_empty() { p { class: "si-msg", "{msg}" } }
-                p { class: "si-foot", "Your current app keeps working as it is. This one reads the same account." }
+                p { class: "si-foot", "We email you a 6-digit code. No password to remember." }
             }
         }
     }

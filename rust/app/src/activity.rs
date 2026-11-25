@@ -1,4 +1,4 @@
-//! Activity: search, filters, every transaction (rn/src/screens/Activity.js), and the Add button.
+//! Activity: search, filters, every transaction, and the Add button.
 
 use crate::kit::*;
 use crate::state::*;
@@ -73,7 +73,20 @@ pub fn TxRow(x: Tx) -> Element {
     let uncounted = !(x.t.counted || inn);
     rsx! {
         Row { icon: rsx! { CatIc { cat } }, title, detail: bits.join(" · "), value: amt_s(x.t.amt, if inn { "in" } else { "out" }), tone: if inn { "pos".to_string() } else { String::new() },
-            sub: Engine::clock_of(x.t.ts), uncounted, onclick: move |_| *SHEET.write() = Some(format!("tx:{}", id)) }
+            sub: Engine::clock_of(x.t.ts), uncounted, onclick: move |_| *SHEET.write() = Some(format!("{}:{}", if x.t.sms { "sms" } else { "tx" }, id)) }
+    }
+}
+
+/// A payment from an SMS, waiting for the bank's email (sms.rs).
+#[component]
+fn SmsRow(x: crate::sms::Item) -> Element {
+    let inn = x.dir == "in";
+    let (title, _) = nice(&x.desc);
+    let id = x.id.clone();
+    rsx! {
+        Row { icon: rsx! { CatIc { cat: if inn { "Money in".to_string() } else { "Other".to_string() } } }, title, detail: format!("{} · from SMS", x.account),
+            value: amt_s(x.amt, if inn { "in" } else { "out" }), tone: if inn { "pos".to_string() } else { String::new() }, sub: Engine::clock_of(x.ts), uncounted: !inn,
+            onclick: move |_| *SHEET.write() = Some(format!("sms:{}", id)) }
     }
 }
 
@@ -114,6 +127,8 @@ pub fn Activity() -> Element {
     if !p.d.is_empty() { active.push(("d", time::parse_iso(&p.d).map(|d| day_name(today, d)).unwrap_or_default())); }
     let data_in = eng(|e| e.data_in);
     let more = n.saturating_sub(shown());
+    // the SMS payments still waiting for their email (when they count straight away they're in the list itself)
+    let sms = if !crate::sms::counting() && (p.f.is_empty() || p.f == "out") && q().is_empty() && active.is_empty() { crate::sms::pending() } else { vec![] };
     rsx! {
         div { class: "page one",
             div { class: "search rise", style: "--i:0",
@@ -135,6 +150,14 @@ pub fn Activity() -> Element {
                             let mut a = ACT.write();
                             match k { "cat" => a.cat.clear(), "card" => a.card.clear(), "acct" => a.acct.clear(), "m" => a.m.clear(), _ => a.d.clear() }
                         } }
+                    }
+                }
+            }
+            if !sms.is_empty() {
+                section { class: "panel k-tray rise", style: "--i:2",
+                    div { class: "rows",
+                        DayHead { left: "From your SMS · waiting for the bank's email".to_string(), right: String::new() }
+                        for x in sms.into_iter() { SmsRow { key: "{x.id}", x } }
                     }
                 }
             }

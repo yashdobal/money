@@ -1,5 +1,5 @@
-//! Supabase rows → what the engine reads (app/shape.js). The same tables and columns the current app selects
-//! (rn/src/store.js getData), so both apps read the same data.
+//! Supabase rows → what the engine reads (app/shape.js). The same tables and columns the app selects
+//!, so both apps read the same data.
 
 use crate::refine::refine;
 use crate::time::{self, Ms};

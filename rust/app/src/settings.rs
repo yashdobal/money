@@ -1,4 +1,4 @@
-//! Settings (rn/src/screens/Settings.js): appearance, your data, sync, account; and the sheets for payee rules, your
+//! Settings: appearance, your data, sync, account; and the sheets for payee rules, your
 //! banks and cards (bringing in a setup) and bank balances.
 
 use crate::kit::*;
@@ -33,6 +33,53 @@ fn SetRow(icon: String, title: String, #[props(default)] detail: String, #[props
 }
 
 fn theme_now() -> String { ls_get("money-rs-theme").unwrap_or_else(|| "auto".into()) }
+fn palette_now() -> String { ls_get("money-rs-palette").unwrap_or_else(|| "signal".into()) }
+/// The colour choices: a name and its swatch. System is the phone's own (Android app only).
+const PALETTES: [(&str, &str, &str); 8] = [("signal", "Signal", "#2F5BFF"), ("minimal", "Minimal", "#141414"), ("indigo", "Indigo", "#4B44C8"), ("forest", "Forest", "#2E6B4E"),
+    ("ocean", "Ocean", "#1F5F8B"), ("rose", "Rose", "#A23E62"), ("sand", "Sand", "#8A5A2B"), ("system", "System", "")];
+/// The phone's Material You colours, {light, dark}, from the page (index.html asks the Android app).
+fn system_colors() -> Option<(String, String)> {
+    let w = web_sys::window()?;
+    let f: js_sys::Function = js_sys::Reflect::get(&w, &"moneySystemColors".into()).ok()?.dyn_into().ok()?;
+    let v = f.call0(&w).ok()?;
+    let g = |k: &str| js_sys::Reflect::get(&v, &k.into()).ok().and_then(|x| x.as_string());
+    Some((g("light")?, g("dark")?))
+}
+fn set_palette(p: &str) {
+    if let Some(w) = web_sys::window() {
+        if let Ok(f) = js_sys::Reflect::get(&w, &"moneyPalette".into()) {
+            if let Ok(f) = f.dyn_into::<js_sys::Function>() { let _ = f.call1(&w, &p.into()); }
+        }
+    }
+}
+/// Settings → Colours: a swatch for each choice.
+#[component]
+fn Colours() -> Element {
+    let mut pal = use_signal(palette_now);
+    let dark = web_sys::window().and_then(|w| w.document()).and_then(|d| d.document_element()).map(|e| e.class_name().split(' ').any(|c| c == "dk")).unwrap_or(false);
+    let sys = system_colors();
+    let in_app = crate::lock::in_app();
+    let note = if pal() != "system" { String::new() } else if sys.is_some() { "your phone's Material You colours; they follow your wallpaper".into() }
+        else { "your phone shares its colours from Android 12; until then this is a soft indigo".into() };
+    rsx! {
+        SetRow { icon: "palette", title: "Colours", detail: note,
+            div { class: "pal-list", role: "radiogroup",
+                for (k, label, hex) in PALETTES.iter().copied().filter(|(k, _, _)| *k != "system" || in_app) {
+                    {
+                        let sw = match k { "minimal" => (if dark { "#F2F2F0" } else { "#141414" }).to_string(),
+                            "system" => sys.as_ref().map(|(l, d)| if dark { d.clone() } else { l.clone() }).unwrap_or_else(|| "#5B5BD6".into()), _ => hex.to_string() };
+                        let on = pal() == k;
+                        rsx! {
+                            button { key: "{k}", class: if on { "chip small pal on" } else { "chip small pal" }, role: "radio", aria_checked: "{on}",
+                                onclick: move |_| { if on { return; } crate::haptics::haptic("tick"); set_palette(k); pal.set(k.to_string()); },
+                                i { class: "pal-dot", style: "background:{sw}" } span { "{label}" } }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 fn set_theme(t: &str) {
     if let Some(w) = web_sys::window() {
         if let Ok(f) = js_sys::Reflect::get(&w, &"moneyTheme".into()) {
@@ -76,7 +123,8 @@ pub fn Settings() -> Element {
     rsx! {
         div { class: "page",
             Group { title: "Appearance", i: 0,
-                SetRow { icon: "palette", title: "Theme", right: rsx! { Seg { value: theme(), onchange: move |v: String| { set_theme(&v); theme.set(v); }, options: vec![opt("auto", "Auto"), opt("light", "Light"), opt("dark", "Dark")] } } }
+                SetRow { icon: "palette", title: "Theme", right: rsx! { Seg { value: theme(), onchange: move |v: String| { set_theme(&v); theme.set(v); bump(); }, options: vec![opt("auto", "Auto"), opt("light", "Light"), opt("dark", "Dark")] } } }
+                Colours {}
                 SetRow { icon: "eyeOff", title: "Hide amounts", detail: "shows dots in place of every amount until you tap the eye",
                     right: rsx! { Switch { on: hidden, label: "Hide amounts", onchange: move |v| set_hidden(v) } } }
                 // a laptop's browser can't vibrate: the switch shows only where it can
@@ -86,6 +134,8 @@ pub fn Settings() -> Element {
                 }
             }
             Security {}
+            // in the demo, only inside the Android app (its demo build shows them for the emulator's pictures)
+            if !demo || crate::lock::in_app() { Alerts {} }
             Group { title: "Your data", i: 1,
                 SetRow { icon: "download", title: "Export to CSV", detail: format!("{}, for a spreadsheet", plural(n_tx as i64, "transaction")), onclick: move |_| {
                     let (name, text) = eng(|e| (format!("money-{}.csv", time::iso(e.today())), e.csv_text()));
@@ -105,11 +155,9 @@ pub fn Settings() -> Element {
             }
             Group { title: "Account", i: 3,
                 SetRow { icon: "user", title: if demo { "The demo (made-up data)".to_string() } else { s.as_ref().map(|s| s.email.clone()).unwrap_or("Signed in".into()) },
-                    detail: format!("Money in Rust · engine {} · {}", money_core::version(), if crate::lock::in_app() { "Android app" } else { "website" }) }
+                    detail: format!("Money · engine {} · {}", money_core::version(),
+                        if crate::lock::in_app() { format!("Android app {}", crate::lock::call("version", &[]).and_then(|v| v.as_string()).unwrap_or_default()) } else { "website".into() }) }
                 if !demo { SetRow { icon: "out", title: "Sign out", danger: true, onclick: move |_| { toast("Signing out…", "info"); sign_out(); } } }
-                SetRow { icon: "spark", title: "Open the current app", detail: "yash-money.pages.dev, while this one is being finished", onclick: move |_| {
-                    if let Some(w) = web_sys::window() { let _ = w.location().set_href("https://yash-money.pages.dev"); }
-                } }
             }
         }
     }
@@ -230,6 +278,38 @@ pub fn SetupSheet(#[props(default)] arg: String) -> Element {
     }
 }
 
+/// Alerts (bills, EMIs, salary, the 9 PM summary): the Android app's own, or web push in a browser; and bank SMS.
+#[component]
+fn Alerts() -> Element {
+    let _ = VER();
+    let (perm, muted) = crate::native::alert_state();
+    let in_app = crate::lock::in_app();
+    let sms_ok = crate::sms::supported();
+    let sms_on = crate::sms::enabled();
+    let first = crate::sms::counting();
+    let on = perm == "granted";
+    let title = if on { "Send a test alert" } else if in_app { "Alerts on this phone" } else { "Alerts in this browser" };
+    let detail = if on { if muted { "muted in phone settings · tap to fix" } else { "on · bills, EMIs, salary, a 9 PM summary" } }
+        else if perm == "none" { "this browser can't receive them" } else if perm == "blocked" { "blocked · tap to allow" } else { "off · tap to turn on" };
+    rsx! {
+        Group { title: "Alerts", i: 1,
+            SetRow { icon: "bell", title, detail, onclick: move |_| { dioxus::core::spawn_forever(async { crate::native::test_alert().await; }); } }
+            if sms_ok {
+                SetRow { icon: "mail", title: "Read bank SMS", detail: if sms_on { "payments show the moment the SMS arrives" } else { "show payments straight from your bank's SMS, before the email" },
+                    right: rsx! { Switch { on: sms_on, label: "Read bank SMS", onchange: move |v: bool| { let m = crate::sms::set_enabled(v); if !m.is_empty() { toast(m, "info"); } bump(); } } } }
+                if sms_on {
+                    SetRow { icon: "spark", title: "Count them straight away", detail: if first { "SMS payments count in every figure at once; the bank's email takes their place" } else { "off: they wait in Activity until the bank's email comes" },
+                        right: rsx! { Switch { on: first, label: "Count SMS payments straight away", onchange: move |v: bool| crate::sms::set_counting(v) } } }
+                }
+            }
+            if crate::sms::plain_apk() {
+                SetRow { icon: "mail", title: "Read bank SMS", detail: "this copy of Money can't: install money-…-sms.apk from the latest release (it installs over this one, if your phone allows apps that read SMS)" }
+            }
+            if in_app { SetRow { icon: "phone", title: "Alert sound and vibration", detail: "Android's settings for Money", onclick: move |_| { crate::lock::call("openNotificationSettings", &[]); } } }
+        }
+    }
+}
+
 /// The lock: the fingerprint lock inside the Android app, a 4-digit code in a browser.
 #[component]
 fn Security() -> Element {
@@ -246,6 +326,12 @@ fn Security() -> Element {
                     right: rsx! { Switch { on, label: "Fingerprint lock", onchange: move |v: bool| { lock::call("setLock", &[wasm_bindgen::JsValue::from(v)]); } } } }
                 if on { SetRow { icon: "refresh", title: "Lock after", right: rsx! { Seg { value: a.to_string(), onchange: move |v: String| { let n = v.parse().unwrap_or(0); lock::set_after(n); after.set(Some(n)); },
                     options: vec![opt("0", "Right away"), opt("60", "1 min"), opt("300", "5 min")] } } } }
+                SetRow { icon: "eyeOff", title: "Hide in recent apps", detail: "also blocks screenshots of Money",
+                    right: rsx! { Switch { on: info["hideRecents"] == true, label: "Hide in recent apps", onchange: move |v: bool| {
+                        lock::call("setHideRecents", &[wasm_bindgen::JsValue::from(v)]);
+                        if v { toast("Hidden in recent apps. Screenshots of Money are blocked too.", ""); }
+                        bump();
+                    } } } }
             }
         };
     }

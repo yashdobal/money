@@ -88,7 +88,7 @@ function json(v: Cell): unknown {
 }
 
 // ---------------------------------------------------------------- your accounts
-/** Your banks and cards, from the profile the app saves with your settings (see applyProfile in app/engine.js). */
+/** Your banks and cards, from the profile the app saves with your settings (see apply_profile in rust/core/src/engine). */
 type Profile = { groups?: Record<string, { short?: string; issuer?: string; stmtDay?: number; dueAfter?: number; closed?: string }>;
   cards?: Record<string, { group?: string; last4?: string }> };
 const last4Of = (label: string) => (label.match(/(\d{4})\s*$/) ?? [])[1] ?? null;

@@ -6,10 +6,10 @@ plugins {
     id("org.jetbrains.kotlin.android")
 }
 
-// The repository around this folder: the app (rn/), the shared maths (app/), the website build (tools/build_site.py).
+// The repository around this folder: the app itself is rust/ (built for the web by rust/build-web.sh into rust/dist).
 val repo: File = rootProject.projectDir.parentFile
 @Suppress("UNCHECKED_CAST")
-val publicConfig = JsonSlurper().parse(repo.resolve("app/public-config.json")) as Map<String, String>
+val publicConfig = JsonSlurper().parse(repo.resolve("rust/public-config.json")) as Map<String, String>
 // GitHub's run number plus 100: the repository's runs started again from 1 after build 67, and each build must have
 // a higher number than the one installed for it to install over it
 val runNumber = (System.getenv("GITHUB_RUN_NUMBER") ?: "1").toInt() + 100
@@ -17,17 +17,14 @@ val keystore: String? = System.getenv("MONEY_KEYSTORE")
 // -Pmoney.demo=true: the app runs on the made-up demo data, offline (for the emulator screenshots in GitHub Actions).
 // Never used for the APK you install.
 val demo = (findProperty("money.demo") as String?) == "true"
-// -Pmoney.rust=true: the Rust app (rust/, built first by rust/build-web.sh into rust/dist) instead of the current one,
-// as its own app ("Money · Rust", com.yashdobal.money.rs) that installs beside it. Built by .github/workflows/rust.yml.
-val rust = (findProperty("money.rust") as String?) == "true"
 
 android {
     namespace = "com.yashdobal.money"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = if (rust) "com.yashdobal.money.rs" else "com.yashdobal.money"
-        manifestPlaceholders["appLabel"] = if (rust) "Money · Rust" else "@string/app_name"
+        applicationId = "com.yashdobal.money"
+        manifestPlaceholders["appLabel"] = "@string/app_name"
         minSdk = 26
         targetSdk = 35
         versionCode = runNumber                 // every GitHub build is newer than the last, so it installs over it
@@ -56,7 +53,16 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             // the real key in GitHub Actions; a throwaway debug key for test builds on a branch
             signingConfig = signingConfigs.getByName(if (keystore != null) "release" else "debug")
+            buildConfigField("boolean", "SMS", "false")
         }
+        /* The same app that can read bank SMS (src/releaseSms/AndroidManifest.xml adds the permission). Its own APK,
+           because in India Google Play Protect may refuse to install an app from a browser or a file manager that
+           asks for SMS: the plain APK always installs, and this one installs over it where the phone allows it. */
+        create("releaseSms") {
+            initWith(getByName("release"))
+            buildConfigField("boolean", "SMS", "true")
+        }
+        debug { buildConfigField("boolean", "SMS", "false") }
     }
 
     buildFeatures { buildConfig = true }
@@ -69,27 +75,19 @@ android {
     testOptions { unitTests.isIncludeAndroidResources = true }
 }
 
-/* The web app inside the APK: the website, built from Money RN's code (rn/) by tools/build_site.py, the same build as
-   yash-money.pages.dev. syncWeb syncs it into the APK's assets/web on every
-   build. Needs `npm ci` in rn/ first (the workflow does it). */
+/* The web app inside the APK: the website (rust/dist, built first by rust/build-web.sh), the same build as
+   yash-money.pages.dev. syncWeb syncs it into the APK's assets/web on every build. The demo build starts the app on
+   its made-up data (window.MONEY_DEMO), as if it were 8 Dec 2026. */
 val webOut = layout.buildDirectory.dir("web-dist")
 val buildWeb = tasks.register<Exec>("buildWeb") {
-    description = "Builds the website from rn/ into build/web-dist"
+    description = "Copies the website from rust/dist into build/web-dist"
     workingDir = repo
-    inputs.dir(repo.resolve("rn/src"))
-    inputs.dir(repo.resolve("rn/web"))
-    inputs.dir(repo.resolve("rn/assets"))
-    inputs.dir(repo.resolve("app"))
-    inputs.file(repo.resolve("tools/build_site.py"))
-    inputs.file(repo.resolve("tools/rn_engine.mjs"))
-    inputs.file(repo.resolve("collector/money-collector.gs"))
+    inputs.dir(repo.resolve("rust/dist"))
     inputs.property("demo", demo)
-    inputs.property("rust", rust)
     outputs.dir(webOut)
     val out = webOut.get().asFile.absolutePath
-    if (rust) commandLine("bash", "-c", "test -f rust/dist/index.html || { echo 'Build the Rust app first: rust/build-web.sh'; exit 1; }; rm -rf '$out' && mkdir -p '$out' && cp -r rust/dist/. '$out'")
-    else if (demo) commandLine("python3", "tools/build_site.py", "--demo", "--out", out)
-    else commandLine("python3", "tools/build_site.py", "--out", out)
+    val flag = if (demo) "sed -i 's|<div id=\"main\"></div>|<div id=\"main\"></div><script>window.MONEY_DEMO=1;window.MONEY_DEMO_AT=\"2026-12-08\"</script>|' '$out/index.html'" else "true"
+    commandLine("bash", "-c", "test -f rust/dist/index.html || { echo 'Build the app first: rust/build-web.sh'; exit 1; }; rm -rf '$out' && mkdir -p '$out' && cp -r rust/dist/. '$out' && $flag")
 }
 
 abstract class SyncWeb : DefaultTask() {

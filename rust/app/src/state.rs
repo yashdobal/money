@@ -86,6 +86,7 @@ pub fn act<R>(f: impl FnOnce(&mut Engine) -> R) -> R {
     let writes = eng_mut(|e| std::mem::take(&mut e.outbox));
     if !writes.is_empty() && !*DEMO.read() { dioxus::core::spawn_forever(async move { send_writes(writes).await; }); }
     if eng(|e| e.unsaved) { queue_save(); }
+    crate::native::widget(false);
     r
 }
 static SAVE_GEN: GlobalSignal<u64> = Signal::global(|| 0);
@@ -99,7 +100,7 @@ fn queue_save() {
         if *SAVE_GEN.read() == g { save().await; }
     });
 }
-/// Saves your settings (the app function's "save"), as the current app does: with the version it loaded, so a change
+/// Saves your settings (the app function's "save"), as the app does: with the version it loaded, so a change
 /// made meanwhile on another device isn't overwritten (that reloads instead).
 async fn save() {
     if *DEMO.read() { eng_mut(|e| e.unsaved = false); *SAVE_MSG.write() = "The demo doesn't save".into(); return; }
@@ -143,12 +144,19 @@ fn param(name: &str) -> Option<String> {
     q.trim_start_matches('?').split('&').find_map(|kv| { let mut it = kv.splitn(2, '='); if it.next() == Some(name) { Some(it.next().unwrap_or("").to_string()) } else { None } })
 }
 
+/// The Android app's demo build (window.MONEY_DEMO): the made-up data, never your account.
+pub fn demo_build() -> bool {
+    web_sys::window().and_then(|w| js_sys::Reflect::get(&w, &"MONEY_DEMO".into()).ok()).map(|v| v.is_truthy()).unwrap_or(false)
+}
+
 /// At start: the demo, your saved sign-in, or the sign-in screen.
 pub fn start() {
     if let Some(h) = ls_get("money-rs-hidden") { *HIDDEN.write() = h == "1"; }
-    if param("demo").is_some() {
+    // the demo: ?demo in the address, or the Android app's demo build (for the emulator's pictures)
+    if param("demo").is_some() || demo_build() {
         *DEMO.write() = true;
-        let at = param("at").and_then(|d| money_core::time::parse_iso_at(&d, 10));
+        let at = param("at").or_else(|| web_sys::window().and_then(|w| js_sys::Reflect::get(&w, &"MONEY_DEMO_AT".into()).ok()).and_then(|v| v.as_string()))
+            .and_then(|d| money_core::time::parse_iso_at(&d, 10));
         // the made-up data is its own file (dist/demo.json), so the app itself doesn't carry it
         dioxus::core::spawn_forever(async move {
             step("reading the demo data");
@@ -162,13 +170,31 @@ pub fn start() {
             *FEED.write() = if fixture.is_null() { Feed { tone: "warn", text: "Couldn't load the demo data".into() } } else { Feed { tone: "ok", text: "Made-up data · the demo".into() } };
             *PHASE.write() = Phase::Ready;
             bump();
+            // the Android app's demo build: the widget gets the demo's numbers, for the emulator's pictures of it
+            if demo_build() { crate::native::widget(true); }
         });
         return;
     }
-    match ls_get(SESSION_KEY).and_then(|s| serde_json::from_str::<Session>(&s).ok()) {
+    match ls_get(SESSION_KEY).and_then(|s| serde_json::from_str::<Session>(&s).ok()).or_else(adopt_old_session) {
         Some(s) => { *SESSION.write() = Some(s); *PHASE.write() = Phase::Loading; dioxus::core::spawn_forever(async { load().await; }); }
         None => *PHASE.write() = Phase::SignedOut,
     }
+}
+
+/// The sign-in the old app kept (Money before it was rebuilt in Rust, on the same address and in the same Android app):
+/// brought over once, so switching apps doesn't ask you to sign in again.
+fn adopt_old_session() -> Option<Session> {
+    let k = api::old_session_key();
+    let raw = if crate::lock::in_app() { crate::lock::call("sessionGet", &[k.as_str().into()]).and_then(|v| v.as_string()) } else { ls_get(&k) }?;
+    let s = api::session_from_old(&raw)?;
+    ls_set(SESSION_KEY, &serde_json::to_string(&s).unwrap_or_default());
+    forget_old_session();
+    Some(s)
+}
+fn forget_old_session() {
+    let k = api::old_session_key();
+    ls_del(&k);
+    if crate::lock::in_app() { crate::lock::call("sessionDel", &[k.as_str().into()]); }
 }
 
 pub fn signed_in(s: Session) {
@@ -180,6 +206,9 @@ pub fn signed_in(s: Session) {
 }
 pub fn sign_out() {
     ls_del(SESSION_KEY);
+    forget_old_session();
+    crate::native::signed_out();
+    crate::sms::set_enabled(false);
     *SESSION.write() = None;
     eng_mut(|e| *e = Engine::new());
     *PHASE.write() = Phase::SignedOut;
@@ -193,7 +222,9 @@ pub async fn fresh() -> Option<Session> {
     if s.expires_at - now > 60 { return Some(s); }
     match api::refresh(&s).await {
         Ok(n) => { ls_set(SESSION_KEY, &serde_json::to_string(&n).unwrap_or_default()); *SESSION.write() = Some(n.clone()); Some(n) }
-        Err(_) => { sign_out(); None }
+        // offline: keep your sign-in and say so; the next try renews it
+        Err(api::Renew::Offline(e)) => { *FEED.write() = Feed { tone: "warn", text: format!("Offline: {}", e) }; if *PHASE.peek() == Phase::Loading { *PHASE.write() = Phase::Ready; } None }
+        Err(api::Renew::Refused(_)) => { sign_out(); toast("Your sign-in ran out. Sign in again with a code.", "warn"); None }
     }
 }
 
@@ -217,6 +248,7 @@ pub async fn load() {
             *FEED.write() = Feed { tone: "ok", text: if n > 0 { format!("Emails checked {}", ago) } else { "Connected. No transactions yet.".into() } };
             step("drawing the screen");
             *PHASE.write() = Phase::Ready;
+            crate::native::loaded();
         }
         Err(e) => {
             *FEED.write() = Feed { tone: "warn", text: format!("Couldn't load: {}", e) };
@@ -231,6 +263,7 @@ pub async fn load() {
 pub async fn refresh() {
     if *BUSY.read() { return; }
     if *DEMO.read() { *FEED.write() = Feed { tone: "ok", text: "The demo doesn't check email".into() }; return; }
+    crate::sms::scan();
     let Some(s) = fresh().await else { return };
     *BUSY.write() = true;
     *FEED.write() = Feed { tone: "warn", text: "Asking the collector to check Gmail…".into() };
@@ -252,4 +285,4 @@ pub async fn refresh() {
     else { crate::haptics::haptic("error"); }
 }
 
-pub fn set_hidden(h: bool) { *HIDDEN.write() = h; ls_set("money-rs-hidden", if h { "1" } else { "0" }); }
+pub fn set_hidden(h: bool) { *HIDDEN.write() = h; ls_set("money-rs-hidden", if h { "1" } else { "0" }); crate::native::widget(true); }

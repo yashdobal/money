@@ -1,4 +1,4 @@
-//! Plan (rn/src/screens/Plan.js, flow.js): the salary planner (split each salary with sliders), where it goes, the
+//! Plan: the salary planner (split each salary with sliders), where it goes, the
 //! calendar, goals and EMIs; and the sheets for salary settings, fixed payments, goals and moving money to one.
 
 use crate::kit::*;

@@ -1,46 +1,40 @@
 # Money in Rust
 
-The Money app rebuilt in Rust, next to the current one. The current app (`rn/` and `app/`) stays the one you use
-until this one does everything it does; then we switch.
+The whole app: the engine, the screens, and the engine again for the server.
 
-- `core/` — the engine: every figure (card bills, Safe to spend, Plan, spending, Rewards, Trips), ported from
-  `app/engine.js` (and `app/shape.js`, the collector's category rules) function by function, same names in
-  snake_case.
-- `app/` — the screens, in [Dioxus](https://dioxuslabs.com), compiled to WebAssembly for the website and the Android
-  app.
+- `core/` — the engine: every figure (card bills, Safe to spend, Plan, spending, Rewards, Trips), the card rulebook
+  (`data/cards.json`), reading the bank's words (`refine.rs`) and bank SMS (`sms.rs`).
+- `app/` — the screens, in [Dioxus](https://dioxuslabs.com), compiled to WebAssembly. `native.rs` is what the phone and
+  the browser do for it (the widget, alerts and web push, the device key, the Android app's answers), `sms.rs` the
+  phone's bank SMS, `haptics.rs` the buzzes, `lock.rs` the lock.
+- `server/` — the engine for the Supabase functions: `build.sh` compiles it to WebAssembly and writes it into
+  `../supabase/functions/_shared/money/` (built by GitHub before each deploy; not kept in git).
+- `web/` — the page around the app: `index.html` (light or dark and the colour choice before anything draws),
+  `style.css` (the look), `host.js` and `sw.js` (the service worker: opening offline, web push), fonts, icons, the
+  install manifest, the status page.
 
-## The parity check
-
-`core/tests/parity.rs` runs both engines on the demo data (`tools/demo/demo-fixture.json`) at 42 moments between
-October and February and compares every figure of `snapshot()` (the same check the server's engine uses). The
-JavaScript side is `tools/rust/snapshot.mjs`. A change to `app/engine.js` that isn't made here too fails it.
+## Checks
 
     cd rust && cargo test
 
-## The website
+`core/tests/parity.rs` works out every figure on the demo data (`../tools/demo/demo-fixture.json`) at 42 moments
+between October and February, what each screen says, the widget and the 9 PM summary; `actions.rs` makes 102 changes
+one after another and checks what each returns, saves and writes. Both compare with recorded answers in
+`core/tests/golden` (first recorded from the original JavaScript engine). A change that means to alter a figure
+rewrites them on purpose — `UPDATE_GOLDEN=1 cargo test -p money-core` — and the diff shows what moved.
+`by_hand.rs` checks Trips, Rewards, reversed and refunded payments and spending for someone else against figures
+worked out by hand; `fuzz.rs` scrambles the demo data (`FUZZ_N=5000` for more) and nothing may crash.
 
-    TOOLCHAIN=+stable ./build-web.sh     # needs the wasm32-unknown-unknown target and wasm-bindgen-cli 0.2.130
+`server/deno.test.ts` runs the server's build under Deno in UTC and checks it gives the recorded widget and summary.
 
-builds `dist/` (the page, the WebAssembly, the stylesheet and the fonts). GitHub builds it on every change and puts
-it live at https://rust.yash-money.pages.dev — a separate address in the same Cloudflare Pages project as the
-current website, which isn't touched. `?demo&at=2026-12-08` opens it on the made-up demo data at that date.
+## Building
 
-Sign-in is the same email code as the current app, with its own session (signing in here doesn't sign you out
-there).
+    TOOLCHAIN=+stable ./build-web.sh      # needs the wasm32-unknown-unknown target, wasm-bindgen-cli 0.2.130, wasm-opt
 
-## Progress
+builds `dist/`: the website (https://yash-money.pages.dev) and what the Android app carries. `?demo` opens it on the
+made-up demo data (`?demo&at=2026-12-08` at that date).
 
-| Stage | What | State |
-|---|---|---|
-| 1 | Workspace, GitHub check, the website build and deploy | done |
-| 2 | Engine: every figure, Today's words, Plan, Cards, the CSV export, Trips, Rewards | done, matches engine.js at 42 moments |
-| 2 | Engine: every change you can make, and what it saves | done, 102 changes match engine.js |
-| 3 | Sign-in, loading data, saving, bottom bar, Today | done |
-| 4 | Activity, Cards, Plan, Spending, Trips, Rewards, Settings, and their sheets | done |
-| 4 | The lock (a code on the web, the fingerprint in the app), laptop layout, haptics | done |
-| 4 | Not yet: colour choices, SMS (phone only), the widget (phone only) | to do |
-| 5 | Android APK alongside the current one (`rust-NN` releases) | done |
-| 5 | The switch | when you say |
+    TOOLCHAIN=+stable ./server/build.sh   # the server's engine
 
 ## Haptics
 
@@ -49,5 +43,11 @@ letting go, a limit, saved, refused), the phone's own haptics in the app (`MainA
 `navigator.vibrate` in a phone's browser. A stronger buzz wins over a weaker one fired at the same moment, so one tap
 that saves gives one buzz. Settings → Vibration turns them off.
 
-The card rulebooks (`core/data/cards.json`) are written out of `app/trips.js` and `app/rewards.js` by
-`node tools/rust/data.mjs`; GitHub checks they're the same.
+## Bank SMS
+
+Android only, in the `-sms` APK (the `releaseSms` build: Google Play Protect in India may refuse to install an app
+that reads SMS from a browser download, so the plain APK leaves the permission out and always installs). Off until you
+turn it on (Settings → Alerts → Read bank SMS). The app reads only messages from your
+banks' senders (`android/…/Sms.kt` filters them), `core/src/sms.rs` reads each as a payment, and it waits in Activity
+until the bank's email for it arrives (then the email takes its place). "Count them straight away" puts the waiting
+ones into every figure at once. What's read stays on the phone.

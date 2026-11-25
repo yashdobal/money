@@ -12,6 +12,8 @@ pub fn SheetBody(name: String) -> Element {
     match name.as_str() {
         "explain" => rsx! { Explain {} },
         "add" => rsx! { crate::txsheets::AddSheet {} },
+        n if n.starts_with("add:") => rsx! { crate::txsheets::AddSheet { key: "{n}", sms: n[4..].to_string() } },
+        n if n.starts_with("sms:") => rsx! { crate::txsheets::SmsSheet { key: "{n}", id: n[4..].to_string() } },
         "salary" => rsx! { crate::plan::SalarySheet {} },
         "rules" => rsx! { crate::settings::RulesSheet {} },
         "pin" => rsx! { crate::lock::PinSheet {} },
@@ -38,7 +40,7 @@ pub fn SheetBody(name: String) -> Element {
         "bank" => rsx! { History {} },
         "about-coming" => rsx! { h2 { class: "sheet-t", "Coming up" } Note { "Every dated thing from today on: card bills and statements, card EMIs, your salary and what it sends to family, SIP and the emergency fund, and fixed payments. Grey ones are information (a statement closing, a charge on a card), not money leaving your bank that day." } },
         "about-usual" => rsx! { h2 { class: "sheet-t", "A usual month" } Note { "Your take-home pay split by your salary rule, with no one-off payments: what goes to family, the SIP and the emergency fund, and what's yours to spend." } },
-        _ => rsx! { h2 { class: "sheet-t", "Not in the Rust app yet" } Note { "This part isn't rebuilt in Rust yet. Your current app has it." } },
+        _ => rsx! { h2 { class: "sheet-t", "Not here" } Note { "This isn't part of Money any more." } },
     }
 }
 
@@ -46,9 +48,11 @@ pub fn SheetBody(name: String) -> Element {
 fn Explain() -> Element {
     let _ = VER();
     let hero = eng(|e| { let c = e.all_cards(); e.hero_model(&c) });
+    let sms = if crate::sms::counting() { 0.0 } else { crate::sms::pending_total() };
     rsx! {
         h2 { class: "sheet-t", "How this is worked out" }
         p { class: "lead", "{hero.explain}" }
+        if sms >= 1.0 { Note { {format!("Your SMS show {} more spent that the bank's emails haven't brought in yet, so it isn't in this figure until they do.", money_core::fmt::money(sms))} } }
         div { class: "rows plain",
             for (k, r) in hero.rows.iter().enumerate() {
                 Row { key: "{k}", title: r.title.clone(), detail: r.detail.clone(), value: amt_s(r.amt, "plus"), tone: r.tone.clone(), total: r.total }

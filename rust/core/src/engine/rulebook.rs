@@ -1,5 +1,6 @@
-//! The card rulebooks (app/trips.js TRIP_DATA, app/rewards.js REWARD_DATA and its kinds and shops), read from
-//! data/cards.json, which tools/rust/data.mjs writes out of the current engine. Public information only.
+//! The card rulebooks (Trips: cards, countries, award prices; Rewards: cards, kinds of spending, shops), read from
+//! data/cards.json. Edit that file to change a card's rules; tests/by_hand.rs checks it hangs together. Public
+//! information only, with its sources.
 
 use regex::Regex;
 use serde::Deserialize;
@@ -179,7 +180,7 @@ pub fn rulebook() -> &'static Rulebook {
 }
 
 /// JavaScript's Array.prototype.sort as V8 does it (TimSort: a run, then binary insertion sort, for up to 63 items),
-/// so a comparator that doesn't give a strict order puts things in the same order as the current app.
+/// so a comparator that doesn't give a strict order puts things in the same order as the app.
 pub fn js_sort<T: Clone>(v: &mut [T], cmp: impl Fn(&T, &T) -> f64) {
     let n = v.len();
     if n < 2 { return; }

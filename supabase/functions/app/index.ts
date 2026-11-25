@@ -37,7 +37,7 @@ const KEYS: Record<string, "num" | "bool" | "str" | "arr" | "obj"> = {
   ob: "num", obAt: "num", hob: "num", hobAt: "num", inc: "num", payDay: "num", payDayV: "num", buffer: "num", seeded: "bool", migrated: "str", joined: "str",
   manual: "arr", payments: "arr", goals: "arr", contribs: "arr", overrides: "obj", catRules: "obj", payAssign: "obj",
   cfg: "obj",          // salary & fixed payments (payslip figures, split, fixed payments)
-  profile: "obj",      // your banks and cards (see applyProfile in app/engine.js)
+  profile: "obj",      // your banks and cards (see apply_profile in rust/core/src/engine)
 };
 const MAX_BYTES = 400_000;
 

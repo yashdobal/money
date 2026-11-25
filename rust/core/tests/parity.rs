@@ -1,6 +1,6 @@
-//! The Rust engine against the current one (app/engine.js): both work out every figure on the demo data
-//! (tools/demo/demo-fixture.json) at the same moments, and the two snapshots must match to the paisa.
-//! The JavaScript side runs through node (tools/rust/snapshot.mjs), so node and rn/src/engine.gen.js are needed.
+//! Every figure on the demo data (tools/demo/demo-fixture.json) at 42 moments, what each screen says, the widget and
+//! the 9 PM summary, against the recorded answers (tests/golden/snapshot.json.gz, first recorded from the original
+//! JavaScript engine): they must match to the paisa.
 
 use money_core::{shape, Engine};
 use serde_json::Value;
@@ -22,7 +22,7 @@ fn moments() -> Vec<i64> {
 }
 
 #[test]
-fn same_figures_as_the_current_app() {
+fn same_figures_as_recorded() {
     let ms = moments();
     let expected = golden("snapshot");
     assert_eq!(expected.len(), ms.len(), "the recorded moments");
@@ -51,6 +51,6 @@ fn same_figures_as_the_current_app() {
         }
     }
     if updating() { write_golden("snapshot", &fresh); return; }
-    assert!(bad.is_empty(), "the Rust engine differs from the recorded figures:\n{}", bad.join("\n\n"));
+    assert!(bad.is_empty(), "the engine differs from the recorded figures:\n{}", bad.join("\n\n"));
     println!("{} moments, every figure the same", expected.len());
 }
