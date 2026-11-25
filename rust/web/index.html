@@ -58,6 +58,17 @@
         var m = document.querySelector("meta[name=theme-color]"); if (m) m.content = ground;
         try { var b = window.AndroidBridge; if (b && b.setBars) { b.setBars(dark); b.setBarColors(ground, ground); } } catch (e) {}
       }
+      /* once: the look you chose in the old app on this address (its saved preferences), so nothing changes */
+      try {
+        if (!localStorage.getItem("money-rs-adopted")) {
+          var old = function (k) { return localStorage.getItem("ls:pref-" + k); };
+          if (old("theme") && !localStorage.getItem("money-rs-theme")) localStorage.setItem("money-rs-theme", old("theme"));
+          if (old("palette") && old("palette") !== "signal" && !localStorage.getItem("money-rs-palette")) localStorage.setItem("money-rs-palette", old("palette"));
+          if (old("hide") === "1" && !localStorage.getItem("money-rs-hidden")) localStorage.setItem("money-rs-hidden", "1");
+          if (old("haptics") === "0") localStorage.setItem("money-rs-haptics", "0");
+          localStorage.setItem("money-rs-adopted", "1");
+        }
+      } catch (e) {}
       window.moneyTheme = function (t) { try { localStorage.setItem("money-rs-theme", t); } catch (e) {} apply(); };
       window.moneyPalette = function (p) { try { if (p === "signal") localStorage.removeItem("money-rs-palette"); else localStorage.setItem("money-rs-palette", p); } catch (e) {} apply(); };
       mq.addEventListener("change", apply);
