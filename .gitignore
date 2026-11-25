@@ -18,3 +18,5 @@ tools/ui/.tmp/
 # Rust build output
 rust/target/
 rust/dist/
+# the server's engine, built from rust/server by rust/server/build.sh
+supabase/functions/_shared/money/

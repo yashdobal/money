@@ -1,10 +1,12 @@
 name: Server functions
-# Deploys the Supabase functions (supabase/functions) whenever they change on main, after checking that the server
-# engine is the app's engine. Needs one repository secret: SUPABASE_ACCESS_TOKEN (Supabase → Account → Access tokens).
+# Deploys the Supabase functions (supabase/functions) whenever they or the engine change on main. The widget's numbers
+# and the 9 PM summary come from the app's own Rust engine (rust/core), compiled for the server (rust/server/build.sh)
+# and checked under Deno against the recorded figures before anything goes live.
+# Needs one repository secret: SUPABASE_ACCESS_TOKEN (Supabase → Account → Access tokens).
 on:
   push:
     branches: [main]
-    paths: ["supabase/functions/**", "supabase/config.toml", "app/engine.js", "app/shape.js", "collector/money-collector.gs", "tools/rn_engine.mjs", ".github/workflows/supabase.yml"]
+    paths: ["supabase/functions/**", "supabase/config.toml", "rust/core/**", "rust/server/**", "rust/Cargo.lock", ".github/workflows/supabase.yml"]
   workflow_dispatch: {}
 permissions:
   contents: read
@@ -12,20 +14,30 @@ concurrency: { group: supabase-deploy, cancel-in-progress: false }
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       PROJECT: ftnxpufopkosqrtjtkhi
     steps:
       - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with: { targets: wasm32-unknown-unknown }
+      - uses: Swatinem/rust-cache@v2
+        with: { workspaces: rust, key: server }
+      - uses: taiki-e/install-action@v2
+        with: { tool: wasm-bindgen@0.2.130 }
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
-      - run: npm ci --no-audit --no-fund
-        working-directory: rn
-      - name: The generated server engine matches app/engine.js
-        run: node tools/rn_engine.mjs --check
-      - name: The server engine gives the app's figures in UTC
-        run: node tools/engine/ist.test.mjs
+      - name: wasm-opt
+        run: npm i -g binaryen@132.0.0 --no-audit --no-fund
+      - name: Build the server's engine (rust/server → supabase/functions/_shared/money)
+        run: ./rust/server/build.sh
+      - uses: denoland/setup-deno@v2
+        with: { deno-version: v2.x }
+      - name: The functions type-check, and give the app's widget and summary in UTC
+        run: |
+          (cd supabase/functions && deno check notify/index.ts device/index.ts app/index.ts ingest/index.ts)
+          (cd rust/server && TZ=UTC deno test --allow-read --no-check deno.test.ts)
       # a fixed version: "latest" asks GitHub which release is newest, and that lookup can hit GitHub's rate limit
       - uses: supabase/setup-cli@v1
         with: { version: 3.1.0 }

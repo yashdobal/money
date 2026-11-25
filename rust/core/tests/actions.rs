@@ -6,10 +6,9 @@
 use money_core::engine::Edit;
 use money_core::{shape, Engine};
 use serde_json::{Map, Value};
-use std::process::Command;
 
 mod common;
-use common::{diff, root};
+use common::{diff, golden, root, updating, write_golden};
 
 fn s(v: &Value) -> String { match v { Value::String(s) => s.clone(), Value::Null => String::new(), x => x.to_string() } }
 fn merge(a: &Value, b: &Value) -> Value {
@@ -84,9 +83,8 @@ fn run(e: &mut Engine, name: &str, a: &[Value]) -> Option<String> {
 
 #[test]
 fn same_changes_as_the_current_app() {
-    let js = Command::new("node").arg(root().join("tools/rust/actions.mjs")).env("TZ", "Asia/Kolkata").current_dir(root()).output().expect("node runs");
-    assert!(js.status.success(), "node failed: {}", String::from_utf8_lossy(&js.stderr));
-    let expected: Vec<Value> = serde_json::from_slice(&js.stdout).expect("actions JSON");
+    let expected = golden("actions");
+    let mut fresh: Vec<Value> = vec![];
     let script: Value = serde_json::from_str(&std::fs::read_to_string(root().join("tools/rust/actions.json")).unwrap()).unwrap();
     let at = chrono::DateTime::parse_from_rfc3339(script["at"].as_str().unwrap()).unwrap().timestamp_millis();
     let fixture: Value = serde_json::from_str(&std::fs::read_to_string(root().join("tools/demo/demo-fixture.json")).unwrap()).unwrap();
@@ -102,13 +100,18 @@ fn same_changes_as_the_current_app() {
         let args: Vec<Value> = st[1..].iter().map(|v| fill(v, at, &e)).collect();
         let ret = run(&mut e, name, &args);
         let mut out = vec![];
-        diff("ret", &js["ret"], &ret.map(Value::String).unwrap_or(Value::Null), &mut out);
-        diff("saved", &js["blob"], &e.save_blob(), &mut out);
+        let ret = ret.map(Value::String).unwrap_or(Value::Null);
+        let blob = e.save_blob();
         let writes = serde_json::to_value(std::mem::take(&mut e.outbox)).unwrap();
+        let (snap, screens) = (e.snapshot(), e.screens());
+        if updating() { fresh.push(serde_json::json!({ "ret": ret, "blob": blob, "writes": writes, "snap": snap, "screens": screens })); continue; }
+        diff("ret", &js["ret"], &ret, &mut out);
+        diff("saved", &js["blob"], &blob, &mut out);
         diff("writes", &js["writes"], &writes, &mut out);
-        diff("figures", &js["snap"], &e.snapshot(), &mut out);
-        diff("screens", &js["screens"], &e.screens(), &mut out);
+        diff("figures", &js["snap"], &snap, &mut out);
+        diff("screens", &js["screens"], &screens, &mut out);
         assert!(out.is_empty(), "step {} ({} {}) differs from engine.js:\n  {}", i, name, serde_json::to_string(&st[1..]).unwrap(), out.join("\n  "));
     }
+    if updating() { write_golden("actions", &fresh); return; }
     println!("{} changes, each saved and worked out the same", steps.len());
 }

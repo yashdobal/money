@@ -25,7 +25,9 @@ for (const a of process.argv.slice(2)) {
     settings: F.settings, edits: e.shapeEdits(F.payee_rules, F.txn_notes), lastSync: F.ingest_log[0] && F.ingest_log[0].received_at }));
   const snap = e.snapshot();
   const screens = screensOf(e);
-  out.push({ at, snap, screens });
+  // what the server sends: the widget's numbers (less the moment it was made) and the 9 PM summary
+  const widget = e.widgetModel(); delete widget.at;
+  out.push({ at, snap, screens, server: { widget, digest: e.digestModel() } });
   globalThis.Date = RealDate;
 }
 process.stdout.write(JSON.stringify(out));

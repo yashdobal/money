@@ -22,3 +22,23 @@ pub fn diff(path: &str, a: &Value, b: &Value, out: &mut Vec<String>) {
     }
 }
 pub fn short(v: &Value) -> String { let s = v.to_string(); if s.len() > 300 { format!("{}…", &s[..300]) } else { s } }
+
+/// The reference answers (tests/golden/NAME.json.gz): recorded from the original JavaScript engine (app/engine.js)
+/// before it was retired, on the demo data. A change that means to alter a figure rewrites them on purpose:
+/// `UPDATE_GOLDEN=1 cargo test -p money-core`, then review the change in what the app shows.
+pub fn golden(name: &str) -> Vec<Value> {
+    use std::io::Read;
+    let p = root().join(format!("rust/core/tests/golden/{}.json.gz", name));
+    let mut s = String::new();
+    flate2::read::GzDecoder::new(std::fs::File::open(&p).unwrap_or_else(|_| panic!("{} is missing", p.display()))).read_to_string(&mut s).unwrap();
+    serde_json::from_str(&s).unwrap()
+}
+pub fn updating() -> bool { std::env::var("UPDATE_GOLDEN").map(|v| v == "1").unwrap_or(false) }
+pub fn write_golden(name: &str, v: &[Value]) {
+    use std::io::Write;
+    let p = root().join(format!("rust/core/tests/golden/{}.json.gz", name));
+    let mut z = flate2::write::GzEncoder::new(std::fs::File::create(&p).unwrap(), flate2::Compression::best());
+    z.write_all(serde_json::to_string(v).unwrap().as_bytes()).unwrap();
+    z.finish().unwrap();
+    println!("wrote {}", p.display());
+}

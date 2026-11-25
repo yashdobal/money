@@ -1,7 +1,7 @@
 # The Money app in Rust, built alongside the current one (rn/ and app/). See rust/README.md.
 [workspace]
 resolver = "2"
-members = ["core", "app"]
+members = ["core", "app", "server"]
 
 [workspace.package]
 edition = "2021"

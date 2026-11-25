@@ -1,15 +1,15 @@
 /**
- * The app's own engine on the server: reads your rows exactly as the app does (app/money-data.js), shapes them with
- * the same code (app/shape.js) and runs app/engine.js with local time set to India's. So the widget's numbers and the
- * 9 PM summary are the numbers the app shows. engine.gen.js is written by tools/build_app.py.
+ * The app's own engine on the server: reads your rows exactly as the app does (rust/app/src/api.rs) and works them out
+ * with the same Rust code (rust/core, compiled for the server by rust/server/build.sh into ./money/). So the widget's
+ * numbers and the 9 PM summary are the numbers the app shows. Times are India's whatever the server's clock zone.
  */
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2.45.4";
-// @ts-ignore: generated plain JavaScript
-import { makeEngine } from "./engine.gen.js";
-// @ts-ignore: plain JavaScript
-import { istDate } from "./ist-date.js";
+// @ts-ignore: generated plain JavaScript (rust/server/build.sh)
+import { initSync, run } from "./money/money_server.js";
+// @ts-ignore: generated plain JavaScript (rust/server/build.sh)
+import { WASM } from "./money/wasm.js";
 
-/** The same reads as getData() in app/money-data.js, for one user, with the service role. */
+/** The same reads as the app's (rust/app/src/api.rs), for one user, with the service role. */
 export async function readRows(db: SupabaseClient, owner: string) {
   const all = async (table: string, select: string, order?: string) => {
     const out: unknown[] = [];
@@ -43,10 +43,25 @@ export async function readRows(db: SupabaseClient, owner: string) {
 export type Widget = Record<string, unknown> & { v: number; at: number; state: string };
 export type Digest = { date: string; title: string; body: string };
 
+let ready = false;
+function start() {
+  if (ready) return;
+  const bin = atob(WASM as string), bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  initSync({ module: bytes });
+  ready = true;
+}
+
 /** Runs the engine on the rows (as of now, or another moment for a dry run). */
 export function runEngine(rows: Awaited<ReturnType<typeof readRows>>, nowMs?: number) {
-  const E = makeEngine({ Date: istDate(nowMs === undefined ? undefined : () => nowMs) });
-  const edits = rows.editRows ? E.shapeEdits(rows.editRows.rules, rows.editRows.notes) : { ok: false };
-  E.ingest(E.shapeData({ ...rows, edits }));
-  return { widget: (): Widget => E.widgetModel(), digest: (): Digest => E.digestModel() };
+  start();
+  let out: { widget: Widget; digest: Digest; error?: string };
+  try {
+    out = JSON.parse(run(JSON.stringify(rows), nowMs ?? Date.now()));
+  } catch (e) {
+    ready = false; // a crash inside the WebAssembly leaves it unusable: start afresh next time
+    throw new Error("engine: " + ((e as Error)?.message ?? e));
+  }
+  if (out.error) throw new Error("engine: " + out.error);
+  return { widget: (): Widget => out.widget, digest: (): Digest => out.digest };
 }

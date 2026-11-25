@@ -643,3 +643,60 @@ impl Engine {
             r.unknown.iter().map(|u| u.g.clone()).collect::<Vec<_>>(), r.income.amt])
     }
 }
+
+/* ---------------- for the server and the phone's widget ---------------- */
+impl Engine {
+    /// What the phone's home-screen widget shows (engine.js widgetModel): the daily figure, what's left this month, the
+    /// next payment, the balance curve until the salary after next, spent today and the next few dated things. Whole
+    /// rupees; days count from today. The app sends it whenever data loads; the server sends the same every hour.
+    pub fn widget_model(&mut self) -> Value {
+        self.resolve_payments();
+        let cards = self.all_cards();
+        let h = self.hero_model(&cards);
+        let today = self.sod_now();
+        let mut out = serde_json::Map::new();
+        out.insert("v".into(), json!(1)); out.insert("at".into(), json!(self.now())); out.insert("day".into(), json!(iso(today))); out.insert("state".into(), json!(h.state));
+        if h.state != "ok" { return Value::Object(out); }
+        let f = h.f.as_ref().expect("an ok hero has a forecast");
+        let c = &h.chart;
+        let r = |v: f64| round(v);
+        out.insert("daily".into(), json!(r(h.pace))); out.insert("line".into(), json!(h.line)); out.insert("tone".into(), json!(h.tone));
+        out.insert("left".into(), json!(r(h.tiles.rest.total))); out.insert("leftDays".into(), json!(h.tiles.rest.days)); out.insert("payday".into(), json!(iso(f.p1)));
+        out.insert("bill".into(), match &h.next_pay { None => Value::Null, Some(p) => json!({ "title": p.title, "amt": r(p.amt), "due": iso(p.d), "n": days(today, p.d), "overdue": p.overdue }) });
+        out.insert("curve".into(), json!({ "span": days(c.from, c.to).max(1), "buffer": r(c.buffer), "pts": c.pts.iter().map(|p| json!([days(c.from, p.0), r(p.1)])).collect::<Vec<_>>(),
+            "paydays": c.paydays.iter().map(|d| days(c.from, *d)).collect::<Vec<_>>(), "low": [days(c.from, c.low.0), r(c.low.1)] }));
+        let ym = crate::time::ym_of(today);
+        let d = crate::time::parts(today).d;
+        let todays: Vec<_> = self.tx_for(Some(&ym), false).into_iter().filter(|x| x.t.day == d).collect();
+        out.insert("spent".into(), json!(r(self.spend_of(&todays).spend)));
+        let soon: Vec<Value> = self.coming_up(&cards, Some(f)).iter().flat_map(|g| g.items.iter().filter(|e| !e.soft && e.amt.is_some())
+            .map(|e| json!({ "n": g.n, "title": e.title, "amt": r(e.amt.unwrap()), "dot": e.dot })).collect::<Vec<_>>()).take(6).collect();
+        out.insert("soon".into(), Value::from(soon));
+        Value::Object(out)
+    }
+
+    /// The 9 PM summary notification, in the app's own words (engine.js digestModel): {date, title, body}.
+    pub fn digest_model(&mut self) -> Value {
+        self.resolve_payments();
+        let cards = self.all_cards();
+        let h = self.hero_model(&cards);
+        let n = self.net_model(&cards);
+        let today = self.sod_now();
+        let ym = crate::time::ym_of(today);
+        let d = crate::time::parts(today).d;
+        let todays: Vec<_> = self.tx_for(Some(&ym), false).into_iter().filter(|x| x.t.day == d).collect();
+        let spent = self.spend_of(&todays).spend;
+        let soon: Vec<(i32, String)> = match &h.f {
+            None => vec![],
+            Some(f) => self.coming_up(&cards, Some(f)).iter().filter(|g| g.n <= 3).flat_map(|g| g.items.iter().filter(|e| !e.soft && e.amt.is_some() && e.dot != "in")
+                .map(|e| (g.n, format!("{} {}", e.title, money(e.amt.unwrap().abs())))).collect::<Vec<_>>()).collect(),
+        };
+        let when = |k: i32| if k == 0 { "today".to_string() } else if k == 1 { "tomorrow".to_string() } else { format!("in {} days", k) };
+        let title = if h.state == "ok" { format!("{} safe to spend until payday ({} a day)", money(h.tiles.rest.total), money(h.pace)) } else { "Money: today".to_string() };
+        let mut parts = vec![format!("Spent today {}.", money(spent))];
+        if let Some(n) = &n { parts.push(format!("Where you stand {}.", money(n.now))); }
+        if h.f.as_ref().map(|f| f.first_short.is_some()).unwrap_or(false) { parts.insert(0, format!("{}.", h.line)); }
+        if !soon.is_empty() { parts.push(format!("Coming up: {}.", soon.iter().take(3).map(|(k, t)| format!("{} {}", t, when(*k))).collect::<Vec<_>>().join("; "))); }
+        json!({ "date": iso(today), "title": title, "body": parts.join(" ") })
+    }
+}

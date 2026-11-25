@@ -1,0 +1,15 @@
+[package]
+name = "money-server"
+description = "The Rust engine for the Supabase functions: the widget's numbers and the 9 PM summary (see src/lib.rs)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+money-core = { path = "../core" }
+serde_json = { version = "1", features = ["preserve_order"] }
+wasm-bindgen = "=0.2.130"

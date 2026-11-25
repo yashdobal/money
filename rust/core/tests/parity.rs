@@ -4,13 +4,13 @@
 
 use money_core::{shape, Engine};
 use serde_json::Value;
-use std::process::Command;
 
 mod common;
-use common::{diff, root};
+use common::{diff, golden, root, updating, write_golden};
 
 
 /// Moments to compare: every 4 days from 1 Oct 2026 to 28 Feb 2027 at 10:00 India time, and a few late at night.
+#[allow(dead_code)]
 fn moments() -> Vec<i64> {
     let at = |d: &str, hm: &str| chrono::DateTime::parse_from_rfc3339(&format!("{}T{}:00+05:30", d, hm)).unwrap().timestamp_millis();
     let mut v = vec![];
@@ -24,10 +24,9 @@ fn moments() -> Vec<i64> {
 #[test]
 fn same_figures_as_the_current_app() {
     let ms = moments();
-    let js = Command::new("node").arg(root().join("tools/rust/snapshot.mjs")).args(ms.iter().map(|m| m.to_string()))
-        .env("TZ", "Asia/Kolkata").current_dir(root()).output().expect("node runs");
-    assert!(js.status.success(), "node failed: {}", String::from_utf8_lossy(&js.stderr));
-    let expected: Vec<Value> = serde_json::from_slice(&js.stdout).expect("snapshot JSON");
+    let expected = golden("snapshot");
+    assert_eq!(expected.len(), ms.len(), "the recorded moments");
+    let mut fresh: Vec<Value> = vec![];
     let fixture: Value = serde_json::from_str(&std::fs::read_to_string(root().join("tools/demo/demo-fixture.json")).unwrap()).unwrap();
     let rows = shape::rows_from_fixture(&fixture);
     let mut bad = vec![];
@@ -41,11 +40,17 @@ fn same_figures_as_the_current_app() {
         diff("", &e["snap"], &got, &mut out);
         let scr = eng.screens();
         diff("screens", &e["screens"], &scr, &mut out);
+        let mut w = eng.widget_model();
+        w.as_object_mut().unwrap().remove("at");
+        let server = serde_json::json!({ "widget": w, "digest": eng.digest_model() });
+        diff("server", &e["server"], &server, &mut out);
+        if updating() { fresh.push(serde_json::json!({ "at": at, "snap": got, "screens": scr, "server": server })); continue; }
         if !out.is_empty() {
             bad.push(format!("at {} ({}):\n  {}", money_core::time::iso(at), at, out.join("\n  ")));
             if bad.len() >= 3 { break; }
         }
     }
-    assert!(bad.is_empty(), "the Rust engine differs from engine.js:\n{}", bad.join("\n\n"));
+    if updating() { write_golden("snapshot", &fresh); return; }
+    assert!(bad.is_empty(), "the Rust engine differs from the recorded figures:\n{}", bad.join("\n\n"));
     println!("{} moments, every figure the same", expected.len());
 }
