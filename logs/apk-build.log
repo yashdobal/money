@@ -1,0 +1,117 @@
+Starting a Gradle Daemon (subsequent builds will be faster)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:mergeReleaseNativeLibs NO-SOURCE
+> Task :app:stripReleaseDebugSymbols NO-SOURCE
+> Task :app:extractReleaseNativeSymbolTables NO-SOURCE
+> Task :app:mergeReleaseNativeDebugMetadata NO-SOURCE
+> Task :app:buildKotlinToolingMetadata
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:generateReleaseBuildConfig
+> Task :app:generateReleaseResValues
+> Task :app:checkReleaseAarMetadata
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:mergeReleaseResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:javaPreCompileRelease
+> Task :app:mergeReleaseArtProfile
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:buildWeb
+> Task :app:syncWeb
+> Task :app:mergeReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:compressReleaseAssets
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:preReleaseSmsBuild UP-TO-DATE
+> Task :app:mergeReleaseSmsJniLibFolders
+> Task :app:mergeReleaseSmsNativeLibs NO-SOURCE
+> Task :app:stripReleaseSmsDebugSymbols NO-SOURCE
+> Task :app:extractReleaseSmsNativeSymbolTables NO-SOURCE
+> Task :app:mergeReleaseSmsNativeDebugMetadata NO-SOURCE
+> Task :app:processReleaseManifestForPackage
+> Task :app:checkReleaseSmsDuplicateClasses
+> Task :app:generateReleaseSmsBuildConfig
+> Task :app:generateReleaseSmsResValues
+> Task :app:checkReleaseSmsAarMetadata
+> Task :app:mapReleaseSmsSourceSetPaths
+> Task :app:generateReleaseSmsResources
+> Task :app:packageReleaseSmsResources
+> Task :app:createReleaseSmsCompatibleScreenManifests
+> Task :app:extractDeepLinksReleaseSms
+> Task :app:parseReleaseSmsLocalResources
+> Task :app:processReleaseResources
+> Task :app:mergeReleaseSmsResources
+> Task :app:processReleaseSmsMainManifest
+> Task :app:processReleaseSmsManifest
+> Task :app:javaPreCompileReleaseSms
+> Task :app:processReleaseSmsManifestForPackage
+> Task :app:mergeReleaseSmsArtProfile
+> Task :app:mergeReleaseSmsStartupProfile
+> Task :app:convertLinkedResourcesToProtoRelease
+> Task :app:mergeReleaseSmsShaders
+> Task :app:compileReleaseSmsShaders NO-SOURCE
+> Task :app:generateReleaseSmsAssets UP-TO-DATE
+> Task :app:mergeReleaseSmsAssets
+> Task :app:extractReleaseSmsVersionControlInfo
+> Task :app:collectReleaseSmsDependencies
+> Task :app:sdkReleaseSmsDependencyData
+> Task :app:validateSigningReleaseSms
+> Task :app:writeReleaseSmsAppMetadata
+> Task :app:writeReleaseSmsSigningConfigVersions
+> Task :app:compressReleaseSmsAssets
+> Task :app:processReleaseSmsResources
+> Task :app:optimizeReleaseSmsResources
+
+> Task :app:compileReleaseSmsKotlin
+w: file:///home/runner/work/money/money/android/app/src/main/java/com/yashdobal/money/MainActivity.kt:91:16 'var statusBarColor: Int' is deprecated. Deprecated in Java.
+w: file:///home/runner/work/money/money/android/app/src/main/java/com/yashdobal/money/MainActivity.kt:92:16 'var navigationBarColor: Int' is deprecated. Deprecated in Java.
+w: file:///home/runner/work/money/money/android/app/src/main/java/com/yashdobal/money/MainActivity.kt:95:20 'var isStatusBarContrastEnforced: Boolean' is deprecated. Deprecated in Java.
+
+> Task :app:compileReleaseKotlin
+w: file:///home/runner/work/money/money/android/app/src/main/java/com/yashdobal/money/MainActivity.kt:91:16 'var statusBarColor: Int' is deprecated. Deprecated in Java.
+w: file:///home/runner/work/money/money/android/app/src/main/java/com/yashdobal/money/MainActivity.kt:92:16 'var navigationBarColor: Int' is deprecated. Deprecated in Java.
+w: file:///home/runner/work/money/money/android/app/src/main/java/com/yashdobal/money/MainActivity.kt:95:20 'var isStatusBarContrastEnforced: Boolean' is deprecated. Deprecated in Java.
+
+> Task :app:compileReleaseSmsJavaWithJavac
+> Task :app:compileReleaseJavaWithJavac
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:processReleaseJavaRes
+> Task :app:mergeReleaseSmsGeneratedProguardFiles
+> Task :app:processReleaseSmsJavaRes
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:expandReleaseSmsArtProfileWildcards
+> Task :app:mergeReleaseSmsJavaResource
+> Task :app:mergeReleaseJavaResource
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertShrunkResourcesToBinaryRelease
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:assembleRelease
+> Task :app:minifyReleaseSmsWithR8
+> Task :app:compileReleaseSmsArtProfile
+> Task :app:packageReleaseSms
+> Task :app:createReleaseSmsApkListingFileRedirect
+> Task :app:assembleReleaseSms
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_5-1795679344402.json
+
+BUILD SUCCESSFUL in 1m 17s
+85 actionable tasks: 85 executed
