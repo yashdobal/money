@@ -18,7 +18,9 @@ pub struct Env { pub left: f64, pub pace: f64 }
 #[derive(Clone, Debug, PartialEq)]
 pub struct Forecast {
     pub b: BankBalance, pub today: Ms, pub cur: Cyc, pub p1: Ms, pub p2: Ms, pub h: Ms, pub ev: Vec<Ev>, pub segs: Vec<Seg>, pub end: usize, pub low: usize,
-    pub first_short: Option<usize>, pub tight: Option<usize>, pub pace: f64, pub env: Option<Env>, pub buffer: f64, pub next_pay: Option<usize>, pub next_big: Option<usize>, pub short_by: f64,
+    pub first_short: Option<usize>, pub tight: Option<usize>, pub pace: f64, pub env: Option<Env>,
+    /// how far past this month's spending share you've spent (0 if not): the figure is then the bank's room, not ₹0
+    pub over: f64, pub buffer: f64, pub next_pay: Option<usize>, pub next_big: Option<usize>, pub short_by: f64,
 }
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct RowText { pub title: String, pub detail: String }
@@ -178,14 +180,17 @@ impl Engine {
             let goals_total: f64 = if m.rule { 0.0 } else { plan.iter().map(|p| p.funded.max(p.moved_now)).sum() };
             let left = m.spend - goals_total - buffer - self.cycle_spend(&cur);
             let e = Env { left, pace: (left / cur.days_left as f64).max(0.0) };
-            if e.pace < pace { pace = e.pace; tight_o = None; }
+            // a share still to spend caps the figure; a share already spent doesn't zero it while the bank has room:
+            // the figure is then what the bank can take until payday, and the line says how far over the share you are
+            if left > 0.0 && e.pace < pace { pace = e.pace; tight_o = None; }
             env = Some(e);
         }
         let bills: Vec<usize> = (0..ev.len()).filter(|i| ev[*i].amt < 0.0 && matches!(ev[*i].kind.as_str(), "card" | "cardemi" | "fixed")).collect();
         let next_pay = bills.first().copied();
         let next_big = bills.iter().copied().find(|i| ev[*i].amt <= -BIG_BILL);
         let short_by = if first_short.is_some() { -room(&segs[low]) } else { 0.0 };
-        Some(Forecast { b, today, cur, p1, p2, h: hh, ev, segs, end, low, first_short, tight: tight_o, pace, env, buffer, next_pay, next_big, short_by })
+        let over = env.as_ref().map(|e| -e.left).filter(|o| *o >= 0.5 && first_short.is_none()).unwrap_or(0.0);
+        Some(Forecast { b, today, cur, p1, p2, h: hh, ev, segs, end, low, first_short, tight: tight_o, pace, env, over, buffer, next_pay, next_big, short_by })
     }
 
     /// One forecast event as a row: a short title and one line of detail.
@@ -237,6 +242,16 @@ impl Engine {
             explain = format!("Your balance would be {} short on {}{}.{}", money(f.short_by), fmt(low.d),
                 w.map(|w| format!(", when the {}{}", nm, if w.kind == "card" || w.kind == "fixed" { " is due" } else { " goes out" })).unwrap_or_default(),
                 if f.segs[fs].d != low.d { format!(" It first drops below {} on {}.", if f.buffer != 0.0 { "your buffer" } else { "zero" }, fmt(f.segs[fs].d)) } else { String::new() });
+        } else if f.over > 0.0 && f.tight.is_some() {
+            let g = &f.segs[f.tight.unwrap()];
+            let til = if g.pay.is_some() { format!("payday, {}", fmt_d(g.until)) } else { fmt_d(add_days(g.until, -1)) };
+            let keeps_l = if f.buffer != 0.0 { format!("keeps {} in the bank", money(f.buffer)) } else { "keeps your bank above ₹0".to_string() };
+            line = format!("{} over this month's share · {} until {}", money(f.over), keeps_l, til);
+            tone = "warn".to_string();
+            let after = g.why.map(|i| format!(" after the {} {} on {}", money(-f.ev[i].amt), self.ev_row(&f.ev[i]).title, fmt(g.d))).unwrap_or_default();
+            explain = format!("You've spent {} more than this month's spending share, so the share itself has nothing left. This is what your bank balance can still take{}: {} has to last until {}, after every bill and transfer due, without going below {}.",
+                money(f.over), after, money(g.bal - f.buffer), if g.pay.is_some() { format!("your salary on {}", fmt(g.until)) } else { fmt(add_days(g.until, -1)) },
+                if f.buffer != 0.0 { "your buffer" } else { "₹0" });
         } else if f.tight.is_none() {
             let env = f.env.as_ref().unwrap();
             line = format!("Your spending share until payday, {}", fmt_d(f.cur.p1));

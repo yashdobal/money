@@ -151,6 +151,7 @@ html, body { overflow-x: hidden; }
 .hero-fig { margin-top: 8px; font-weight: 300; font-stretch: 122%; font-size: 56px; line-height: 62px; letter-spacing: -0.5px; }
 .hero-line { margin: 10px 0 0; font-size: 14px; line-height: 20px; color: var(--hero-ink2); }
 .hero-line.alert { color: #FF9F92; }
+.hero-line.warn { color: #E8C27A; }
 .hero-chart { position: relative; margin-top: 16px; }
 .hero-chart svg { display: block; overflow: visible; }
 .hc-line { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw 1100ms var(--spring) 200ms forwards; }

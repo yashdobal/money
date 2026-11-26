@@ -78,7 +78,7 @@ fn HeroCard(hero: Hero) -> Element {
                     }
                 } else {
                     Odo { value: money_core::fmt::round(hero.tiles.rest.total), class: "odo hero-fig".to_string() }
-                    p { class: if hero.tone == "alert" { "hero-line alert" } else { "hero-line" }, "{hero.line}" }
+                    p { class: match hero.tone.as_str() { "alert" => "hero-line alert", "warn" => "hero-line warn", _ => "hero-line" }, "{hero.line}" }
                     HeroChart { c: hero.chart.clone(), start: hero.f.as_ref().map(|f| f.b.bal).unwrap_or(0.0) }
                     div { class: "hero-tiles",
                         HeroTile { label: "A day", v: hero.tiles.rest.per_day, sub: format!("for {}", plural(hero.tiles.rest.days as i64, "day")) }

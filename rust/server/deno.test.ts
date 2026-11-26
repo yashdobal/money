@@ -6,6 +6,9 @@ import { runEngine } from "../../supabase/functions/_shared/engine.ts";
 
 const root = new URL("../../", import.meta.url);
 const read = async (p: string) => await Deno.readFile(new URL(p, root));
+// the same JSON whatever the order of its keys (the recordings may list them differently)
+const canon = (v: unknown): string => JSON.stringify(v, (_k, x) => x && typeof x === "object" && !Array.isArray(x)
+  ? Object.fromEntries(Object.keys(x).sort().map((k) => [k, (x as Record<string, unknown>)[k]])) : x);
 const gunzip = async (b: Uint8Array) => new Response(new Blob([b]).stream().pipeThrough(new DecompressionStream("gzip"))).text();
 
 Deno.test("the server works out the app's widget and summary", async () => {
@@ -19,7 +22,7 @@ Deno.test("the server works out the app's widget and summary", async () => {
     const w = { ...e.widget() } as Record<string, unknown>;
     if (w.at !== g.at) throw new Error(`widget.at ${w.at} ≠ ${g.at}`);
     delete w.at;
-    const got = JSON.stringify({ widget: w, digest: e.digest() }), want = JSON.stringify(g.server);
+    const got = canon({ widget: w, digest: e.digest() }), want = canon(g.server);
     if (got !== want) throw new Error(`at ${new Date(g.at).toISOString()}:\n got ${got.slice(0, 400)}\nwant ${want.slice(0, 400)}`);
     n++;
   }
